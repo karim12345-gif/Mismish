@@ -1,0 +1,88 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  phoneNumber    String    @unique
+  password       String
+  name           String
+  isVerified     Boolean   @default(false)
+  otp            String?
+  otpExpiresAt   DateTime?
+  otpResendCount Int       @default(0)
+  lastOtpSentAt  DateTime?
+  latitude       Float?
+  longitude      Float?
+  address        String?
+  orders         Order[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Vendor {
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  password    String
+  name        String
+  description String?
+  latitude    Float?
+  longitude   Float?
+  address     String?
+  listings    SurpriseBox[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model SurpriseBox {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  quantity    Int
+  pickupStart DateTime
+  pickupEnd   DateTime
+  vendorId    Int
+  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+  orders      Order[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum DeliveryMethod {
+  PICKUP
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PickupStatus {
+  PENDING
+  COLLECTED
+  NO_SHOW
+}
+
+model Order {
+  id              Int            @id @default(autoincrement())
+  userId          Int
+  user            User           @relation(fields: [userId], references: [id])
+  surpriseBoxId   Int
+  surpriseBox     SurpriseBox    @relation(fields: [surpriseBoxId], references: [id])
+  status          OrderStatus    @default(PENDING)
+  pickupStatus    PickupStatus   @default(PENDING)
+  orderCode       String         @unique
+  deliveryMethod  DeliveryMethod
+  deliveryAddress String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
