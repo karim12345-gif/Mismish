@@ -6,12 +6,11 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
-// Import routes
-import customerAuthRoutes from './routes/customer/authRoutes';
-import vendorAuthRoutes from './routes/vendor/authRoutes';
+
+import { errorHandler } from './api/shared/middlewares/errorHandler';
+import { customerAuthRoutes, vendorAuthRoutes } from './routes';
 import listingRoutes from './routes/customer/listingRoutes';
 import orderRoutes from './routes/customer/orderRoutes';
-import { errorHandler } from './api/shared/middlewares/errorHandler';
 
 dotenv.config();
 

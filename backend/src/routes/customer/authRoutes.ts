@@ -1,13 +1,36 @@
 import express from 'express';
-import { registerUser, loginUser, verifyOTP, resendOTP } from '../../api/customer/auth/auth.controller';
-import { validate } from '../../api/shared/middlewares/validate';
-import { SignupSchema, LoginSchema, VerifyOTPSchema, ResendOTPSchema } from '../../api/shared/schemas/authSchemas';
+import { 
+  loginUser, 
+  registerUser, 
+  verifyOTP, 
+  resendOTP,
+  refreshAccessToken,
+  logout,
+  changePassword,
+  validate, 
+  authenticate,
+  SignupSchema, 
+  LoginSchema, 
+  VerifyOTPSchema, 
+  ResendOTPSchema,
+  RefreshTokenSchema,
+  LogoutSchema,
+  ChangePasswordSchema
+} from '../../api';
 
 const router = express.Router();
 
+// Public routes
 router.post('/signup', validate(SignupSchema), registerUser);
 router.post('/login', validate(LoginSchema), loginUser);
 router.post('/verify-otp', validate(VerifyOTPSchema), verifyOTP);
 router.post('/resend-otp', validate(ResendOTPSchema), resendOTP);
+
+// Token management routes
+router.post('/refresh', validate(RefreshTokenSchema), refreshAccessToken);
+router.post('/logout', validate(LogoutSchema), logout);
+
+// Protected routes (require authentication)
+router.post('/change-password', authenticate, validate(ChangePasswordSchema), changePassword);
 
 export default router;

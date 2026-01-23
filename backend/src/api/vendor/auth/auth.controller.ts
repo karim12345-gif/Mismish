@@ -2,21 +2,8 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../../../prismaClient';
+import { LoginVendorBody, RegisterVendorBody } from '../types';
 
-interface RegisterVendorBody {
-  email: string;
-  password: string;
-  name: string;
-  address?: string;
-  description?: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-interface LoginVendorBody {
-  email: string;
-  password: string;
-}
 
 export const registerVendor = async (req: Request<{}, {}, RegisterVendorBody>, res: Response): Promise<void> => {
   try {

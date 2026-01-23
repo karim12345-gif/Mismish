@@ -1,13 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { DeliveryMethod, Prisma } from '@prisma/client';
 import prisma from '../../../prismaClient';
+import { CreateOrderBody } from './types';
 
-// Interface for the request body
-interface CreateOrderBody {
-  surpriseBoxId: number;
-  deliveryMethod: DeliveryMethod;
-  deliveryAddress?: string;
-}
 
 // Helper to generate a 6-character alphanumeric code
 const generateOrderCode = () => {

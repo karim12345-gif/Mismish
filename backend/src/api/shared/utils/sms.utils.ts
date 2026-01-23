@@ -68,3 +68,10 @@ export const maskPhoneNumber = (phoneNumber: string): string => {
   const lastDigits = phoneNumber.slice(-4);
   return `${countryCode}***${lastDigits}`;
 };
+
+
+
+
+// Phone number regex for Egypt (+20), Saudi Arabia (+966), UAE (+971)
+export const phoneRegex = /^\+(?:20|966|971)\d{9,10}$/;
+

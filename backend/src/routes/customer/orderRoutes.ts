@@ -1,8 +1,6 @@
 import express from 'express';
-import { createOrder, getMyOrders, getOrderById } from '../../api/customer/order/order.controller';
-import { authenticate } from '../../api/shared/middlewares/auth';
-import { validate } from '../../api/shared/middlewares/validate';
-import { CreateOrderSchema } from '../../api/shared/schemas/orderSchemas';
+import { createOrder, getMyOrders, getOrderById,
+     validate, CreateOrderSchema, authenticate } from '../../api';
 
 const router = express.Router();
 

@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -8,21 +7,23 @@ datasource db {
 }
 
 model User {
-  id             Int       @id @default(autoincrement())
-  phoneNumber    String    @unique
-  password       String
-  name           String
-  isVerified     Boolean   @default(false)
-  otp            String?
-  otpExpiresAt   DateTime?
-  otpResendCount Int       @default(0)
-  lastOtpSentAt  DateTime?
-  latitude       Float?
-  longitude      Float?
-  address        String?
-  orders         Order[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                Int            @id @default(autoincrement())
+  phoneNumber       String         @unique
+  password          String
+  name              String
+  isVerified        Boolean        @default(false)
+  otp               String?
+  otpExpiresAt      DateTime?
+  otpResendCount    Int            @default(0)
+  lastOtpSentAt     DateTime?
+  latitude          Float?
+  longitude         Float?
+  address           String?
+  passwordChangedAt DateTime?
+  orders            Order[]
+  refreshTokens     RefreshToken[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }
 
 model Vendor {
@@ -85,4 +86,20 @@ model Order {
   deliveryAddress String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  deviceInfo String?
+  ipAddress  String?
+  isRevoked  Boolean  @default(false)
+
+  @@index([userId])
+  @@index([token])
 }

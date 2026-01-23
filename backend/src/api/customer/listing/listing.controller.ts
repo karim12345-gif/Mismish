@@ -1,15 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../../../prismaClient';
+import { GetListingByIdParams, NearbyListingsQuery } from './types';
 
-interface NearbyListingsQuery {
-  lat: string;
-  lng: string;
-  radius: string;
-}
-
-interface GetListingByIdParams {
-  id: string;
-}
 
 export const getNearbyListings = async (
   req: Request, 

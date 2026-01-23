@@ -1,7 +1,5 @@
 import express from 'express';
-import { getNearbyListings, getListingById } from '../../api/customer/listing/listing.controller';
-import { validate } from '../../api/shared/middlewares/validate';
-import { NearbyListingsSchema } from '../../api/shared/schemas/listingSchemas';
+import { getListingById, getNearbyListings, NearbyListingsSchema, validate } from '../../api';
 
 const router = express.Router();
 

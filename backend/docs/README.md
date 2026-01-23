@@ -16,6 +16,9 @@ Design decisions and their tradeoffs. Explains *why* we chose specific technolog
 ### [PHASE_1_TASKS.md](./PHASE_1_TASKS.md)
 Detailed task breakdown for Phase 1 (Customer Backend). Includes testing checklist and timeline.
 
+### [JWT_TOKEN_MANAGEMENT.md](./JWT_TOKEN_MANAGEMENT.md)
+Complete guide to JWT token management implementation. Covers dual-token system (access + refresh tokens), database-backed session management, token invalidation on password change, and all authentication endpoints.
+
 ---
 
 ## 🚀 Quick Start
@@ -24,12 +27,15 @@ Detailed task breakdown for Phase 1 (Customer Backend). Includes testing checkli
 2. **Understanding the system?** Read [ARCHITECTURE.md](./ARCHITECTURE.md)
 3. **Wondering why we did X?** Check [TRADEOFFS.md](./TRADEOFFS.md)
 4. **Working on Phase 1?** Follow [PHASE_1_TASKS.md](./PHASE_1_TASKS.md)
+5. **Implementing authentication?** See [JWT_TOKEN_MANAGEMENT.md](./JWT_TOKEN_MANAGEMENT.md)
 
 
 Quick note: to generate JWT base64 token , we use openssl rand -base64 64
 
 To sync primsa database with typescript run:
 - npx prisma generate
+- npx prisma db push (to sync schema with database)
+
 
 ---`
 

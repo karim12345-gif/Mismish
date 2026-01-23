@@ -1,31 +1,25 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import prisma from '../../../prismaClient';
-import { generateOTP, sendOTP, maskPhoneNumber } from '../../shared/utils/sms';
+import { 
+  LoginUserBody, 
+  RegisterUserBody, 
+  ResendOTPBody, 
+  VerifyOTPBody,
+  RefreshTokenBody,
+  LogoutBody,
+  ChangePasswordBody
+} from './types';
+import { generateOTP, maskPhoneNumber, sendOTP } from '../../shared/utils';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  createRefreshTokenRecord,
+  verifyRefreshToken,
+  revokeRefreshToken,
+  revokeAllUserTokens,
+} from '../../shared/utils';
 
-interface RegisterUserBody {
-  phoneNumber: string;
-  password: string;
-  name: string;
-  latitude?: number;
-  longitude?: number;
-  address?: string;
-}
-
-interface LoginUserBody {
-  phoneNumber: string;
-  password: string;
-}
-
-interface VerifyOTPBody {
-  phoneNumber: string;
-  otp: string;
-}
-
-interface ResendOTPBody {
-  phoneNumber: string;
-}
 
 /**
  * Step 1: Register a new user
@@ -117,7 +111,7 @@ export const loginUser = async (req: Request<{}, {}, LoginUserBody>, res: Respon
 };
 
 /**
- * Step 3: Verify OTP and return JWT token
+ * Step 3: Verify OTP and return JWT tokens
  */
 export const verifyOTP = async (req: Request<{}, {}, VerifyOTPBody>, res: Response): Promise<void> => {
   try {
@@ -158,13 +152,22 @@ export const verifyOTP = async (req: Request<{}, {}, VerifyOTPBody>, res: Respon
       },
     });
 
-    // Generate JWT token
-    const token = jwt.sign({ id: user.id, type: 'user' }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+    // Generate access and refresh tokens
+    const accessToken = generateAccessToken(user.id, 'user');
+    const refreshToken = generateRefreshToken();
+
+    // Get device info and IP from request
+    const deviceInfo = req.headers['user-agent'];
+    const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
+
+    // Store refresh token in database
+    await createRefreshTokenRecord(user.id, refreshToken, deviceInfo, ipAddress);
 
     res.status(200).json({ 
       status: 'success', 
       data: { 
-        token, 
+        accessToken,
+        refreshToken,
         user: { 
           id: user.id, 
           phoneNumber: user.phoneNumber, 
@@ -226,6 +229,123 @@ export const resendOTP = async (req: Request<{}, {}, ResendOTPBody>, res: Respon
     });
   } catch (error) {
     console.error('Resend OTP Error:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+};
+
+/**
+ * Refresh access token using refresh token
+ */
+export const refreshAccessToken = async (req: Request<{}, {}, RefreshTokenBody>, res: Response): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      res.status(400).json({ status: 'error', message: 'Refresh token is required' });
+      return;
+    }
+
+    // Verify refresh token
+    const userId = await verifyRefreshToken(refreshToken);
+
+    if (!userId) {
+      res.status(401).json({ status: 'error', message: 'Invalid or expired refresh token' });
+      return;
+    }
+
+    // Generate new access token
+    const accessToken = generateAccessToken(userId, 'user');
+
+    res.status(200).json({ 
+      status: 'success', 
+      data: { accessToken } 
+    });
+  } catch (error) {
+    console.error('Refresh Token Error:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+};
+
+/**
+ * Logout - revoke refresh token
+ */
+export const logout = async (req: Request<{}, {}, LogoutBody>, res: Response): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      res.status(400).json({ status: 'error', message: 'Refresh token is required' });
+      return;
+    }
+
+    // Revoke the refresh token
+    const revoked = await revokeRefreshToken(refreshToken);
+
+    if (!revoked) {
+      res.status(400).json({ status: 'error', message: 'Failed to logout' });
+      return;
+    }
+
+    res.status(200).json({ 
+      status: 'success', 
+      message: 'Logged out successfully' 
+    });
+  } catch (error) {
+    console.error('Logout Error:', error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+};
+
+/**
+ * Change password - invalidates all refresh tokens
+ */
+export const changePassword = async (req: Request<{}, {}, ChangePasswordBody>, res: Response): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ status: 'error', message: 'Unauthorized' });
+      return;
+    }
+
+    // Get user from database
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      res.status(404).json({ status: 'error', message: 'User not found' });
+      return;
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      res.status(400).json({ status: 'error', message: 'Current password is incorrect' });
+      return;
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and set passwordChangedAt timestamp
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+        passwordChangedAt: new Date(),
+      },
+    });
+
+    // Revoke all refresh tokens for this user
+    await revokeAllUserTokens(userId);
+
+    res.status(200).json({ 
+      status: 'success', 
+      message: 'Password changed successfully. Please login again with your new password.' 
+    });
+  } catch (error) {
+    console.error('Change Password Error:', error);
     res.status(500).json({ status: 'error', message: 'Internal server error' });
   }
 };

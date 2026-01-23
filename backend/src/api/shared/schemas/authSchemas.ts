@@ -1,7 +1,6 @@
 import { z } from 'zod';
+import { phoneRegex } from '../utils';
 
-// Phone number regex for Egypt (+20), Saudi Arabia (+966), UAE (+971)
-const phoneRegex = /^\+(?:20|966|971)\d{9,10}$/;
 
 export const SignupSchema = z.object({
   body: z.object({
@@ -34,8 +33,30 @@ export const ResendOTPSchema = z.object({
   }),
 });
 
+export const RefreshTokenSchema = z.object({
+  body: z.object({
+    refreshToken: z.string().min(1, 'Refresh token is required'),
+  }),
+});
+
+export const LogoutSchema = z.object({
+  body: z.object({
+    refreshToken: z.string().min(1, 'Refresh token is required'),
+  }),
+});
+
+export const ChangePasswordSchema = z.object({
+  body: z.object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+  }),
+});
+
 // Type exports for TypeScript
 export type SignupBody = z.infer<typeof SignupSchema>['body'];
 export type LoginBody = z.infer<typeof LoginSchema>['body'];
 export type VerifyOTPBody = z.infer<typeof VerifyOTPSchema>['body'];
 export type ResendOTPBody = z.infer<typeof ResendOTPSchema>['body'];
+export type RefreshTokenBody = z.infer<typeof RefreshTokenSchema>['body'];
+export type LogoutBody = z.infer<typeof LogoutSchema>['body'];
+export type ChangePasswordBody = z.infer<typeof ChangePasswordSchema>['body'];
