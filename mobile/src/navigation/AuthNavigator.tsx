@@ -1,13 +1,11 @@
 import React from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import { AuthStackParamList } from "./types";
 import WelcomeScreen from "@screens/unauthenticated/WelcomeScreen";
 import OnboardingScreen from "@screens/unauthenticated/onboarding/Onboarding.screen";
 import LoginScreen from "@screens/unauthenticated/LoginScreen";
-// Assuming LoginScreen exists, using placeholder/ensure import works or I'll stub it if file missing.
-// I see file exists in file tree from previous context.
 
-const Stack = createNativeStackNavigator<AuthStackParamList>();
+const Stack = createStackNavigator<AuthStackParamList>();
 
 const AuthNavigator = () => {
   return (
