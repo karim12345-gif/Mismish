@@ -7,19 +7,20 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
   const lottieRef = useRef<LottieView>(null);
 
   useEffect(() => {
-    // Navigate after 3.2 seconds
+    console.log("WelcomeScreen mounted");
+    // Navigate after 1.8 seconds
     const timer = setTimeout(() => {
+      console.log("WelcomeScreen timeout triggered");
       if (navigation && navigation.replace) {
         navigation.replace("Onboarding");
       }
-    }, 3200);
+    }, 1800);
 
     return () => clearTimeout(timer);
   }, [navigation]);
 
   return (
     <View className="flex-1 items-center justify-center bg-mismish-teal">
-      {/* Lottie */}
       <LottieView
         ref={lottieRef}
         source={require("@assets/animations/Flow 2.json")}
@@ -30,7 +31,10 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
           height: moderateScale(260),
         }}
         onAnimationFinish={() => {
-          navigation.replace("Onboarding");
+          console.log(
+            "WelcomeScreen animation finished (Ignored for debugging)",
+          );
+          // navigation.replace("Onboarding");
         }}
       />
 

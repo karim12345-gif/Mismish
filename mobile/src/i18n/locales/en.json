@@ -1,0 +1,30 @@
+{
+  "welcome": {
+    "title": "Welcome to MishMish!"
+  },
+  "onboarding": {
+    "step_1_title": "Welcome to MishMish!",
+    "step_2_title": "Find stores right next to you!",
+    "step_3_title": "Get ready for a surprise",
+    "step_4_title": "Book and be on time",
+    "step_5_title": "Collect and enjoy",
+    "step_6_title": "Don't miss out",
+    "next": "Next",
+    "skip": "Skip for now",
+    "get_started": "Get Started"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "tabs": {
+    "home": "Home",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "english": "English",
+    "arabic": "Arabic"
+  }
+}

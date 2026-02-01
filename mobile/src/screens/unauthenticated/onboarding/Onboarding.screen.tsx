@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { styled } from "nativewind";
 import { moderateScale } from "react-native-size-matters";
+import { useTranslation } from "react-i18next";
 
 import {
   ONBOARDING_SLIDES,
@@ -26,6 +27,7 @@ const OnboardingScreen = ({ navigation }: Props) => {
   const { width } = useWindowDimensions();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { t } = useTranslation();
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -46,14 +48,18 @@ const OnboardingScreen = ({ navigation }: Props) => {
         animated: true,
       });
     } else {
-      console.log("Onboarding finished");
-      // navigation.replace("Login");
+      navigation.navigate("Login");
     }
   };
 
   const handleSkip = () => {
-    console.log("Onboarding skipped");
-    // navigation.replace("Login");
+    navigation.navigate("Login");
+  };
+
+  // Helper to get title based on index (1-based for keys)
+  const getSlideTitle = (index: number) => {
+    // Keys are step_1_title, step_2_title etc.
+    return t(`onboarding.step_${index + 1}_title` as any);
   };
 
   return (
@@ -111,7 +117,7 @@ const OnboardingScreen = ({ navigation }: Props) => {
       <BottomSheet>
         <View className="items-center px-1 w-full">
           <StyledText className="text-white text-2xl font-bold text-center min-h-[56px] mb-4">
-            {ONBOARDING_SLIDES[currentIndex].title}
+            {getSlideTitle(currentIndex)}
           </StyledText>
 
           <View className="mb-6">
@@ -120,12 +126,16 @@ const OnboardingScreen = ({ navigation }: Props) => {
 
           <View className="w-full">
             <Button
-              label={currentIndex === LAST_STEP_INDEX ? "Get Started" : "Next"}
+              label={
+                currentIndex === LAST_STEP_INDEX
+                  ? t("onboarding.get_started")
+                  : t("onboarding.next")
+              }
               onPress={handleNext}
             />
 
             <Button
-              label="Skip for now"
+              label={t("onboarding.skip")}
               variant="outline"
               className="bg-white"
               onPress={handleSkip}
