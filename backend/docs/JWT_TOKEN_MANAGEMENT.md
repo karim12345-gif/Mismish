@@ -414,3 +414,16 @@ The following scenarios should be tested:
 
 ### Exports
 - [utils/index.ts](file:///Users/karim/Desktop/Mismish/Mismish/backend/src/api/shared/utils/index.ts) - Exported token service
+
+
+
+### Images 
+
+#### Token Flow
+![Token Flow](../images/Screenshot%202026-01-22%20at%204.31.55 PM.png)
+
+#### Token Refresh Flow
+![Token Refresh Flow](../images/Screenshot%202026-01-22%20at%204.32.00 PM.png)
+
+#### Password Change Flow
+![Password Change Flow](../images/Screenshot%202026-01-22%20at%204.32.04 PM.png)
