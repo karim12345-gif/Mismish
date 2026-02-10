@@ -281,6 +281,32 @@ sequenceDiagram
     API->>Client: Password changed, please login
 ```
 
+### Social Login Flow (Google/Apple)
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant Google/Apple
+    participant API
+    participant DB
+
+    App->>Google/Apple: Request Sign In
+    Google/Apple->>App: Return Identity Token (JWT)
+    App->>API: POST /auth/social-login (provider, idToken)
+    API->>Google/Apple: Verify Identity Token
+    Google/Apple->>API: Token Valid (User Email/ID)
+    API->>DB: Find or Create User by Email
+    API->>API: Generate Access + Refresh Tokens
+    API->>DB: Store Refresh Token
+    API->>App: Return Access + Refresh Tokens
+```
+
+**Key Concept: Native Token Exchange**
+1. **Client-Side**: The mobile uses native SDKs (`expo-apple-authentication`, `google-signin`) to authenticate the user directly with the provider.
+2. **Token Handoff**: The app receives a proof-of-identity (Identity Token) from the provider.
+3. **Backend Verification**: This token is sent to the Mismish backend. The backend verifies the token's signature against the provider's public keys (no passwords involved).
+4. **Session Creation**: Once verified, the backend issues our standard `accessToken` and `refreshToken` pair, treating the user exactly like a password-authenticated user.
+
 ---
 
 ## Security Features

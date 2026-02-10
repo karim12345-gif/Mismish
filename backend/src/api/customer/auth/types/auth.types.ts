@@ -33,3 +33,8 @@ export interface ChangePasswordBody {
   currentPassword: string;
   newPassword: string;
 }
+
+export interface SocialLoginBody {
+  provider: "google" | "apple";
+  idToken: string;
+}

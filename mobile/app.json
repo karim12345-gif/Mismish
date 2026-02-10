@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Mismish",
+    "slug": "Mismish",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -9,18 +9,26 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.mobile"
+      "bundleIdentifier": "com.mismish.app"
     },
-  "android": {
-  "adaptiveIcon": {
-    "foregroundImage": "./assets/adaptive-icon.png", 
-    "backgroundColor": "#1E5655"
-  },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1E5655"
+      },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.mismish.app"
     },
     "plugins": [
-      "expo-localization"
+      "expo-localization",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.505490363229-enso09ftem17pq92gc6e4i60tv0qsk0d"
+        }
+      ],
+      "expo-apple-authentication"
     ]
   }
 }

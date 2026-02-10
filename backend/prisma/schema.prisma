@@ -8,8 +8,11 @@ datasource db {
 
 model User {
   id                Int            @id @default(autoincrement())
-  phoneNumber       String         @unique
-  password          String
+  phoneNumber       String?        @unique
+  password          String?
+  email             String?        @unique
+  googleId          String?        @unique
+  appleId           String?        @unique
   name              String
   isVerified        Boolean        @default(false)
   otp               String?

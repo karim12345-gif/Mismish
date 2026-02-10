@@ -48,12 +48,12 @@ const OnboardingScreen = ({ navigation }: Props) => {
         animated: true,
       });
     } else {
-      navigation.navigate("Login");
+      navigation.navigate("AuthStart");
     }
   };
 
   const handleSkip = () => {
-    navigation.navigate("Login");
+    navigation.navigate("AuthStart");
   };
 
   // Helper to get title based on index (1-based for keys)

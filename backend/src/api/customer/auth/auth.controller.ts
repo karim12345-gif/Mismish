@@ -1,16 +1,19 @@
-import bcrypt from 'bcrypt';
-import { Request, Response } from 'express';
-import prisma from '../../../prismaClient';
-import { 
-  LoginUserBody, 
-  RegisterUserBody, 
-  ResendOTPBody, 
+import bcrypt from "bcrypt";
+import { Request, Response } from "express";
+import prisma from "../../../prismaClient";
+import {
+  LoginUserBody,
+  RegisterUserBody,
+  ResendOTPBody,
   VerifyOTPBody,
   RefreshTokenBody,
   LogoutBody,
-  ChangePasswordBody
-} from './types';
-import { generateOTP, maskPhoneNumber, sendOTP } from '../../shared/utils';
+  ChangePasswordBody,
+  SocialLoginBody,
+} from "./types";
+import { generateOTP, maskPhoneNumber, sendOTP } from "../../shared/utils";
+import { OAuth2Client } from "google-auth-library";
+import appleSignin from "apple-signin-auth";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -18,21 +21,28 @@ import {
   verifyRefreshToken,
   revokeRefreshToken,
   revokeAllUserTokens,
-} from '../../shared/utils';
-
+} from "../../shared/utils";
 
 /**
  * Step 1: Register a new user
  * Creates account but does NOT return JWT token
  */
-export const registerUser = async (req: Request<{}, {}, RegisterUserBody>, res: Response): Promise<void> => {
+export const registerUser = async (
+  req: Request<{}, {}, RegisterUserBody>,
+  res: Response,
+): Promise<void> => {
   try {
-    const { phoneNumber, password, name, latitude, longitude, address } = req.body;
+    const { phoneNumber, password, name, latitude, longitude, address } =
+      req.body;
 
-    const existingUser = await prisma.user.findUnique({ where: { phoneNumber } });
+    const existingUser = await prisma.user.findUnique({
+      where: { phoneNumber },
+    });
 
     if (existingUser) {
-      res.status(400).json({ status: 'error', message: 'Phone number already registered' });
+      res
+        .status(400)
+        .json({ status: "error", message: "Phone number already registered" });
       return;
     }
 
@@ -50,13 +60,14 @@ export const registerUser = async (req: Request<{}, {}, RegisterUserBody>, res: 
       },
     });
 
-    res.status(201).json({ 
-      status: 'success', 
-      message: 'Account created successfully. Please login to verify your phone number.' 
+    res.status(201).json({
+      status: "success",
+      message:
+        "Account created successfully. Please login to verify your phone number.",
     });
   } catch (error) {
-    console.error('Register User Error:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    console.error("Register User Error:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
 
@@ -64,21 +75,24 @@ export const registerUser = async (req: Request<{}, {}, RegisterUserBody>, res: 
  * Step 2: Login and send OTP
  * Verifies credentials and sends OTP to phone
  */
-export const loginUser = async (req: Request<{}, {}, LoginUserBody>, res: Response): Promise<void> => {
+export const loginUser = async (
+  req: Request<{}, {}, LoginUserBody>,
+  res: Response,
+): Promise<void> => {
   try {
     const { phoneNumber, password } = req.body;
 
     const user = await prisma.user.findUnique({ where: { phoneNumber } });
 
     if (!user) {
-      res.status(401).json({ status: 'error', message: 'Invalid credentials' });
+      res.status(401).json({ status: "error", message: "Invalid credentials" });
       return;
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    
+    const isMatch = await bcrypt.compare(password, user.password!);
+
     if (!isMatch) {
-      res.status(401).json({ status: 'error', message: 'Invalid credentials' });
+      res.status(401).json({ status: "error", message: "Invalid credentials" });
       return;
     }
 
@@ -100,44 +114,53 @@ export const loginUser = async (req: Request<{}, {}, LoginUserBody>, res: Respon
     // Send OTP via SMS
     await sendOTP(phoneNumber, otp);
 
-    res.status(200).json({ 
-      status: 'success', 
-      message: `OTP sent to ${maskPhoneNumber(phoneNumber)}. Valid for 5 minutes.` 
+    res.status(200).json({
+      status: "success",
+      message: `OTP sent to ${maskPhoneNumber(phoneNumber)}. Valid for 5 minutes.`,
     });
   } catch (error) {
-    console.error('Login User Error:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    console.error("Login User Error:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
 
 /**
  * Step 3: Verify OTP and return JWT tokens
  */
-export const verifyOTP = async (req: Request<{}, {}, VerifyOTPBody>, res: Response): Promise<void> => {
+export const verifyOTP = async (
+  req: Request<{}, {}, VerifyOTPBody>,
+  res: Response,
+): Promise<void> => {
   try {
     const { phoneNumber, otp } = req.body;
 
     const user = await prisma.user.findUnique({ where: { phoneNumber } });
 
     if (!user) {
-      res.status(404).json({ status: 'error', message: 'User not found' });
+      res.status(404).json({ status: "error", message: "User not found" });
       return;
     }
 
     if (!user.otp || !user.otpExpiresAt) {
-      res.status(400).json({ status: 'error', message: 'No OTP requested. Please login first.' });
+      res.status(400).json({
+        status: "error",
+        message: "No OTP requested. Please login first.",
+      });
       return;
     }
 
     // Check if OTP is expired
     if (new Date() > user.otpExpiresAt) {
-      res.status(400).json({ status: 'error', message: 'OTP expired. Please request a new one.' });
+      res.status(400).json({
+        status: "error",
+        message: "OTP expired. Please request a new one.",
+      });
       return;
     }
 
     // Verify OTP
     if (user.otp !== otp) {
-      res.status(400).json({ status: 'error', message: 'Invalid OTP' });
+      res.status(400).json({ status: "error", message: "Invalid OTP" });
       return;
     }
 
@@ -153,54 +176,64 @@ export const verifyOTP = async (req: Request<{}, {}, VerifyOTPBody>, res: Respon
     });
 
     // Generate access and refresh tokens
-    const accessToken = generateAccessToken(user.id, 'user');
+    const accessToken = generateAccessToken(user.id, "user");
     const refreshToken = generateRefreshToken();
 
     // Get device info and IP from request
-    const deviceInfo = req.headers['user-agent'];
-    const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
+    const deviceInfo = req.headers["user-agent"];
+    const ipAddress =
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0] ||
+      req.socket.remoteAddress;
 
     // Store refresh token in database
-    await createRefreshTokenRecord(user.id, refreshToken, deviceInfo, ipAddress);
+    await createRefreshTokenRecord(
+      user.id,
+      refreshToken,
+      deviceInfo,
+      ipAddress,
+    );
 
-    res.status(200).json({ 
-      status: 'success', 
-      data: { 
+    res.status(200).json({
+      status: "success",
+      data: {
         accessToken,
         refreshToken,
-        user: { 
-          id: user.id, 
-          phoneNumber: user.phoneNumber, 
+        user: {
+          id: user.id,
+          phoneNumber: user.phoneNumber,
           name: user.name,
           isVerified: true,
-        } 
-      } 
+        },
+      },
     });
   } catch (error) {
-    console.error('Verify OTP Error:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    console.error("Verify OTP Error:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
 
 /**
  * Resend OTP (max 2 times)
  */
-export const resendOTP = async (req: Request<{}, {}, ResendOTPBody>, res: Response): Promise<void> => {
+export const resendOTP = async (
+  req: Request<{}, {}, ResendOTPBody>,
+  res: Response,
+): Promise<void> => {
   try {
     const { phoneNumber } = req.body;
 
     const user = await prisma.user.findUnique({ where: { phoneNumber } });
 
     if (!user) {
-      res.status(404).json({ status: 'error', message: 'User not found' });
+      res.status(404).json({ status: "error", message: "User not found" });
       return;
     }
 
     // Check resend limit
     if (user.otpResendCount >= 2) {
-      res.status(429).json({ 
-        status: 'error', 
-        message: 'Maximum OTP resend attempts reached. Please login again.' 
+      res.status(429).json({
+        status: "error",
+        message: "Maximum OTP resend attempts reached. Please login again.",
       });
       return;
     }
@@ -223,25 +256,30 @@ export const resendOTP = async (req: Request<{}, {}, ResendOTPBody>, res: Respon
     // Send OTP via SMS
     await sendOTP(phoneNumber, otp);
 
-    res.status(200).json({ 
-      status: 'success', 
-      message: `OTP resent to ${maskPhoneNumber(phoneNumber)}. ${2 - user.otpResendCount} attempts remaining.` 
+    res.status(200).json({
+      status: "success",
+      message: `OTP resent to ${maskPhoneNumber(phoneNumber)}. ${2 - user.otpResendCount} attempts remaining.`,
     });
   } catch (error) {
-    console.error('Resend OTP Error:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    console.error("Resend OTP Error:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
 
 /**
  * Refresh access token using refresh token
  */
-export const refreshAccessToken = async (req: Request<{}, {}, RefreshTokenBody>, res: Response): Promise<void> => {
+export const refreshAccessToken = async (
+  req: Request<{}, {}, RefreshTokenBody>,
+  res: Response,
+): Promise<void> => {
   try {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      res.status(400).json({ status: 'error', message: 'Refresh token is required' });
+      res
+        .status(400)
+        .json({ status: "error", message: "Refresh token is required" });
       return;
     }
 
@@ -249,32 +287,39 @@ export const refreshAccessToken = async (req: Request<{}, {}, RefreshTokenBody>,
     const userId = await verifyRefreshToken(refreshToken);
 
     if (!userId) {
-      res.status(401).json({ status: 'error', message: 'Invalid or expired refresh token' });
+      res
+        .status(401)
+        .json({ status: "error", message: "Invalid or expired refresh token" });
       return;
     }
 
     // Generate new access token
-    const accessToken = generateAccessToken(userId, 'user');
+    const accessToken = generateAccessToken(userId, "user");
 
-    res.status(200).json({ 
-      status: 'success', 
-      data: { accessToken } 
+    res.status(200).json({
+      status: "success",
+      data: { accessToken },
     });
   } catch (error) {
-    console.error('Refresh Token Error:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    console.error("Refresh Token Error:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
 
 /**
  * Logout - revoke refresh token
  */
-export const logout = async (req: Request<{}, {}, LogoutBody>, res: Response): Promise<void> => {
+export const logout = async (
+  req: Request<{}, {}, LogoutBody>,
+  res: Response,
+): Promise<void> => {
   try {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      res.status(400).json({ status: 'error', message: 'Refresh token is required' });
+      res
+        .status(400)
+        .json({ status: "error", message: "Refresh token is required" });
       return;
     }
 
@@ -282,30 +327,33 @@ export const logout = async (req: Request<{}, {}, LogoutBody>, res: Response): P
     const revoked = await revokeRefreshToken(refreshToken);
 
     if (!revoked) {
-      res.status(400).json({ status: 'error', message: 'Failed to logout' });
+      res.status(400).json({ status: "error", message: "Failed to logout" });
       return;
     }
 
-    res.status(200).json({ 
-      status: 'success', 
-      message: 'Logged out successfully' 
+    res.status(200).json({
+      status: "success",
+      message: "Logged out successfully",
     });
   } catch (error) {
-    console.error('Logout Error:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    console.error("Logout Error:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
 
 /**
  * Change password - invalidates all refresh tokens
  */
-export const changePassword = async (req: Request<{}, {}, ChangePasswordBody>, res: Response): Promise<void> => {
+export const changePassword = async (
+  req: Request<{}, {}, ChangePasswordBody>,
+  res: Response,
+): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
-      res.status(401).json({ status: 'error', message: 'Unauthorized' });
+      res.status(401).json({ status: "error", message: "Unauthorized" });
       return;
     }
 
@@ -313,15 +361,27 @@ export const changePassword = async (req: Request<{}, {}, ChangePasswordBody>, r
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
-      res.status(404).json({ status: 'error', message: 'User not found' });
+      res.status(404).json({ status: "error", message: "User not found" });
       return;
     }
 
     // Verify current password
+    if (!user.password) {
+      res
+        .status(400)
+        .json({
+          status: "error",
+          message: "User does not have a password set",
+        });
+      return;
+    }
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
-      res.status(400).json({ status: 'error', message: 'Current password is incorrect' });
+      res
+        .status(400)
+        .json({ status: "error", message: "Current password is incorrect" });
       return;
     }
 
@@ -340,12 +400,148 @@ export const changePassword = async (req: Request<{}, {}, ChangePasswordBody>, r
     // Revoke all refresh tokens for this user
     await revokeAllUserTokens(userId);
 
-    res.status(200).json({ 
-      status: 'success', 
-      message: 'Password changed successfully. Please login again with your new password.' 
+    res.status(200).json({
+      status: "success",
+      message:
+        "Password changed successfully. Please login again with your new password.",
     });
   } catch (error) {
-    console.error('Change Password Error:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    console.error("Change Password Error:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+};
+
+// Initialize Google Client
+// You should store CLIENT_ID in .env
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+/**
+ * Social Login (Google / Apple)
+ */
+export const socialLogin = async (
+  req: Request<{}, {}, SocialLoginBody>,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { provider, idToken } = req.body;
+    let email: string | undefined;
+    let googleId: string | undefined;
+    let appleId: string | undefined;
+    let name: string = "User";
+
+    // 1. Verify Token with Provider
+    if (provider === "google") {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: [
+          process.env.GOOGLE_CLIENT_ID || "",
+          process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "",
+          "505490363229-enso09ftem17pq92gc6e4i60tv0qsk0d.apps.googleusercontent.com",
+        ],
+      });
+      const payload = ticket.getPayload();
+
+      if (!payload) {
+        throw new Error("Invalid Google Token");
+      }
+
+      email = payload.email;
+      googleId = payload.sub;
+      name = payload.name || name;
+    } else if (provider === "apple") {
+      const { sub, email: appleEmail } = await appleSignin.verifyIdToken(
+        idToken,
+        {
+          audience: process.env.APPLE_BUNDLE_ID || "com.mismish.app",
+          ignoreExpiration: true,
+        },
+      );
+
+      appleId = sub;
+      email = appleEmail;
+    }
+
+    if (!email && !googleId && !appleId) {
+      res.status(400).json({
+        status: "error",
+        message: "Could not verify identity from provider",
+      });
+      return;
+    }
+
+    // 2. Find or Create User
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { googleId: googleId || undefined },
+          { appleId: appleId || undefined },
+          { email: email || undefined },
+        ],
+      },
+    });
+
+    if (user) {
+      // User exists - Update IDs if missing (Link Account)
+      if (provider === "google" && !user.googleId && googleId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { googleId },
+        });
+      }
+      if (provider === "apple" && !user.appleId && appleId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { appleId },
+        });
+      }
+    } else {
+      // Create New User
+      user = await prisma.user.create({
+        data: {
+          email,
+          googleId,
+          appleId,
+          name,
+          isVerified: true,
+        },
+      });
+    }
+
+    // 3. Generate Tokens
+    const accessToken = generateAccessToken(user.id, "user");
+    const refreshToken = generateRefreshToken();
+
+    const deviceInfo = req.headers["user-agent"];
+    const ipAddress =
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0] ||
+      req.socket.remoteAddress;
+
+    await createRefreshTokenRecord(
+      user.id,
+      refreshToken,
+      deviceInfo,
+      ipAddress,
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        accessToken,
+        refreshToken,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          isVerified: user.isVerified,
+        },
+      },
+    });
+  } catch (error: any) {
+    console.error("Social Login Error:", error);
+    res.status(401).json({
+      status: "error",
+      message: "Authentication failed: " + error.message,
+    });
   }
 };
