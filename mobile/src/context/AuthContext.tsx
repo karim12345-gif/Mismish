@@ -11,13 +11,19 @@ import { AuthContextProps } from "./types";
 const AuthContext = createContext<AuthContextProps>({
   isAuthenticated: false,
   isLoading: true,
+  hasSelectedLocation: false,
+  hasSeenIntro: false,
   login: () => {},
   logout: () => {},
+  setLocationSelected: () => {},
+  completeIntro: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasSelectedLocation, setHasSelectedLocation] = useState(false);
+  const [hasSeenIntro, setHasSeenIntro] = useState(false);
 
   useEffect(() => {
     checkLoginStatus();
@@ -25,17 +31,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkLoginStatus = async () => {
     try {
-      // Check token AND wait for minimum splash time (e.g. 2000ms)
-      const [token] = await Promise.all([
+      const [token, locationSelected, introSeen] = await Promise.all([
         AsyncStorage.getItem("userToken"),
-        new Promise((resolve) => setTimeout(resolve, 2000)),
+        AsyncStorage.getItem("hasSelectedLocation"),
+        AsyncStorage.getItem("hasSeenIntro"),
       ]);
+
+      console.log("Checking login status:", {
+        token,
+        locationSelected,
+        introSeen,
+      });
 
       if (token) {
         setIsAuthenticated(true);
       }
+
+      if (locationSelected) {
+        setHasSelectedLocation(true);
+      }
+
+      if (introSeen) {
+        setHasSeenIntro(true);
+      }
     } catch (e) {
-      console.log("Failed to load token");
+      console.log("Failed to load token", e);
     } finally {
       setIsLoading(false);
     }
@@ -54,14 +74,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       await AsyncStorage.removeItem("userToken");
+      // Don't remove location preference or intro preference
       setIsAuthenticated(false);
+      // setHasSelectedLocation(false);
     } catch (e) {
       console.log("Failed to remove token");
     }
   };
 
+  const setLocationSelected = async () => {
+    try {
+      await AsyncStorage.setItem("hasSelectedLocation", "true");
+      setHasSelectedLocation(true);
+    } catch (e) {
+      console.log("Failed to save location selection");
+    }
+  };
+
+  const completeIntro = async () => {
+    try {
+      await AsyncStorage.setItem("hasSeenIntro", "true");
+      setHasSeenIntro(true);
+    } catch (e) {
+      console.log("Failed to save intro status");
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        hasSelectedLocation,
+        hasSeenIntro,
+        login,
+        logout,
+        setLocationSelected,
+        completeIntro,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

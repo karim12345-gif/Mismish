@@ -20,6 +20,7 @@ import {
 } from "./onboarding.constants";
 import { Props } from "./types";
 import { BottomSheet, Button, InView, Stepper } from "@components/index";
+import { useAuth } from "../../../context/AuthContext";
 
 const StyledText = styled(Text);
 
@@ -28,6 +29,7 @@ const OnboardingScreen = ({ navigation }: Props) => {
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { t } = useTranslation();
+  const { completeIntro } = useAuth();
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -48,11 +50,13 @@ const OnboardingScreen = ({ navigation }: Props) => {
         animated: true,
       });
     } else {
+      completeIntro();
       navigation.navigate("AuthStart");
     }
   };
 
   const handleSkip = () => {
+    completeIntro();
     navigation.navigate("AuthStart");
   };
 

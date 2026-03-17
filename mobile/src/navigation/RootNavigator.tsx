@@ -5,9 +5,10 @@ import MainNavigator from "./MainNavigator";
 import { useAuth } from "../context/AuthContext";
 import "../i18n";
 import WelcomeScreen from "../screens/unauthenticated/WelcomeScreen";
+import SelectLocationScreen from "@screens/authenticated/SelectLocationScreen";
 
 const RootNavigator = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, hasSelectedLocation } = useAuth();
 
   if (isLoading) {
     // @ts-ignore - navigation prop is optional/handled inside
@@ -16,7 +17,15 @@ const RootNavigator = () => {
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
+      {isAuthenticated ? (
+        hasSelectedLocation ? (
+          <MainNavigator />
+        ) : (
+          <SelectLocationScreen />
+        )
+      ) : (
+        <AuthNavigator />
+      )}
     </NavigationContainer>
   );
 };

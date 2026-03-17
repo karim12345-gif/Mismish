@@ -3,8 +3,11 @@ import { View, Image } from "react-native";
 import LottieView from "lottie-react-native";
 import { moderateScale } from "react-native-size-matters";
 
+import { useAuth } from "../../context/AuthContext";
+
 const WelcomeScreen = ({ navigation }: { navigation: any }) => {
   const lottieRef = useRef<LottieView>(null);
+  const { hasSeenIntro } = useAuth();
 
   useEffect(() => {
     console.log("WelcomeScreen mounted");
@@ -12,12 +15,12 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
     const timer = setTimeout(() => {
       console.log("WelcomeScreen timeout triggered");
       if (navigation && navigation.replace) {
-        navigation.replace("Onboarding");
+        navigation.replace(hasSeenIntro ? "AuthStart" : "Onboarding");
       }
     }, 1800);
 
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, [navigation, hasSeenIntro]);
 
   return (
     <View className="flex-1 items-center justify-center bg-mismish-teal">

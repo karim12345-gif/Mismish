@@ -9,7 +9,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mismish.app"
+      "bundleIdentifier": "com.mismish.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Mismish needs your location to show nearby stores."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,6 +24,13 @@
       "package": "com.mismish.app"
     },
     "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
+          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
       "expo-localization",
       [
         "@react-native-google-signin/google-signin",
