@@ -10,16 +10,12 @@ export interface Props {
   navigation: NavigationProp;
 }
 
-export type OnboardingStep =
-  | "welcome"
-  | "nearbyStores"
-  | "surprise"
-  | "booking"
-  | "collect"
-  | "reminder";
+export type OnboardingStep = "surplus" | "surprise" | "booking" | "impact";
 
 export interface Slide {
   id: OnboardingStep;
   title: string;
-  image: any;
+  description: string;
+  icon: any;
+  decoration: any;
 }

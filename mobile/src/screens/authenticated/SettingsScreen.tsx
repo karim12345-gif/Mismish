@@ -7,13 +7,12 @@ import { styled } from "nativewind";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Updates from "expo-updates";
 
-const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchable = styled(TouchableOpacity);
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
-  const { logout } = useAuth();
+  const { logout, isAuthenticated } = useAuth();
 
   const changeLanguage = async (lang: "en" | "ar") => {
     await AsyncStorage.setItem("language", lang);
@@ -32,7 +31,7 @@ const SettingsScreen = () => {
   };
 
   return (
-    <InView className="p-6 justify-start pt-20">
+    <InView className="p-6 justify-start pt-20 flex-1">
       <StyledText className="text-3xl font-bold text-[#146566] mb-8 text-center">
         {t("settings.title")}
       </StyledText>
@@ -45,7 +44,11 @@ const SettingsScreen = () => {
         <View className="flex-row gap-4">
           <StyledTouchable
             onPress={() => changeLanguage("en")}
-            className={`flex-1 p-4 rounded-xl border-2 items-center flex-row justify-center gap-2 ${i18n.language === "en" ? "border-[#F59E0B] bg-[#FFF8E1]" : "border-gray-200 bg-white"}`}
+            className={`flex-1 p-4 rounded-xl border-2 items-center flex-row justify-center gap-2 ${
+              i18n.language === "en"
+                ? "border-[#F59E0B] bg-[#FFF8E1]"
+                : "border-gray-200 bg-white"
+            }`}
           >
             <Text>🇺🇸</Text>
             <StyledText className={i18n.language === "en" ? "font-bold" : ""}>
@@ -55,7 +58,11 @@ const SettingsScreen = () => {
 
           <StyledTouchable
             onPress={() => changeLanguage("ar")}
-            className={`flex-1 p-4 rounded-xl border-2 items-center flex-row justify-center gap-2 ${i18n.language === "ar" ? "border-[#F59E0B] bg-[#FFF8E1]" : "border-gray-200 bg-white"}`}
+            className={`flex-1 p-4 rounded-xl border-2 items-center flex-row justify-center gap-2 ${
+              i18n.language === "ar"
+                ? "border-[#F59E0B] bg-[#FFF8E1]"
+                : "border-gray-200 bg-white"
+            }`}
           >
             <Text>🇸🇦</Text>
             <StyledText className={i18n.language === "ar" ? "font-bold" : ""}>
@@ -65,12 +72,36 @@ const SettingsScreen = () => {
         </View>
       </View>
 
-      <View className="mt-auto mb-8">
+      <View className="mt-auto mb-8 gap-4">
+        {!isAuthenticated ? (
+          <StyledTouchable
+            onPress={() => {
+              // Future login flow handle here
+              console.log("Sign In pressed");
+            }}
+            className="w-full p-4 rounded-xl bg-[#146566] items-center"
+          >
+            <StyledText className="text-white font-bold">Sign In</StyledText>
+          </StyledTouchable>
+        ) : (
+          <StyledTouchable
+            onPress={logout}
+            className="w-full p-4 rounded-xl bg-red-50 border border-red-200 items-center"
+          >
+            <StyledText className="text-red-600 font-bold">Logout</StyledText>
+          </StyledTouchable>
+        )}
+
         <StyledTouchable
-          onPress={logout}
-          className="w-full p-4 rounded-xl bg-red-50 border border-red-200 items-center"
+          onPress={async () => {
+            await AsyncStorage.removeItem("hasSeenIntro");
+            await Updates.reloadAsync();
+          }}
+          className="w-full p-4 rounded-xl bg-gray-100 items-center"
         >
-          <StyledText className="text-red-600 font-bold">Logout</StyledText>
+          <StyledText className="text-gray-600 font-bold">
+            Reset Onboarding (Debug)
+          </StyledText>
         </StyledTouchable>
       </View>
     </InView>

@@ -11,34 +11,36 @@ const ONBOARDING_IMAGES = {
 
 export const ONBOARDING_SLIDES: readonly Slide[] = [
   {
-    id: "welcome",
-    title: "Welcome to MishMish!",
-    image: ONBOARDING_IMAGES.welcome,
-  },
-  {
-    id: "nearbyStores",
-    title: "Find stores right next to you!",
-    image: ONBOARDING_IMAGES.store,
+    id: "surplus",
+    title: "Find surplus deals near you",
+    description:
+      "Discover delicious food from local restaurants and cafes at a fraction of the price.",
+    icon: require("@assets/images/map.png"),
+    decoration: require("@assets/images/Container.png"),
   },
   {
     id: "surprise",
-    title: "Get ready for a surprise",
-    image: ONBOARDING_IMAGES.gift,
+    title: "Surprise bags with great value",
+    description:
+      "Get mystery food boxes with up to 70% discount. Fresh, delicious, and sustainable.",
+    icon: require("@assets/images/shopping-bag.png"),
+    decoration: require("@assets/images/sparkles.png"),
   },
   {
     id: "booking",
-    title: "Book and be on time",
-    image: ONBOARDING_IMAGES.clock,
+    title: "Book & pick up easily",
+    description:
+      "Reserve your surprise bag and pick it up at your convenience with our simple QR system.",
+    icon: require("@assets/images/scan-line.png"), // these aren't actually used by the new illustrations
+    decoration: require("@assets/images/qr-code.png"),
   },
   {
-    id: "collect",
-    title: "Collect and enjoy",
-    image: ONBOARDING_IMAGES.rewards,
-  },
-  {
-    id: "reminder",
-    title: "Don't miss out",
-    image: ONBOARDING_IMAGES.alarm,
+    id: "impact",
+    title: "Save money, save the planet",
+    description:
+      "Track your positive impact on the environment and your wallet with every order.",
+    icon: require("@assets/images/map.png"), // generic fallback, not used by new illustrations
+    decoration: require("@assets/images/Container.png"),
   },
 ] as const;
 

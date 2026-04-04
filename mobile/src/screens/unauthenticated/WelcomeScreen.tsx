@@ -15,7 +15,7 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
     const timer = setTimeout(() => {
       console.log("WelcomeScreen timeout triggered");
       if (navigation && navigation.replace) {
-        navigation.replace(hasSeenIntro ? "AuthStart" : "Onboarding");
+        navigation.replace("Onboarding");
       }
     }, 1800);
 

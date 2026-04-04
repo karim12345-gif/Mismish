@@ -8,7 +8,8 @@ import WelcomeScreen from "../screens/unauthenticated/WelcomeScreen";
 import SelectLocationScreen from "@screens/authenticated/SelectLocationScreen";
 
 const RootNavigator = () => {
-  const { isAuthenticated, isLoading, hasSelectedLocation } = useAuth();
+  const { isAuthenticated, isLoading, hasSelectedLocation, hasSeenIntro } =
+    useAuth();
 
   if (isLoading) {
     // @ts-ignore - navigation prop is optional/handled inside
@@ -17,7 +18,7 @@ const RootNavigator = () => {
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? (
+      {hasSeenIntro ? (
         hasSelectedLocation ? (
           <MainNavigator />
         ) : (
