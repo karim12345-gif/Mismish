@@ -1,6 +1,17 @@
 import { z } from "zod";
 import { phoneRegex } from "../utils";
 
+export const SendOtpSchema = z.object({
+  body: z.object({
+    phoneNumber: z
+      .string()
+      .regex(
+        phoneRegex,
+        "Invalid phone number. Must be +20, +966, or +971 followed by 9-10 digits",
+      ),
+  }),
+});
+
 export const SignupSchema = z.object({
   body: z.object({
     phoneNumber: z
@@ -72,6 +83,7 @@ export const SocialLoginSchema = z.object({
 });
 
 // Type exports for TypeScript
+export type SendOtpZodBody = z.infer<typeof SendOtpSchema>["body"];
 export type SignupBody = z.infer<typeof SignupSchema>["body"];
 export type LoginBody = z.infer<typeof LoginSchema>["body"];
 export type VerifyOTPBody = z.infer<typeof VerifyOTPSchema>["body"];

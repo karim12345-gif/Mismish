@@ -11,6 +11,8 @@ import { errorHandler } from './api/shared/middlewares/errorHandler';
 import { customerAuthRoutes, vendorAuthRoutes } from './routes';
 import listingRoutes from './routes/customer/listingRoutes';
 import orderRoutes from './routes/customer/orderRoutes';
+import userRoutes from './routes/customer/userRoutes';
+import storeRoutes from './routes/customer/storeRoutes';
 
 dotenv.config();
 
@@ -45,6 +47,8 @@ app.use(cors({
 app.use('/api/customer/auth', customerAuthRoutes);
 app.use('/api/customer/listings', listingRoutes);
 app.use('/api/customer/orders', orderRoutes);
+app.use('/api/customer/users', userRoutes);
+app.use('/api/customer/stores', storeRoutes);
 
 // Vendor API Routes
 app.use('/api/vendor/auth', vendorAuthRoutes);

@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  sendOtp,
   loginUser,
   registerUser,
   verifyOTP,
@@ -9,6 +10,7 @@ import {
   changePassword,
   validate,
   authenticate,
+  SendOtpSchema,
   SignupSchema,
   LoginSchema,
   VerifyOTPSchema,
@@ -23,6 +25,7 @@ import {
 const router = express.Router();
 
 // Public routes
+router.post("/send-otp", validate(SendOtpSchema), sendOtp);
 router.post("/signup", validate(SignupSchema), registerUser);
 router.post("/login", validate(LoginSchema), loginUser);
 router.post("/verify-otp", validate(VerifyOTPSchema), verifyOTP);

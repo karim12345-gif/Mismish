@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import prisma from "../../../prismaClient";
 import {
+  SendOtpBody,
   LoginUserBody,
   RegisterUserBody,
   ResendOTPBody,
@@ -22,6 +23,47 @@ import {
   revokeRefreshToken,
   revokeAllUserTokens,
 } from "../../shared/utils";
+
+/**
+ * Phone-only OTP send — creates user if first time, sends OTP via SMS (dev: console)
+ */
+export const sendOtp = async (
+  req: Request<{}, {}, SendOtpBody>,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { phoneNumber } = req.body;
+
+    let user = await prisma.user.findUnique({ where: { phoneNumber } });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: { phoneNumber, isVerified: false },
+      });
+    }
+
+    const otp = generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { phoneNumber },
+      data: { otp, otpExpiresAt, otpResendCount: 0, lastOtpSentAt: new Date() },
+    });
+
+    await sendOTP(phoneNumber, otp);
+
+    const isDevMode = process.env.SMS_DEV_MODE === "true";
+
+    res.status(200).json({
+      status: "success",
+      message: `OTP sent to ${maskPhoneNumber(phoneNumber)}. Valid for 5 minutes.`,
+      ...(isDevMode && { devOtp: otp }),
+    });
+  } catch (error) {
+    console.error("Send OTP Error:", error);
+    res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+};
 
 /**
  * Step 1: Register a new user
@@ -202,7 +244,9 @@ export const verifyOTP = async (
           id: user.id,
           phoneNumber: user.phoneNumber,
           name: user.name,
+          email: user.email,
           isVerified: true,
+          needsProfile: !user.name || !user.email,
         },
       },
     });

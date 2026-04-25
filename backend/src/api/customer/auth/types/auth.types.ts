@@ -1,3 +1,7 @@
+export interface SendOtpBody {
+  phoneNumber: string;
+}
+
 export interface RegisterUserBody {
   phoneNumber: string;
   password: string;
