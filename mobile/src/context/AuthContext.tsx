@@ -6,17 +6,27 @@ import React, {
   useEffect,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AuthContextProps } from "./types";
+import { AuthContextProps, AuthUser } from "./types";
+
+const STORAGE_KEYS = {
+  ACCESS_TOKEN: "accessToken",
+  REFRESH_TOKEN: "refreshToken",
+  USER: "user",
+  HAS_SELECTED_LOCATION: "hasSelectedLocation",
+  HAS_SEEN_INTRO: "hasSeenIntro",
+} as const;
 
 const AuthContext = createContext<AuthContextProps>({
   isAuthenticated: false,
   isLoading: true,
   hasSelectedLocation: false,
   hasSeenIntro: false,
-  login: () => {},
-  logout: () => {},
-  setLocationSelected: () => {},
-  completeIntro: () => {},
+  user: null,
+  login: async () => {},
+  logout: async () => {},
+  updateUser: () => {},
+  setLocationSelected: async () => {},
+  completeIntro: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -24,79 +34,95 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasSelectedLocation, setHasSelectedLocation] = useState(false);
   const [hasSeenIntro, setHasSeenIntro] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    checkLoginStatus();
+    restoreSession();
   }, []);
 
-  const checkLoginStatus = async () => {
+  const restoreSession = async () => {
     try {
-      const [token, locationSelected, introSeen] = await Promise.all([
-        AsyncStorage.getItem("userToken"),
-        AsyncStorage.getItem("hasSelectedLocation"),
-        AsyncStorage.getItem("hasSeenIntro"),
-      ]);
+      const [accessToken, storedUser, locationSelected, introSeen] =
+        await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
+          AsyncStorage.getItem(STORAGE_KEYS.USER),
+          AsyncStorage.getItem(STORAGE_KEYS.HAS_SELECTED_LOCATION),
+          AsyncStorage.getItem(STORAGE_KEYS.HAS_SEEN_INTRO),
+          new Promise((resolve) => setTimeout(resolve, 2000)),
+        ]);
 
-      console.log("Checking login status:", {
-        token,
-        locationSelected,
-        introSeen,
-      });
-
-      if (token) {
+      if (accessToken && storedUser) {
         setIsAuthenticated(true);
+        setUser(JSON.parse(storedUser));
       }
 
-      if (locationSelected) {
-        setHasSelectedLocation(true);
-      }
-
-      if (introSeen) {
-        setHasSeenIntro(true);
-      }
+      if (locationSelected) setHasSelectedLocation(true);
+      if (introSeen) setHasSeenIntro(true);
     } catch (e) {
-      console.log("Failed to load token", e);
+      console.error("Failed to restore session:", e);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (token?: string) => {
+  const login = async (
+    accessToken: string,
+    refreshToken: string,
+    userData: AuthUser,
+  ) => {
     try {
-      const tokenToSave = token || "dummy-token";
-      await AsyncStorage.setItem("userToken", tokenToSave);
+      await AsyncStorage.multiSet([
+        [STORAGE_KEYS.ACCESS_TOKEN, accessToken],
+        [STORAGE_KEYS.REFRESH_TOKEN, refreshToken],
+        [STORAGE_KEYS.USER, JSON.stringify(userData)],
+      ]);
+      setUser(userData);
       setIsAuthenticated(true);
     } catch (e) {
-      console.log("Failed to save token");
+      console.error("Failed to save session:", e);
     }
   };
 
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem("userToken");
-      // Don't remove location preference or intro preference
+      await AsyncStorage.multiRemove([
+        STORAGE_KEYS.ACCESS_TOKEN,
+        STORAGE_KEYS.REFRESH_TOKEN,
+        STORAGE_KEYS.USER,
+      ]);
+      setUser(null);
       setIsAuthenticated(false);
-      // setHasSelectedLocation(false);
     } catch (e) {
-      console.log("Failed to remove token");
+      console.error("Failed to clear session:", e);
     }
+  };
+
+  const updateUser = (updates: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updated)).catch(
+        console.error,
+      );
+      return updated;
+    });
   };
 
   const setLocationSelected = async () => {
     try {
-      await AsyncStorage.setItem("hasSelectedLocation", "true");
+      await AsyncStorage.setItem(STORAGE_KEYS.HAS_SELECTED_LOCATION, "true");
       setHasSelectedLocation(true);
     } catch (e) {
-      console.log("Failed to save location selection");
+      console.error("Failed to save location selection:", e);
     }
   };
 
   const completeIntro = async () => {
     try {
-      await AsyncStorage.setItem("hasSeenIntro", "true");
+      await AsyncStorage.setItem(STORAGE_KEYS.HAS_SEEN_INTRO, "true");
       setHasSeenIntro(true);
     } catch (e) {
-      console.log("Failed to save intro status");
+      console.error("Failed to save intro status:", e);
     }
   };
 
@@ -107,8 +133,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         hasSelectedLocation,
         hasSeenIntro,
+        user,
         login,
         logout,
+        updateUser,
         setLocationSelected,
         completeIntro,
       }}

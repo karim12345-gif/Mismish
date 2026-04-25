@@ -1726,6 +1726,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mapbox/geo-viewport@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "@mapbox/geo-viewport@npm:0.4.1"
+  dependencies:
+    "@mapbox/sphericalmercator": "npm:~1.1.0"
+  checksum: 10c0/a2fc2cac2c35b4abcb1bf3d6fd4c11234d8c896267b1829d17856ccad246ed174be2230c6d4f8036b72e32438b181e749ee758f072ba2844ceac54c0e19c0148
+  languageName: node
+  linkType: hard
+
+"@mapbox/sphericalmercator@npm:~1.1.0":
+  version: 1.1.0
+  resolution: "@mapbox/sphericalmercator@npm:1.1.0"
+  bin:
+    bbox: bin/bbox.js
+    to4326: bin/to4326.js
+    to900913: bin/to900913.js
+    xyz: bin/xyz.js
+  checksum: 10c0/06b0a78efe81c33cc28254cc1c26a8a106bce6a997882a52749bf768a66e00ea8b263dea80c77daff22751ebcc7f190e486f23da94ca84a327f0e16c79d83dba
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -2475,6 +2496,7 @@ __metadata:
     expo: "npm:^54.0.32"
     expo-apple-authentication: "npm:~8.0.8"
     expo-dev-client: "npm:~6.0.20"
+    expo-linear-gradient: "npm:^55.0.11"
     expo-localization: "npm:~17.0.8"
     expo-location: "npm:^19.0.8"
     expo-status-bar: "npm:~3.0.9"
@@ -2486,6 +2508,7 @@ __metadata:
     react-i18next: "npm:^16.5.3"
     react-native: "npm:0.81.5"
     react-native-gesture-handler: "npm:~2.28.0"
+    react-native-map-clustering: "npm:^4.0.0"
     react-native-maps: "npm:^1.27.1"
     react-native-reanimated: "npm:~4.1.1"
     react-native-safe-area-context: "npm:~5.6.0"
@@ -4036,6 +4059,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-linear-gradient@npm:^55.0.11":
+  version: 55.0.11
+  resolution: "expo-linear-gradient@npm:55.0.11"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/a59a69b86dd59cb2b319379faa8bb62f3c000add960cffff9bda575ff1aa45cfd431f6b8ae3b008a887deaf787e80e4ce173a4e5811d127be8bf0606c5771296
+  languageName: node
+  linkType: hard
+
 "expo-localization@npm:~17.0.8":
   version: 17.0.8
   resolution: "expo-localization@npm:17.0.8"
@@ -5135,6 +5169,13 @@ __metadata:
   bin:
     json5: lib/cli.js
   checksum: 10c0/5a04eed94810fa55c5ea138b2f7a5c12b97c3750bc63d11e511dcecbfef758003861522a070c2272764ee0f4e3e323862f386945aeb5b85b87ee43f084ba586c
+  languageName: node
+  linkType: hard
+
+"kdbush@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "kdbush@npm:4.0.2"
+  checksum: 10c0/d50183b299c57e2573114e902ab47aed7494be3ca41b66d456779ecc3b2f153f491de341f9609965414784f728894f9a9001152eb9f3a40cd3755521c06a45a3
   languageName: node
   linkType: hard
 
@@ -6796,6 +6837,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-map-clustering@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "react-native-map-clustering@npm:4.0.0"
+  dependencies:
+    "@mapbox/geo-viewport": "npm:^0.4.1"
+    supercluster: "npm:^8.0.0"
+  peerDependencies:
+    react-native: "*"
+    react-native-maps: "*"
+  checksum: 10c0/98382f8b0b00f85a2eb208cdd35041ced99e315f4fba6fb03d19d8e1cfa3e5317a8d845a2f25260c1be9ef5ee95726c48fc313e7a61c89abea086f59b0c83ff8
+  languageName: node
+  linkType: hard
+
 "react-native-maps@npm:^1.27.1":
   version: 1.27.1
   resolution: "react-native-maps@npm:1.27.1"
@@ -7615,6 +7669,15 @@ __metadata:
     sucrase: bin/sucrase
     sucrase-node: bin/sucrase-node
   checksum: 10c0/6fa22329c261371feb9560630d961ad0d0b9c87dce21ea74557c5f3ffbe5c1ee970ea8bcce9962ae9c90c3c47165ffa7dd41865c7414f5d8ea7a40755d612c5c
+  languageName: node
+  linkType: hard
+
+"supercluster@npm:^8.0.0":
+  version: 8.0.1
+  resolution: "supercluster@npm:8.0.1"
+  dependencies:
+    kdbush: "npm:^4.0.2"
+  checksum: 10c0/79121e6dbff67b3036ea6651f3baddb942478830ba3ecbc27455715ab5bd269de8381dc04618c0c15963346ea2ed0f81cd5f767c2978a63e2841807c73445d57
   languageName: node
   linkType: hard
 

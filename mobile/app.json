@@ -7,6 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#386851"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mismish.app",
@@ -17,7 +22,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1E5655"
+        "backgroundColor": "#386851"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
