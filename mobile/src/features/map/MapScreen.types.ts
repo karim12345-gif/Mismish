@@ -11,9 +11,13 @@ export interface ClusterItem {
   store: Store;
 }
 
+export type ActiveFilter = "Available Now" | "My Favorites" | "";
+
 export interface StoreBottomCardProps {
   store: Store;
+  isFavorite: boolean;
   onClose: () => void;
+  onToggleFavorite: (storeId: number) => void;
 }
 
 export type FilterChip = {
@@ -31,5 +35,4 @@ export const RIYADH: Region = {
 export const FILTER_CHIPS: FilterChip[] = [
   { label: "Available Now", icon: null },
   { label: "My Favorites", icon: "heart-outline" },
-  { label: "Cuisine", icon: "restaurant-outline" },
 ];

@@ -1,14 +1,21 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
+import { useCart } from "../../../context/CartContext";
 
 interface CheckoutSummaryProps {
   onChangePaymentPress: () => void;
 }
 
-export const CheckoutSummary = ({
-  onChangePaymentPress,
-}: CheckoutSummaryProps) => {
+export const CheckoutSummary = ({ onChangePaymentPress }: CheckoutSummaryProps) => {
+  const { cartItems, subtotal } = useCart();
+
+  const originalTotal = cartItems.reduce(
+    (sum, item) => sum + (item.originalPrice ?? item.price) * item.quantity,
+    0,
+  );
+  const savings = originalTotal - subtotal;
+
   return (
     <View className="bg-white border-t-[8px] border-gray-50 mb-40">
       <View className="px-5 py-5 border-b border-gray-100">
@@ -36,27 +43,31 @@ export const CheckoutSummary = ({
           Order Summary
         </Text>
 
-        <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-[#111] font-medium text-[13px]">
-            Total Before Discount
-          </Text>
-          <Text className="text-[#111] font-black text-[13px] line-through decoration-dotted">
-            ﷼ 174.00
-          </Text>
-        </View>
+        {originalTotal > subtotal && (
+          <>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-[#111] font-medium text-[13px]">
+                Total Before Discount
+              </Text>
+              <Text className="text-[#111] font-black text-[13px] line-through decoration-dotted">
+                SAR {originalTotal.toFixed(2)}
+              </Text>
+            </View>
 
-        <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-[#18C96D] font-medium text-[13px]">
-            Mismish Discount 🪄
-          </Text>
-          <Text className="text-[#18C96D] font-black text-[13px]">
-            - ﷼ 87.00
-          </Text>
-        </View>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-[#18C96D] font-medium text-[13px]">
+                Mismish Discount 🪄
+              </Text>
+              <Text className="text-[#18C96D] font-black text-[13px]">
+                - SAR {savings.toFixed(2)}
+              </Text>
+            </View>
+          </>
+        )}
 
         <View className="flex-row items-center justify-between mb-3">
           <Text className="text-[#111] font-medium text-[13px]">Sub-total</Text>
-          <Text className="text-[#111] font-black text-[13px]">﷼ 87.00</Text>
+          <Text className="text-[#111] font-black text-[13px]">SAR {subtotal.toFixed(2)}</Text>
         </View>
 
         <Text className="text-gray-400 font-bold text-[10px] italic mb-5">
@@ -69,7 +80,7 @@ export const CheckoutSummary = ({
           <Text className="text-[#111] font-black text-[16px]">
             Total Amount
           </Text>
-          <Text className="text-[#111] font-black text-[16px]">﷼ 87.00</Text>
+          <Text className="text-[#111] font-black text-[16px]">SAR {subtotal.toFixed(2)}</Text>
         </View>
       </View>
     </View>

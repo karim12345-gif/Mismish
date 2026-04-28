@@ -1,14 +1,25 @@
-import express from 'express';
-import { createOrder, getMyOrders, getOrderById,
-     validate, CreateOrderSchema, authenticate } from '../../api';
+import express from "express";
+import {
+  createOrder,
+  getMyOrders,
+  getOrderById,
+  collectOrder,
+  devSetOrderStatus,
+  getUserImpactStats,
+  validate,
+  CreateOrderSchema,
+  authenticate,
+} from "../../api";
 
 const router = express.Router();
 
-// Apply auth middleware to all order routes
 router.use(authenticate);
 
-router.post('/', validate(CreateOrderSchema), createOrder);
-router.get('/', getMyOrders);
-router.get('/:id', getOrderById);
+router.post("/", validate(CreateOrderSchema), createOrder);
+router.get("/", getMyOrders);
+router.get("/stats", getUserImpactStats);
+router.get("/:id", getOrderById);
+router.patch("/:id/collect", collectOrder);
+router.patch("/:id/dev-status", devSetOrderStatus);
 
 export default router;

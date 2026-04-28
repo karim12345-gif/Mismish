@@ -15,6 +15,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useAuth } from "../../context/AuthContext";
+import { useLocation } from "../../context/LocationContext";
 import { Button } from "../../components/index";
 
 const StyledView = styled(View);
@@ -26,6 +27,7 @@ const { width, height } = Dimensions.get("window");
 
 const SelectLocationScreen = () => {
   const { setLocationSelected } = useAuth();
+  const { setLocationByCoords } = useLocation();
   const mapRef = React.useRef<MapView>(null);
 
   // Default to Dubai
@@ -106,10 +108,8 @@ const SelectLocationScreen = () => {
   };
 
   const handleSelect = () => {
-    // Here you would typically save the selected location/radius to backend/context
-    console.log("Selected Location:", region, "Radius:", distance, "KM");
+    setLocationByCoords(region.latitude, region.longitude);
     setLocationSelected();
-    // Navigation will be handled by RootNavigator state change
   };
 
   const getCurrentLocation = async () => {

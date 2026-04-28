@@ -8,8 +8,7 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
-  Map: undefined;
-  Rewards: undefined;
+  Map: { flyToLocation?: boolean } | undefined;
   Orders: undefined;
   Account: undefined;
 };

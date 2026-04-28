@@ -3,15 +3,18 @@ import React, { createContext, useContext, useState } from "react";
 export interface CartItemProduct {
   id: string;
   surpriseBoxId?: number;
+  storeId?: number;
   title: string;
   price: number;
   originalPrice?: number;
   imageUrl?: string;
   quantity: number;
+  pickupOffset?: number;
 }
 
 interface CartContextType {
   cartItems: CartItemProduct[];
+  cartStoreId: number | null;
   addToCart: (
     item: Omit<CartItemProduct, "quantity">,
     quantity?: number,
@@ -21,6 +24,8 @@ interface CartContextType {
   decrementItem: (id: string) => void;
   totalQuantity: number;
   subtotal: number;
+  clearCart: () => void;
+  updateStoreOffsets: (storeId: number, offset: number) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -38,7 +43,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       const existing = prev.find((p) => p.id === item.id);
       if (existing) {
         return prev.map((p) =>
-          p.id === item.id ? { ...p, quantity: p.quantity + quantity } : p,
+          p.id === item.id
+            ? {
+                ...p,
+                quantity: p.quantity + quantity,
+                pickupOffset: item.pickupOffset ?? p.pickupOffset,
+              }
+            : p,
         );
       }
       return [...prev, { ...item, quantity }];
@@ -65,6 +76,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
+  const updateStoreOffsets = (storeId: number, offset: number) => {
+    setCartItems((prev) =>
+      prev.map((p) =>
+        p.storeId === storeId ? { ...p, pickupOffset: offset } : p,
+      ),
+    );
+  };
+
+  const clearCart = () => setCartItems([]);
+
+  const cartStoreId = cartItems[0]?.storeId ?? null;
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -79,8 +101,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         removeFromCart,
         incrementItem,
         decrementItem,
+        clearCart,
+        updateStoreOffsets,
         totalQuantity,
         subtotal,
+        cartStoreId,
       }}
     >
       {children}

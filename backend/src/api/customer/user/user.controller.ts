@@ -38,6 +38,31 @@ export const getMyProfile = async (
   }
 };
 
+export const savePushToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ status: "error", message: "Unauthorized" });
+      return;
+    }
+
+    const { pushToken } = req.body as { pushToken: string };
+    if (!pushToken) {
+      res.status(400).json({ status: "error", message: "pushToken is required" });
+      return;
+    }
+
+    await prisma.user.update({ where: { id: userId }, data: { pushToken } });
+    res.status(200).json({ status: "success" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateMyProfile = async (
   req: Request,
   res: Response,

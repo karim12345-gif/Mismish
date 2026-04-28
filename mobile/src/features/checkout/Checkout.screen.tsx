@@ -11,42 +11,74 @@ import { CheckoutSummary } from "./components/CheckoutSummary";
 import { CheckoutPaymentFooter } from "./components/CheckoutPaymentFooter";
 import { PaymentMethodBottomSheet } from "./components/PaymentMethodBottomSheet";
 import { AddNewCardBottomSheet } from "./components/AddNewCardBottomSheet";
-import { ConfirmOrderBottomSheet } from "./components/ConfirmOrderBottomSheet";
+import { OrderErrorModal } from "./components/OrderErrorModal";
+import { ConfirmOrderBottomSheet, isPickupExpired } from "./components/ConfirmOrderBottomSheet";
 import { useCreateOrder } from "../../hooks/useCreateOrder";
 import { useCart } from "../../context/CartContext";
+import { useStores } from "../../hooks/useStores";
 
 export default function CheckoutScreen() {
-  const navigation = useNavigation();
-  const { cartItems } = useCart();
+  const navigation = useNavigation<any>();
+  const { cartItems, clearCart } = useCart();
   const { mutate: createOrder, isPending } = useCreateOrder();
+  const { data: stores = [] } = useStores();
+
+  const cartBoxId = cartItems.find((i: any) => i.surpriseBoxId)?.surpriseBoxId;
+  const activeStore = stores.find((s) =>
+    s.listings.some((l) => l.id === cartBoxId),
+  );
+  const activeBag = activeStore?.listings.find((l) => l.id === cartBoxId);
 
   const [paymentSheetVisible, setPaymentSheetVisible] = useState(false);
   const [addCardSheetVisible, setAddCardSheetVisible] = useState(false);
   const [confirmSheetVisible, setConfirmSheetVisible] = useState(false);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
 
   const handleInitialPayPress = () => setConfirmSheetVisible(true);
 
+  const handleGoHomeAndClear = () => {
+    setErrorModalVisible(false);
+    clearCart();
+    navigation.navigate("MainTabs" as never);
+  };
+
   const handleConfirm = () => {
-    const surpriseBoxId = cartItems.find((i: any) => i.surpriseBoxId)?.surpriseBoxId;
+    const surpriseBoxId = cartItems.find(
+      (i: any) => i.surpriseBoxId,
+    )?.surpriseBoxId;
 
     if (!surpriseBoxId) {
       Alert.alert("Error", "No bag selected. Please go back and add a bag.");
       return;
     }
 
+    if (activeBag?.pickupEnd && isPickupExpired(activeBag.pickupEnd)) {
+      setConfirmSheetVisible(false);
+      setErrorModalVisible(true);
+      return;
+    }
+
     createOrder(
       { surpriseBoxId, deliveryMethod: "PICKUP" },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
           setConfirmSheetVisible(false);
-          navigation.navigate("Orders" as never);
+          (navigation.navigate as any)("BookingConfirmed", {
+            order: response.data,
+          });
         },
         onError: (err: any) => {
           setConfirmSheetVisible(false);
-          Alert.alert(
-            "Order Failed",
-            err?.response?.data?.message ?? "Could not place order. Try again.",
-          );
+          const msg = err?.response?.data?.message ?? "";
+
+          if (msg === "Pickup time has ended") {
+            setErrorModalVisible(true);
+          } else {
+            Alert.alert(
+              "Order Failed",
+              msg || "Could not place order. Try again.",
+            );
+          }
         },
       },
     );
@@ -58,7 +90,11 @@ export default function CheckoutScreen() {
 
       <ScrollView className="flex-1 pb-40" showsVerticalScrollIndicator={false}>
         <CheckoutFulfillmentToggle />
-        <CheckoutStoreDetails />
+        <CheckoutStoreDetails
+          store={activeStore}
+          bag={activeBag}
+          cartItem={cartItems[0]}
+        />
         <CheckoutOrderItems />
         <CheckoutCoupon />
         <CheckoutSummary
@@ -88,6 +124,15 @@ export default function CheckoutScreen() {
         onClose={() => setConfirmSheetVisible(false)}
         onConfirm={handleConfirm}
         isLoading={isPending}
+        pickupStart={activeBag?.pickupStart}
+        pickupEnd={activeBag?.pickupEnd}
+        pickupOffset={cartItems[0]?.pickupOffset ?? 0}
+      />
+
+      <OrderErrorModal
+        visible={errorModalVisible}
+        onClose={() => setErrorModalVisible(false)}
+        onHomePress={handleGoHomeAndClear}
       />
     </SafeAreaView>
   );

@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useFavorites } from "../../../hooks/useFavorites";
 
 interface StoreCardProps {
   storeId: number;
@@ -13,8 +14,8 @@ interface StoreCardProps {
   rating: string;
   reviews: string;
   branches: string;
-  imageUrl: string;
-  logoUrl: string;
+  imageUrl: any;
+  logoUrl: any;
   leftCount: string;
 }
 
@@ -33,16 +34,18 @@ export const StoreCard = ({
   leftCount,
 }: StoreCardProps) => {
   const navigation = useNavigation<any>();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(storeId);
 
   return (
     <TouchableOpacity
-      onPress={() => navigation.navigate("SurpriseBag", { storeId })}
+      onPress={() => navigation.push("SurpriseBag", { storeId })}
       className="w-full bg-white rounded-2xl overflow-hidden border border-gray-200 mb-6"
     >
       {/* Top Banner Image */}
       <View className="relative h-[160px] w-full bg-gray-100">
         <Image
-          source={{ uri: imageUrl }}
+          source={typeof imageUrl === "string" ? { uri: imageUrl } : imageUrl}
           className="w-full h-full"
           resizeMode="cover"
         />
@@ -55,14 +58,24 @@ export const StoreCard = ({
         </View>
 
         {/* Heart Icon Top Right */}
-        <TouchableOpacity className="absolute top-4 right-4 bg-white/90 p-2 rounded-full border border-gray-100">
-          <Feather name="heart" size={18} color="#555" />
+        <TouchableOpacity
+          onPress={(e) => {
+            e.stopPropagation();
+            toggleFavorite(storeId);
+          }}
+          className="absolute top-4 right-4 bg-white/90 p-2 rounded-full border border-gray-100"
+        >
+          <Ionicons
+            name={favorited ? "heart" : "heart-outline"}
+            size={18}
+            color={favorited ? "#FF7F50" : "#555"}
+          />
         </TouchableOpacity>
 
         {/* Square Logo Overlap */}
         <View className="absolute -bottom-5 left-4 w-12 h-12 bg-white rounded-xl items-center justify-center border border-gray-200 overflow-hidden">
           <Image
-            source={{ uri: logoUrl }}
+            source={typeof logoUrl === "string" ? { uri: logoUrl } : logoUrl}
             className="w-[85%] h-[85%] rounded-lg"
             resizeMode="contain"
           />

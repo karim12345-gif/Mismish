@@ -7,6 +7,7 @@ interface LocationContextType {
   isRequestingLocation: boolean;
   error: string | null;
   requestLocation: () => Promise<void>;
+  setLocationByCoords: (latitude: number, longitude: number) => Promise<void>;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(
@@ -22,6 +23,39 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const setLocationByCoords = async (latitude: number, longitude: number) => {
+    setIsRequestingLocation(true);
+    setError(null);
+    try {
+      const geocodedList = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+      if (geocodedList && geocodedList.length > 0) {
+        setAddress(geocodedList[0]);
+        setLocation({
+          coords: {
+            latitude,
+            longitude,
+            altitude: null,
+            accuracy: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: Date.now(),
+        } as Location.LocationObject);
+      }
+    } catch (e: any) {
+      setError(e.message || "Could not resolve location");
+    } finally {
+      setIsRequestingLocation(false);
+    }
+  };
+
+  const [watchSubscription, setWatchSubscription] =
+    useState<Location.LocationSubscription | null>(null);
+
   const requestLocation = async () => {
     // Prevent overlapping requests
     if (isRequestingLocation) return;
@@ -36,6 +70,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // 1. Initial fetch
       let currentLoc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
         mayShowUserSettingsDialog: true,
@@ -50,12 +85,42 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
       if (geocodedList && geocodedList.length > 0) {
         setAddress(geocodedList[0]);
       }
+
+      // 2. Continuous watcher
+      if (!watchSubscription) {
+        const sub = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 2000,
+            distanceInterval: 10,
+          },
+          async (newLoc) => {
+            setLocation(newLoc);
+            const geo = await Location.reverseGeocodeAsync({
+              latitude: newLoc.coords.latitude,
+              longitude: newLoc.coords.longitude,
+            });
+            if (geo && geo.length > 0) {
+              setAddress(geo[0]);
+            }
+          },
+        );
+        setWatchSubscription(sub);
+      }
     } catch (e: any) {
       setError(e.message || "An error occurred while fetching location");
     } finally {
       setIsRequestingLocation(false);
     }
   };
+
+  React.useEffect(() => {
+    return () => {
+      if (watchSubscription) {
+        watchSubscription.remove();
+      }
+    };
+  }, [watchSubscription]);
 
   return (
     <LocationContext.Provider
@@ -65,6 +130,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         isRequestingLocation,
         error,
         requestLocation,
+        setLocationByCoords,
       }}
     >
       {children}

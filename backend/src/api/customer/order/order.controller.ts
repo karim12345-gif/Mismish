@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { DeliveryMethod, Prisma } from "@prisma/client";
+import { DeliveryMethod, OrderStatus, Prisma } from "@prisma/client";
 import prisma from "../../../prismaClient";
 import { CreateOrderBody } from "./types";
+import { sendPushNotification } from "../../shared/utils/notification";
 
 // Helper to generate a 6-character alphanumeric code
 const generateOrderCode = () => {
@@ -79,12 +80,34 @@ export const createOrder = async (
             orderCode,
             pickupStatus: "PENDING",
           },
+          include: {
+            surpriseBox: {
+              include: {
+                vendor: true,
+              },
+            },
+          },
         });
 
         return newOrder;
       },
     );
 
+    // Fire-and-forget push notification
+    const user = await prisma.user.findUnique({
+      where: { id: order.userId },
+      select: { pushToken: true },
+    });
+    if (user?.pushToken) {
+      sendPushNotification({
+        to: user.pushToken,
+        title: "Order Received",
+        body: "We received your order, waiting for store confirmation.",
+        data: { orderId: order.id },
+      });
+    }
+
+    console.log("SENDING ORDER TO FRONTEND:", JSON.stringify(order, null, 2));
     res.status(201).json({ status: "success", data: order });
   } catch (error: any) {
     if (
@@ -126,6 +149,70 @@ export const getMyOrders = async (
     });
 
     res.status(200).json({ status: "success", data: orders });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const collectOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user?.id;
+    const orderId = parseInt(req.params.id as string);
+
+    if (!userId) {
+      res.status(401).json({ status: "error", message: "Unauthorized" });
+      return;
+    }
+
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+
+    if (!order) {
+      res.status(404).json({ status: "error", message: "Order not found" });
+      return;
+    }
+
+    if (order.userId !== userId) {
+      res.status(403).json({ status: "error", message: "Forbidden" });
+      return;
+    }
+
+    if (!["PENDING", "CONFIRMED"].includes(order.status)) {
+      res.status(400).json({
+        status: "error",
+        message: "Order cannot be marked as collected",
+      });
+      return;
+    }
+
+    const updated = await prisma.order.update({
+      where: { id: orderId },
+      data: { status: "COMPLETED", pickupStatus: "COLLECTED" },
+      include: {
+        surpriseBox: {
+          include: { vendor: { select: { name: true, address: true } } },
+        },
+      },
+    });
+
+    // Notify user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { pushToken: true },
+    });
+    if (user?.pushToken) {
+      sendPushNotification({
+        to: user.pushToken,
+        title: "Enjoy your bag! 🎉",
+        body: "Your order has been collected. Hope you love it!",
+        data: { orderId: order.id },
+      });
+    }
+
+    res.status(200).json({ status: "success", data: updated });
   } catch (error) {
     next(error);
   }
@@ -173,6 +260,82 @@ export const getOrderById = async (
     }
 
     res.status(200).json({ status: "success", data: order });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/customer/orders/stats
+export const getUserImpactStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ status: "error", message: "Unauthorized" });
+      return;
+    }
+
+    // Include COMPLETED and DELIVERED orders for impact stats
+    const orders = await prisma.order.findMany({
+      where: {
+        userId,
+        status: { in: ["COMPLETED", "DELIVERED"] },
+      },
+      select: {
+        id: true,
+        surpriseBox: {
+          select: {
+            price: true,
+            originalPrice: true,
+          },
+        },
+      },
+    });
+
+    const mealsRescued = orders.length;
+    const sarSaved = orders.reduce((sum, order) => {
+      const original =
+        order.surpriseBox.originalPrice || order.surpriseBox.price;
+      const saved = original - order.surpriseBox.price;
+      return sum + (saved > 0 ? saved : 0);
+    }, 0);
+
+    // Standard metric: 1 meal rescued = 2.5kg CO2
+    const co2Reduced = mealsRescued * 2.5;
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        sarSaved: Math.round(sarSaved),
+        mealsRescued,
+        co2Reduced: parseFloat(co2Reduced.toFixed(1)),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DEV ONLY — force-set any order status for manual testing
+export const devSetOrderStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const orderId = parseInt(req.params.id as string);
+    const { status } = req.body as { status: OrderStatus };
+
+    const updated = await prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+      include: { surpriseBox: { include: { vendor: true } } },
+    });
+
+    res.json({ status: "success", data: updated });
   } catch (error) {
     next(error);
   }

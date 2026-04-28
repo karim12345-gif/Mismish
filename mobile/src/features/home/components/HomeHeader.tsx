@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
-import { useLocation } from "src/context";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { useLocation } from "../../../context/LocationContext";
 import { useNavigation } from "@react-navigation/native";
 
 export const HomeHeader = () => {
@@ -10,18 +10,24 @@ export const HomeHeader = () => {
 
   const primaryText =
     address?.name ||
-    address?.streetNumber ||
-    (isRequestingLocation ? "Discovering..." : "Unknown");
+    address?.district ||
+    address?.street ||
+    (isRequestingLocation ? "Discovering..." : "Riyadh");
+
   const secondaryText = address
-    ? `${address.street || address.district || ""}, ${address.city || ""}`
+    ? `${address.streetNumber || ""} ${address.street || ""} ${address.city || ""}`.trim()
     : isRequestingLocation
       ? "Fetching location..."
-      : "Location unknown";
+      : "Tap to set location";
 
   return (
     <View className="flex-row justify-between items-center w-full bg-white px-5 pt-8 pb-4">
       {/* Left side: Location Info */}
-      <View className="flex-row items-center flex-1 pr-6">
+      <TouchableOpacity
+        className="flex-row items-center flex-1 pr-6"
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate("Map", { flyToLocation: true })}
+      >
         {/* House Icon */}
         <View className="mr-3">
           <Feather name="home" size={24} color="#111" />
@@ -55,7 +61,7 @@ export const HomeHeader = () => {
             {secondaryText}
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Right side: Wallet & Fav */}
       <View className="flex-row items-center">
@@ -74,7 +80,7 @@ export const HomeHeader = () => {
 
         <View className="w-[1px] h-[18px] bg-gray-300 mx-3" />
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("Favorites")}>
           <Feather name="heart" size={20} color="#111" strokeWidth={2.5} />
         </TouchableOpacity>
       </View>

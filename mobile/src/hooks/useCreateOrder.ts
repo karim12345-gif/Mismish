@@ -4,6 +4,7 @@ import {
   CreateOrderRequest,
   OrderResponse,
 } from "../services/order/order.service";
+import { STORES_QUERY_KEY } from "./useStores";
 
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
@@ -11,8 +12,8 @@ export const useCreateOrder = () => {
   return useMutation<OrderResponse, Error, CreateOrderRequest>({
     mutationFn: (payload) => OrderServices.createOrder(payload),
     onSuccess: () => {
-      // Invalidate orders list so OrdersScreen refreshes automatically
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: STORES_QUERY_KEY });
     },
   });
 };

@@ -22,6 +22,7 @@ model User {
   latitude          Float?
   longitude         Float?
   address           String?
+  pushToken         String?
   passwordChangedAt DateTime?
   orders            Order[]
   refreshTokens     RefreshToken[]
@@ -70,6 +71,9 @@ enum DeliveryMethod {
 enum OrderStatus {
   PENDING
   CONFIRMED
+  READY_FOR_PICKUP
+  ON_THE_WAY
+  DELIVERED
   COMPLETED
   CANCELLED
 }

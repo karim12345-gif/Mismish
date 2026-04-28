@@ -1,10 +1,18 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 export const CORAL = "#FF7F50";
 export const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400";
 
 export const styles = StyleSheet.create({
+  // ── Root ─────────────────────────────────────────────────────────────────
+  mapContainer: {
+    flex: 1,
+  },
+  markerImage: {
+    width: "100%",
+    height: "100%",
+  },
   // ── StoreBottomCard ──────────────────────────────────────────────────────
   cardContainer: {
     position: "absolute",
@@ -22,6 +30,12 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 20,
     elevation: 10,
+  },
+  favoriteButton: {
+    position: "absolute",
+    top: 14,
+    right: 50,
+    zIndex: 1,
   },
   closeButton: {
     position: "absolute",
@@ -157,6 +171,7 @@ export const styles = StyleSheet.create({
   // ── Top overlay ──────────────────────────────────────────────────────────
   topOverlay: {
     position: "absolute",
+    top: Platform.OS === "ios" ? 60 : 40,
     left: 16,
     right: 16,
     zIndex: 5,
@@ -174,11 +189,20 @@ export const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
+  searchIcon: {
+    marginRight: 10,
+  },
   searchInput: {
     flex: 1,
     fontSize: 14,
     fontWeight: "500" as const,
     color: "#111",
+  },
+  filterSortChevron: {
+    marginLeft: 3,
+  },
+  filterChipIcon: {
+    marginRight: 5,
   },
   filterRow: {
     paddingTop: 10,
@@ -223,6 +247,46 @@ export const styles = StyleSheet.create({
     color: "#fff",
   },
 
+  // ── Cuisine row ──────────────────────────────────────────────────────────
+  cuisineRow: {
+    paddingTop: 8,
+    paddingBottom: 4,
+    gap: 8,
+  },
+  cuisineChip: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cuisineChipActive: {
+    backgroundColor: CORAL,
+  },
+  cuisineChipLabel: {
+    color: "#111",
+    fontWeight: "600" as const,
+    fontSize: 12,
+  },
+  cuisineChipLabelActive: {
+    color: "#fff",
+  },
+
+  // ── Search results count ─────────────────────────────────────────────────
+  resultsBar: {
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
+  resultsText: {
+    color: "#888",
+    fontSize: 12,
+    fontWeight: "500" as const,
+  },
+
   // ── Location FAB ─────────────────────────────────────────────────────────
   locationFab: {
     position: "absolute",
@@ -239,5 +303,11 @@ export const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
     zIndex: 5,
+  },
+  locationFabDefault: {
+    bottom: 110,
+  },
+  locationFabWithCard: {
+    bottom: 260,
   },
 });

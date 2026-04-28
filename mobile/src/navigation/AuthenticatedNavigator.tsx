@@ -7,6 +7,11 @@ import CompleteProfileScreen from "../features/profile/screens/CompleteProfileSc
 import CheckoutScreen from "../features/checkout/Checkout.screen";
 import CartScreen from "../features/cart/Cart.screen";
 import AddNewCardScreen from "../features/profile/screens/AddNewCardScreen";
+import FavoritesScreen from "../features/favorites/Favorites.screen";
+import BookingConfirmedScreen from "../features/checkout/BookingConfirmed.screen";
+import SearchScreen from "../features/search/Search.screen";
+import ElevenUnderScreen from "../features/home/ElevenUnder.screen";
+import { Order } from "../services/order/order.service";
 
 export type AuthenticatedStackParamList = {
   MainTabs: undefined;
@@ -16,6 +21,10 @@ export type AuthenticatedStackParamList = {
   Checkout: undefined;
   Cart: undefined;
   AddNewCard: undefined;
+  Favorites: undefined;
+  BookingConfirmed: { order: Order };
+  Search: undefined;
+  ElevenUnder: undefined;
 };
 
 const Stack = createStackNavigator<AuthenticatedStackParamList>();
@@ -33,6 +42,10 @@ export default function AuthenticatedNavigator() {
       <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="AddNewCard" component={AddNewCardScreen} />
+      <Stack.Screen name="Favorites" component={FavoritesScreen} />
+      <Stack.Screen name="BookingConfirmed" component={BookingConfirmedScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen name="ElevenUnder" component={ElevenUnderScreen} />
     </Stack.Navigator>
   );
 }

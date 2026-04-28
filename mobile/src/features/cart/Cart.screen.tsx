@@ -14,6 +14,7 @@ import { GuestAuthModal } from "../../components/GuestAuthModal";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { CartMilestoneTracker } from "./components/CartMilestoneTracker";
+import { useStoreInventory } from "../../hooks/useStoreInventory";
 
 const UPSELL_ITEMS = [
   {
@@ -58,6 +59,26 @@ export default function CartScreen() {
     addToCart,
   } = useCart();
   const [authModalVisible, setAuthModalVisible] = useState(false);
+
+  const activeStoreId = cartItems.length > 0 ? cartItems[0].storeId : undefined;
+  const { data: storeInventory } = useStoreInventory(activeStoreId ?? 0);
+
+  const dynamicUpsells = storeInventory
+    ? storeInventory.map((bag: any) => ({
+        id: String(bag.id),
+        surpriseBoxId: bag.id,
+        storeId: activeStoreId,
+        title: bag.name,
+        price: bag.price,
+        originalPrice: bag.originalPrice,
+        imageUrl:
+          bag.imageUrl ??
+          "https://images.unsplash.com/photo-1559525839-b184a4d698c7?q=80&w=200",
+      }))
+    : [];
+
+  const displayUpsells =
+    dynamicUpsells.length > 0 ? dynamicUpsells : UPSELL_ITEMS;
 
   const handleCheckoutPress = () => {
     if (!isAuthenticated) {
@@ -107,7 +128,7 @@ export default function CartScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 20 }}
               >
-                {UPSELL_ITEMS.map((upsell) => {
+                {displayUpsells.map((upsell) => {
                   const blockItem = cartItems.find((i) => i.id === upsell.id);
                   const qty = blockItem?.quantity || 0;
 
@@ -118,7 +139,11 @@ export default function CartScreen() {
                     >
                       <View className="w-full h-28 bg-[#F8F6F2] rounded-xl mb-3 overflow-hidden relative">
                         <Image
-                          source={{ uri: upsell.imageUrl }}
+                          source={
+                            typeof upsell.imageUrl === "string"
+                              ? { uri: upsell.imageUrl }
+                              : upsell.imageUrl
+                          }
                           className="w-full h-full"
                           resizeMode="cover"
                         />

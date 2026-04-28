@@ -15,13 +15,30 @@ interface ConfirmOrderBottomSheetProps {
   onClose: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
+  pickupStart?: string;
+  pickupEnd?: string;
+  pickupOffset?: number;
 }
+
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+
+export const isPickupExpired = (pickupEnd: string) =>
+  new Date(pickupEnd) <= new Date();
 
 export const ConfirmOrderBottomSheet = ({
   visible,
   onClose,
   onConfirm,
   isLoading = false,
+  pickupStart,
+  pickupEnd,
+  pickupOffset = 0,
 }: ConfirmOrderBottomSheetProps) => {
   const slideAnim = useRef(new Animated.Value(500)).current;
 
@@ -83,7 +100,9 @@ export const ConfirmOrderBottomSheet = ({
                 Pickup Date
               </Text>
               <Text className="text-gray-500 font-medium text-[14px]">
-                Today
+                {pickupStart && pickupEnd
+                  ? (pickupOffset === 1 ? "Tomorrow" : "Today")
+                  : "—"}
               </Text>
             </View>
 
@@ -92,7 +111,9 @@ export const ConfirmOrderBottomSheet = ({
                 Pickup Time
               </Text>
               <Text className="text-gray-500 font-medium text-[14px]">
-                9:00 PM - 12:00 AM
+                {pickupStart && pickupEnd
+                  ? `${fmtTime(pickupStart)} – ${fmtTime(pickupEnd)}`
+                  : "—"}
               </Text>
             </View>
           </View>

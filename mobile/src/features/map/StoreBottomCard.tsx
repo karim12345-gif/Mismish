@@ -1,11 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, Image, Text, TouchableOpacity, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StoreBottomCardProps } from "./MapScreen.types";
 import { styles, FALLBACK_IMAGE, CORAL } from "./MapScreen.styles";
 
-export function StoreBottomCard({ store, onClose }: StoreBottomCardProps) {
+export function StoreBottomCard({
+  store,
+  isFavorite,
+  onClose,
+  onToggleFavorite,
+}: StoreBottomCardProps) {
   const navigation = useNavigation<any>();
   const slideAnim = useRef(new Animated.Value(250)).current;
 
@@ -29,6 +34,7 @@ export function StoreBottomCard({ store, onClose }: StoreBottomCardProps) {
       style={[styles.cardContainer, { transform: [{ translateY: slideAnim }] }]}
     >
       <View style={styles.card}>
+        {/* Close */}
         <TouchableOpacity
           onPress={onClose}
           style={styles.closeButton}
@@ -37,6 +43,19 @@ export function StoreBottomCard({ store, onClose }: StoreBottomCardProps) {
           <View style={styles.closeIcon}>
             <Feather name="x" size={14} color="#666" />
           </View>
+        </TouchableOpacity>
+
+        {/* Favorite */}
+        <TouchableOpacity
+          onPress={() => onToggleFavorite(store.id)}
+          style={styles.favoriteButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={20}
+            color={isFavorite ? CORAL : "#bbb"}
+          />
         </TouchableOpacity>
 
         <View style={styles.storeRow}>
@@ -75,7 +94,7 @@ export function StoreBottomCard({ store, onClose }: StoreBottomCardProps) {
 
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate("SurpriseBag", { storeId: store.id })
+                navigation.push("SurpriseBag", { storeId: store.id })
               }
               style={styles.viewBagButton}
             >

@@ -30,7 +30,7 @@ export const SurpriseBagCard = ({
 
   return (
     <TouchableOpacity
-      onPress={() => navigation.navigate("SurpriseBag", { storeId })}
+      onPress={() => navigation.push("SurpriseBag", { storeId })}
       className="bg-white rounded-2xl overflow-hidden border border-gray-200 mb-5"
       style={{
         width: 260,

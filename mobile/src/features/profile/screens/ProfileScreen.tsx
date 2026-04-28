@@ -7,20 +7,54 @@ import {
   SafeAreaView,
   StatusBar,
   Image,
+  RefreshControl,
 } from "react-native";
 import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useImpactStats } from "../../../hooks/useImpactStats";
+import { ActivityIndicator } from "react-native";
 
 export default function ProfileScreen() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigation = useNavigation();
+  const { data: stats, isLoading: statsLoading, refetch } = useImpactStats();
 
   const handleReset = async () => {
     await AsyncStorage.removeItem("skipMismishInfoModal");
     logout();
   };
+
+  const renderStat = (
+    imageSource: any,
+    value: string | number,
+    label: string,
+  ) => (
+    <View className="bg-white rounded-[16px] w-[31%] py-6 items-center justify-center border border-gray-100 shadow-sm shadow-black/5">
+      <Image
+        source={imageSource}
+        className="w-8 h-8 mb-4 opacity-100"
+        resizeMode="contain"
+      />
+      {statsLoading ? (
+        <View className="items-center">
+          <View className="bg-gray-100 w-16 h-5 rounded-md mb-2 animate-pulse" />
+          <View className="bg-gray-50 w-12 h-3 rounded-md" />
+        </View>
+      ) : (
+        <>
+          <Text className="text-[#366150] font-black text-[17px] mb-1">
+            {value}
+          </Text>
+          <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">
+            {label}
+          </Text>
+        </>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-[#F8F6F2]">
       <StatusBar barStyle="dark-content" backgroundColor="#F8F6F2" />
@@ -39,55 +73,38 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="flex-1"
+        refreshControl={
+          <RefreshControl
+            refreshing={statsLoading}
+            onRefresh={refetch}
+            tintColor="#366150"
+          />
+        }
+      >
         {/* Impact Section */}
         <View className="px-5 mb-10 mt-2">
           <Text className="text-center text-[18px] font-bold text-[#1A1A1A] mb-7">
             Your Impact
           </Text>
           <View className="flex-row justify-between">
-            {/* Box 1 */}
-            <View className="bg-[#F0F7F4] rounded-[16px] w-[31%] py-6 items-center justify-center">
-              <Image
-                source={require("../../../../assets/images/money.png")}
-                className="w-8 h-8 mb-4 opacity-90"
-                resizeMode="contain"
-              />
-              <Text className="text-[#366150] font-black text-[16px] mb-1.5">
-                10
-              </Text>
-              <Text className="text-gray-500 text-[11px] font-semibold">
-                SAR Saved
-              </Text>
-            </View>
-            {/* Box 2 */}
-            <View className="bg-[#F0F7F4] rounded-[16px] w-[31%] py-6 items-center justify-center">
-              <Image
-                source={require("../../../../assets/images/co.png")}
-                className="w-8 h-8 mb-4 opacity-90"
-                resizeMode="contain"
-              />
-              <Text className="text-[#366150] font-black text-[16px] mb-1.5">
-                10
-              </Text>
-              <Text className="text-gray-500 text-[11px] font-semibold">
-                Meals Rescued
-              </Text>
-            </View>
-            {/* Box 3 */}
-            <View className="bg-[#F0F7F4] rounded-[16px] w-[31%] py-6 items-center justify-center">
-              <Image
-                source={require("../../../../assets/images/enviroment.png")}
-                className="w-8 h-8 mb-4 opacity-90"
-                resizeMode="contain"
-              />
-              <Text className="text-[#366150] font-black text-[16px] mb-1.5">
-                10
-              </Text>
-              <Text className="text-gray-500 text-[11px] font-semibold">
-                CO₂ Reduced
-              </Text>
-            </View>
+            {renderStat(
+              require("../../../../assets/images/money.png"),
+              stats?.sarSaved ?? 0,
+              "SAR Saved",
+            )}
+            {renderStat(
+              require("../../../../assets/images/co.png"),
+              stats?.mealsRescued ?? 0,
+              "Meals Rescued",
+            )}
+            {renderStat(
+              require("../../../../assets/images/enviroment.png"),
+              stats?.co2Reduced ?? 0,
+              "CO₂ Reduced",
+            )}
           </View>
         </View>
 
@@ -95,13 +112,24 @@ export default function ProfileScreen() {
         <View className="px-6 flex-row items-center mb-10">
           <View className="w-20 h-20 rounded-full bg-[#366150] items-center justify-center mr-5 shadow-sm shadow-black/10 border-2 border-white/50">
             <Text className="text-white text-2xl font-black tracking-wider">
-              MU
+              {user?.name
+                ? user.name
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase()
+                : "MU"}
             </Text>
           </View>
           <View>
             <Text className="text-[#1A1A1A] text-[20px] font-black">
-              Muhammad Uzair
+              {user?.name ?? "Muhammad Uzair"}
             </Text>
+            {__DEV__ && (
+              <Text className="text-gray-400 text-[11px] font-medium mt-0.5">
+                ID: {user?.id} · {user?.email}
+              </Text>
+            )}
           </View>
         </View>
 

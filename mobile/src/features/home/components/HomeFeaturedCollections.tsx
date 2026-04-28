@@ -1,5 +1,6 @@
 import React from "react";
 import { ScrollView, TouchableOpacity, Text, View, Image } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 const COLLECTIONS = [
   {
@@ -35,6 +36,12 @@ const COLLECTIONS = [
 ];
 
 export const HomeFeaturedCollections = () => {
+  const navigation = useNavigation<any>();
+
+  const handleCollectionPress = (col: typeof COLLECTIONS[0]) => {
+    if (col.id === 1) navigation.navigate("ElevenUnder");
+  };
+
   return (
     <View className="mt-6 mb-2">
       <Text className="px-5 text-[#111] text-[16px] font-black tracking-tight mb-4">
@@ -46,7 +53,7 @@ export const HomeFeaturedCollections = () => {
         contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
       >
         {COLLECTIONS.map((col) => (
-          <TouchableOpacity key={col.id} className="items-center">
+          <TouchableOpacity key={col.id} className="items-center" onPress={() => handleCollectionPress(col)}>
             <View className="mb-2 bg-white rounded-2xl border border-gray-200 overflow-hidden w-[72px] h-[72px] items-center justify-center">
               <Image
                 source={{ uri: col.image }}

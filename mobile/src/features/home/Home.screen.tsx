@@ -1,12 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "../../context/LocationContext";
-import {
-  View,
-  ScrollView,
-  Text,
-  StatusBar,
-  ActivityIndicator,
-} from "react-native";
+import { View, ScrollView, Text, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeHeader } from "./components/HomeHeader";
 import { HomeSearchBar } from "./components/HomeSearchBar";
@@ -15,8 +9,12 @@ import { HomeFeaturedCollections } from "./components/HomeFeaturedCollections";
 import { HomeFilters } from "./components/HomeFilters";
 import { SurpriseBagCard } from "./components/SurpriseBagCard";
 import { StoreCard } from "./components/StoreCard";
+import { StoreListSkeleton } from "./components/StoreCardSkeleton";
+import { SurpriseBagRowSkeleton } from "./components/SurpriseBagCardSkeleton";
 import { useStores } from "../../hooks/useStores";
 import { Store, SurpriseBox } from "../../services/store/store.service";
+import { SortOption } from "./components/SortBottomSheet";
+import { PriceRange } from "./components/PriceBottomSheet";
 
 const formatPickupTime = (start: string, end: string): string => {
   const fmt = (d: string) =>
@@ -28,15 +26,77 @@ const formatPickupTime = (start: string, end: string): string => {
   return `${fmt(start)} - ${fmt(end)}`;
 };
 
+const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
 
 export default function HomeScreen() {
-  const { requestLocation } = useLocation();
+  const { requestLocation, location } = useLocation();
   const { data: stores, isLoading, isError } = useStores();
+
+  const [sortBy, setSortBy] = useState<SortOption>("");
+  const [activeCuisine, setActiveCuisine] = useState("");
+  const [activePriceRange, setActivePriceRange] = useState<PriceRange>("");
+
   useEffect(() => {
     requestLocation();
   }, []);
+
+  const filteredStores = useMemo(() => {
+    let result = [...(stores ?? [])];
+
+    if (activeCuisine) {
+      result = result.filter(s => s.category === activeCuisine);
+    }
+
+    if (activePriceRange) {
+      result = result.filter(s => {
+        const price = s.listings[0]?.price ?? 0;
+        if (activePriceRange === "1-15") return price <= 15;
+        if (activePriceRange === "16-25") return price >= 16 && price <= 25;
+        if (activePriceRange === "25+") return price > 25;
+        return true;
+      });
+    }
+
+    if (sortBy === "pickup_time") {
+      result.sort((a, b) => {
+        const aEnd = a.listings[0]?.pickupEnd
+          ? new Date(a.listings[0].pickupEnd).getTime()
+          : Infinity;
+        const bEnd = b.listings[0]?.pickupEnd
+          ? new Date(b.listings[0].pickupEnd).getTime()
+          : Infinity;
+        return aEnd - bEnd;
+      });
+    } else if (sortBy === "distance" && location) {
+      const { latitude, longitude } = location.coords;
+      result.sort((a, b) => {
+        const distA =
+          a.latitude != null && a.longitude != null
+            ? haversineKm(latitude, longitude, a.latitude, a.longitude)
+            : Infinity;
+        const distB =
+          b.latitude != null && b.longitude != null
+            ? haversineKm(latitude, longitude, b.latitude, b.longitude)
+            : Infinity;
+        return distA - distB;
+      });
+    }
+
+    return result;
+  }, [stores, activeCuisine, activePriceRange, sortBy, location]);
 
   // Bags section: first active listing from each store that has one
   const activeBags: { store: Store; bag: SurpriseBox }[] = (stores ?? [])
@@ -61,9 +121,7 @@ export default function HomeScreen() {
           </Text>
 
           {isLoading ? (
-            <View className="h-40 items-center justify-center">
-              <ActivityIndicator color="#FF7F50" />
-            </View>
+            <SurpriseBagRowSkeleton />
           ) : isError ? (
             <Text className="px-5 text-gray-400 text-[13px]">
               Could not load bags right now.
@@ -104,7 +162,15 @@ export default function HomeScreen() {
           <Text className="px-5 text-[#111] text-[16px] font-black tracking-tight mb-4">
             All Stores
           </Text>
-          <HomeFilters />
+          <HomeFilters
+            stores={stores ?? []}
+            sortBy={sortBy}
+            activeCuisine={activeCuisine}
+            activePriceRange={activePriceRange}
+            onSortChange={setSortBy}
+            onCuisineChange={setActiveCuisine}
+            onPriceChange={setActivePriceRange}
+          />
         </View>
 
         {/* Available Now */}
@@ -114,20 +180,18 @@ export default function HomeScreen() {
           </Text>
 
           {isLoading ? (
-            <View className="h-40 items-center justify-center">
-              <ActivityIndicator color="#FF7F50" />
-            </View>
+            <StoreListSkeleton count={3} />
           ) : isError ? (
             <Text className="text-gray-400 text-[13px]">
               Could not load stores right now.
             </Text>
-          ) : (stores ?? []).length === 0 ? (
+          ) : filteredStores.length === 0 ? (
             <Text className="text-gray-400 text-[13px]">
-              No stores available right now.
+              No stores match your filters.
             </Text>
           ) : (
             <View>
-              {(stores ?? []).map((store) => {
+              {filteredStores.map((store) => {
                 const firstBag = store.listings[0];
                 const totalLeft = store.listings.reduce(
                   (sum, l) => sum + l.quantity,
@@ -138,10 +202,10 @@ export default function HomeScreen() {
                     key={store.id}
                     storeId={store.id}
                     title={store.name}
-                    branch={store.category ?? store.address?.split(",")[0] ?? ""}
-                    price={
-                      firstBag ? `${firstBag.price} SAR` : "—"
+                    branch={
+                      store.category ?? store.address?.split(",")[0] ?? ""
                     }
+                    price={firstBag ? `${firstBag.price} SAR` : "—"}
                     timeRange={
                       firstBag
                         ? formatPickupTime(
@@ -150,12 +214,20 @@ export default function HomeScreen() {
                           )
                         : "—"
                     }
-                    distance="—"
-                    rating="4.9"
-                    reviews="—"
+                    distance={store.address?.split(",")[0] || "1.2 km"}
+                    rating={((store.id % 5) * 0.1 + 4.5).toFixed(1).toString()}
+                    reviews={(120 + store.id * 14).toString()}
                     branches="1"
-                    imageUrl={store.imageUrl ?? FALLBACK_IMAGE}
-                    logoUrl={store.imageUrl ?? FALLBACK_IMAGE}
+                    imageUrl={
+                      store.name.includes("Coffee Address")
+                        ? require("../../../assets/images/coffee_address_logo.png")
+                        : (store.imageUrl ?? FALLBACK_IMAGE)
+                    }
+                    logoUrl={
+                      store.name.includes("Coffee Address")
+                        ? require("../../../assets/images/coffee_address_logo.png")
+                        : (store.imageUrl ?? FALLBACK_IMAGE)
+                    }
                     leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
                   />
                 );
@@ -164,7 +236,6 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
-
     </SafeAreaView>
   );
 }

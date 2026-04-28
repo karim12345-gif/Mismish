@@ -2,7 +2,14 @@ import api from "../api";
 import ORDER_ENDPOINTS from "./order.config";
 
 export type DeliveryMethod = "PICKUP" | "DELIVERY";
-export type OrderStatus = "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+export type OrderStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "READY_FOR_PICKUP"
+  | "ON_THE_WAY"
+  | "DELIVERED"
+  | "COMPLETED"
+  | "CANCELLED";
 export type PickupStatus = "PENDING" | "COLLECTED" | "NO_SHOW";
 
 export interface CreateOrderRequest {
@@ -46,6 +53,17 @@ export interface OrdersResponse {
   data: Order[];
 }
 
+export interface ImpactStats {
+  sarSaved: number;
+  mealsRescued: number;
+  co2Reduced: number;
+}
+
+export interface ImpactStatsResponse {
+  status: string;
+  data: ImpactStats;
+}
+
 const createOrder = async (
   payload: CreateOrderRequest,
 ): Promise<OrderResponse> => {
@@ -61,11 +79,39 @@ const getMyOrders = async (): Promise<OrdersResponse> => {
   return response.data;
 };
 
+const getUserImpactStats = async (): Promise<ImpactStatsResponse> => {
+  const response = await api.get<ImpactStatsResponse>(ORDER_ENDPOINTS.STATS);
+  return response.data;
+};
+
 const getOrderById = async (id: number): Promise<OrderResponse> => {
   const response = await api.get<OrderResponse>(ORDER_ENDPOINTS.BY_ID(id));
   return response.data;
 };
 
-const OrderServices = { createOrder, getMyOrders, getOrderById };
+const collectOrder = async (id: number): Promise<OrderResponse> => {
+  const response = await api.patch<OrderResponse>(ORDER_ENDPOINTS.COLLECT(id));
+  return response.data;
+};
+
+const devSetStatus = async (
+  id: number,
+  status: OrderStatus,
+): Promise<OrderResponse> => {
+  const response = await api.patch<OrderResponse>(
+    ORDER_ENDPOINTS.DEV_STATUS(id),
+    { status },
+  );
+  return response.data;
+};
+
+const OrderServices = {
+  createOrder,
+  getMyOrders,
+  getUserImpactStats,
+  getOrderById,
+  collectOrder,
+  devSetStatus,
+};
 
 export { OrderServices };

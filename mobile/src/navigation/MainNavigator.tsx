@@ -46,8 +46,6 @@ const MainNavigator = () => {
             );
           } else if (route.name === "Map") {
             iconContent = <Ionicons name="map" size={22} color={color} />;
-          } else if (route.name === "Rewards") {
-            iconContent = <Ionicons name="gift" size={22} color={color} />;
           } else if (route.name === "Orders") {
             iconContent = <Ionicons name="receipt" size={22} color={color} />;
           } else if (route.name === "Account") {
@@ -79,11 +77,6 @@ const MainNavigator = () => {
         options={{ title: "Home" }}
       />
       <Tab.Screen name="Map" component={MapScreen} options={{ title: "Map" }} />
-      <Tab.Screen
-        name="Rewards"
-        component={PlaceholderScreen}
-        options={{ title: "Rewards" }}
-      />
       <Tab.Screen
         name="Orders"
         component={OrdersScreen}

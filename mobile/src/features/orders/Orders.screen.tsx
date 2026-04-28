@@ -1,112 +1,219 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StatusBar,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useMyOrders } from "../../hooks/useMyOrders";
-import { Order } from "../../services/order/order.service";
-import { useAuth } from "../../context/AuthContext";
-import { GuestAuthModal } from "../../components/GuestAuthModal";
+import { useCollectOrder } from "../../hooks/useCollectOrder";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Order,
+  OrderStatus,
+  OrderServices,
+} from "../../services/order/order.service";
+import { MY_ORDERS_QUERY_KEY } from "../../hooks/useMyOrders";
+import { OrdersSkeleton } from "./components/OrdersSkeleton";
+import {
+  STATUS_CONFIG,
+  TAB_BADGE_SELECTED,
+  TAB_BADGE_UNSELECTED,
+  TAB_BADGE_TEXT_SELECTED,
+  TAB_BADGE_TEXT_UNSELECTED,
+  styles,
+} from "./Orders.styles";
 
-const ACTIVE_STATUSES: Order["status"][] = ["PENDING", "CONFIRMED"];
+const ACTIVE_STATUSES: Order["status"][] = [
+  "PENDING",
+  "CONFIRMED",
+  "READY_FOR_PICKUP",
+  "ON_THE_WAY",
+];
 
-const statusLabel: Record<Order["status"], string> = {
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
-
-const statusColor: Record<Order["status"], string> = {
-  PENDING: "#F59E0B",
-  CONFIRMED: "#10B981",
-  COMPLETED: "#6B7280",
-  CANCELLED: "#EF4444",
-};
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   });
 
+const dayLabel = (iso: string) => {
+  const d = new Date(iso);
+  const today = new Date();
+  return d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate()
+    ? "Today"
+    : "Tomorrow";
+};
+
+import { IMPACT_STATS_QUERY_KEY } from "../../hooks/useImpactStats";
+
+const STATUS_CYCLE: OrderStatus[] = [
+  "PENDING",
+  "CONFIRMED",
+  "READY_FOR_PICKUP",
+  "ON_THE_WAY",
+  "DELIVERED",
+  "COMPLETED",
+  "CANCELLED",
+];
+const STATUS_CYCLE_LABELS: Record<OrderStatus, string> = {
+  PENDING: "→ Confirmed",
+  CONFIRMED: "→ Ready",
+  READY_FOR_PICKUP: "→ On the Way",
+  ON_THE_WAY: "→ Delivered",
+  DELIVERED: "→ Collected",
+  COMPLETED: "→ Cancelled",
+  CANCELLED: "→ Pending",
+};
+
 function OrderCard({ order }: { order: Order }) {
-  const store = order.surpriseBox?.vendor;
+  const navigation = useNavigation<any>();
+  const queryClient = useQueryClient();
+  const { mutate: collectOrder, isPending: isCollecting } = useCollectOrder();
   const bag = order.surpriseBox;
+  const vendor = bag?.vendor;
+  const status = STATUS_CONFIG[order.status];
+  const isActive = ACTIVE_STATUSES.includes(order.status);
+  const isConfirmed = order.status === "CONFIRMED";
+
+  const cycleStatus = async () => {
+    const next =
+      STATUS_CYCLE[
+        (STATUS_CYCLE.indexOf(order.status) + 1) % STATUS_CYCLE.length
+      ];
+    await OrderServices.devSetStatus(order.id, next);
+    queryClient.invalidateQueries({ queryKey: MY_ORDERS_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: IMPACT_STATS_QUERY_KEY });
+  };
 
   return (
-    <View className="bg-white rounded-2xl border border-gray-100 p-4 mb-4 shadow-sm shadow-black/5">
-      <View className="flex-row items-start justify-between mb-3">
-        <View className="flex-1 pr-3">
-          <Text
-            className="text-[#111] font-black text-[15px] mb-0.5"
-            numberOfLines={1}
-          >
-            {bag?.name ?? "Surprise Bag"}
-          </Text>
-          <Text className="text-gray-500 font-medium text-[12px]">
-            {store?.name ?? "—"}
-          </Text>
+    <View className="bg-white rounded-2xl border border-gray-100 p-4 mb-3 shadow-sm shadow-black/5">
+      {/* Top row: image + info + badge */}
+      <View className="flex-row items-start mb-4">
+        <View className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 mr-3">
+          {bag?.imageUrl ? (
+            <Image
+              source={{ uri: bag.imageUrl }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          ) : (
+            <View className="w-full h-full items-center justify-center">
+              <Text className="text-2xl">🎁</Text>
+            </View>
+          )}
         </View>
-        <View
-          className="px-3 py-1 rounded-full"
-          style={{ backgroundColor: `${statusColor[order.status]}20` }}
-        >
-          <Text
-            className="font-black text-[11px]"
-            style={{ color: statusColor[order.status] }}
-          >
-            {statusLabel[order.status]}
+
+        <View className="flex-1">
+          <View className="flex-row items-start justify-between mb-1">
+            <Text
+              className="text-[#111] font-black text-[15px] flex-1 mr-2"
+              numberOfLines={1}
+            >
+              {vendor?.name ?? "Store"}
+            </Text>
+            <View
+              className="px-2.5 py-1 rounded-full"
+              style={{ backgroundColor: status.bg }}
+            >
+              <Text
+                className="font-black text-[11px]"
+                style={{ color: status.color }}
+              >
+                {status.label}
+              </Text>
+            </View>
+          </View>
+
+          <Text className="text-gray-500 font-medium text-[13px] mb-1.5">
+            1 Surprise Bag · SAR {bag?.price?.toFixed(2) ?? "—"}
           </Text>
+
+          {bag?.pickupStart && bag?.pickupEnd && (
+            <View className="flex-row items-center">
+              <Feather name="clock" size={12} color="#aaa" />
+              <Text className="text-gray-400 font-medium text-[12px] ml-1">
+                {fmtTime(bag.pickupStart)} – {fmtTime(bag.pickupEnd)}
+                {"  "}
+                <Text className="text-[#111] font-bold">
+                  {dayLabel(bag.pickupEnd)}
+                </Text>
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
-      <View className="flex-row items-center justify-between border-t border-gray-50 pt-3">
-        <View className="flex-row items-center">
-          <Feather name="hash" size={12} color="#888" />
-          <Text className="text-gray-500 font-bold text-[12px] ml-1">
-            {order.orderCode}
+      {/* DEV: cycle order status */}
+      {__DEV__ && (
+        <TouchableOpacity
+          onPress={cycleStatus}
+          className="mb-3 h-8 rounded-lg border border-dashed border-gray-300 items-center justify-center"
+        >
+          <Text className="text-gray-400 font-bold text-[11px]">
+            [DEV] {order.status} {STATUS_CYCLE_LABELS[order.status]}
           </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Action row — only for active orders */}
+      {isActive && (
+        <View className="flex-col gap-2">
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              onPress={() => navigation.navigate("BookingConfirmed", { order })}
+              className="flex-1 h-11 rounded-xl bg-[#111] flex-row items-center justify-center gap-2"
+            >
+              <Ionicons name="qr-code-outline" size={16} color="#fff" />
+              <Text className="text-white font-black text-[13px]">
+                View QR Code
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity className="w-11 h-11 rounded-xl border border-gray-200 items-center justify-center bg-white">
+              <Feather name="map-pin" size={16} color="#FF7F50" />
+            </TouchableOpacity>
+          </View>
+
+          {isConfirmed && (
+            <TouchableOpacity
+              onPress={() => collectOrder(order.id)}
+              disabled={isCollecting}
+              className="h-11 rounded-xl border border-[#18C96D] flex-row items-center justify-center gap-2"
+              style={
+                isCollecting ? styles.collectDisabled : styles.collectEnabled
+              }
+            >
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={16}
+                color="#18C96D"
+              />
+              <Text className="text-[#18C96D] font-black text-[13px]">
+                {isCollecting ? "Marking…" : "Mark as Collected"}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
-        <View className="flex-row items-center">
-          <Feather name="calendar" size={12} color="#888" />
-          <Text className="text-gray-500 font-medium text-[12px] ml-1">
-            {formatDate(order.createdAt)}
-          </Text>
-        </View>
-        <View className="flex-row items-center">
-          <Feather name="shopping-bag" size={12} color="#888" />
-          <Text className="text-gray-500 font-medium text-[12px] ml-1">
-            SAR {bag?.price ?? "—"}
-          </Text>
-        </View>
-      </View>
+      )}
     </View>
   );
 }
 
 export default function OrdersScreen() {
-  const [activeTab, setActiveTab] = useState<"active" | "past">("past");
-  const [authModalVisible, setAuthModalVisible] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState<"active" | "past">("active");
   const { data: orders, isLoading, isError, refetch } = useMyOrders();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setAuthModalVisible(true);
-    }
-  }, [isAuthenticated]);
-
-  const activeOrders = (orders ?? []).filter((o: any) =>
+  const activeOrders = (orders ?? []).filter((o) =>
     ACTIVE_STATUSES.includes(o.status),
   );
   const pastOrders = (orders ?? []).filter(
@@ -115,44 +222,68 @@ export default function OrdersScreen() {
   const displayed = activeTab === "active" ? activeOrders : pastOrders;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView className="flex-1 bg-[#F9F9F9]">
+      <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
 
       <View className="items-center justify-center pt-2 pb-5">
         <Text className="text-[#111] font-black text-[18px]">Orders</Text>
       </View>
 
-      {/* Segmented Control */}
-      <View className="px-5 mb-6">
-        <View className="flex-row items-center bg-white rounded-[20px] p-1 border border-gray-100 shadow-sm shadow-black/5">
-          {(["active", "past"] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              activeOpacity={0.8}
-              className={`flex-1 items-center justify-center py-3.5 rounded-[16px] ${
-                activeTab === tab ? "bg-[#FF7F50]" : "bg-transparent"
-              }`}
-            >
-              <Text
-                className={`font-bold text-[14px] ${
-                  activeTab === tab ? "text-white" : "text-gray-500"
+      {/* Segmented control */}
+      <View className="px-5 mb-5">
+        <View className="flex-row items-stretch h-10 bg-white rounded-2xl p-1 border border-gray-100 shadow-sm shadow-black/5">
+          {(["active", "past"] as const).map((tab) => {
+            const isSelected = activeTab === tab;
+            const count =
+              tab === "active" ? activeOrders.length : pastOrders.length;
+            return (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setActiveTab(tab)}
+                activeOpacity={0.8}
+                className={`flex-1 flex-row items-center justify-center gap-2 rounded-xl ${
+                  isSelected ? "bg-[#FF7F50]" : "bg-transparent"
                 }`}
               >
-                {tab === "active" ? "Active Orders" : "Past Orders"}
-                {tab === "active" && activeOrders.length > 0
-                  ? ` (${activeOrders.length})`
-                  : ""}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  className={`font-bold text-[14px] ${
+                    isSelected ? "text-white" : "text-gray-500"
+                  }`}
+                >
+                  {tab === "active" ? "Active" : "Past Orders"}
+                </Text>
+                {tab === "active" && count > 0 && (
+                  <View
+                    className="w-5 h-5 rounded-full items-center justify-center"
+                    style={
+                      isSelected ? TAB_BADGE_SELECTED : TAB_BADGE_UNSELECTED
+                    }
+                  >
+                    <Text
+                      className="font-black text-[11px]"
+                      style={
+                        isSelected
+                          ? TAB_BADGE_TEXT_SELECTED
+                          : TAB_BADGE_TEXT_UNSELECTED
+                      }
+                    >
+                      {count}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#FF7F50" />
-        </View>
+        <ScrollView
+          className="flex-1 px-5"
+          showsVerticalScrollIndicator={false}
+        >
+          <OrdersSkeleton />
+        </ScrollView>
       ) : isError ? (
         <View className="flex-1 items-center justify-center px-8">
           <Text className="text-gray-400 text-center font-medium mb-4">
@@ -163,29 +294,20 @@ export default function OrdersScreen() {
           </TouchableOpacity>
         </View>
       ) : displayed.length === 0 ? (
-        /* Empty state */
         <View className="flex-1 items-center justify-center pb-24">
           <Image
             source={require("../../../assets/images/gift_bag.png")}
             style={{ width: 140, height: 170, marginBottom: 28 }}
             resizeMode="contain"
           />
-
           <Text className="text-[#111] font-black text-[20px] mb-2">
             {activeTab === "active" ? "No Active Orders" : "No Past Orders"}
           </Text>
-
           {activeTab === "active" && (
-            <View className="items-center w-full mt-1">
+            <View className="items-center mt-1 w-full">
               <Text className="text-[#888] font-medium text-[14px] text-center px-10 mb-6">
                 You don't have any orders in progress right now.
               </Text>
-
-              <TouchableOpacity className="bg-[#FF7F50] px-10 py-3.5 rounded-2xl shadow-sm shadow-[#FF7F50]/20 w-[60%] max-w-[240px] items-center">
-                <Text className="text-white font-black text-[15px]">
-                  Order now!
-                </Text>
-              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -201,22 +323,24 @@ export default function OrdersScreen() {
             />
           }
         >
-          <View className="pt-2 pb-8">
-            {displayed.map((order: any) => (
+          <View className="pt-1 pb-4">
+            {displayed.map((order) => (
               <OrderCard key={order.id} order={order} />
             ))}
           </View>
+
+          {/* Info box — active tab only */}
+          {activeTab === "active" && displayed.length > 0 && (
+            <View className="flex-row items-center bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl px-4 py-3.5 mb-8 gap-3">
+              <Ionicons name="qr-code-outline" size={28} color="#16A34A" />
+              <Text className="flex-1 text-[#15803D] font-medium text-[13px] leading-5">
+                Show your QR code to the shop staff at the counter to collect
+                your surprise bag.
+              </Text>
+            </View>
+          )}
         </ScrollView>
       )}
-
-      <GuestAuthModal
-        visible={authModalVisible}
-        onClose={() => setAuthModalVisible(false)}
-        onLoginSuccess={() => {
-          setAuthModalVisible(false);
-          refetch();
-        }}
-      />
     </SafeAreaView>
   );
 }

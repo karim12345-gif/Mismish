@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import React, { useRef } from "react";
+import { View, Text, Image, TouchableOpacity, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 interface StoreItemCardProps {
@@ -25,6 +25,16 @@ export const StoreItemCard = ({
   onAdd,
   onItemPress,
 }: StoreItemCardProps) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const handleAdd = () => {
+    Animated.sequence([
+      Animated.spring(scale, { toValue: 1.35, useNativeDriver: true, speed: 50, bounciness: 10 }),
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 6 }),
+    ]).start();
+    onAdd();
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={0.9}
@@ -60,28 +70,40 @@ export const StoreItemCard = ({
           resizeMode="cover"
         />
 
-        {/* Badge */}
+        {/* "X left" badge */}
         <View className="absolute top-2 left-2 bg-[#FFF2C2] px-2 py-0.5 rounded-md">
           <Text className="text-[#D7402B] text-[9px] font-black">
             {leftCount}
           </Text>
         </View>
 
-        {/* Plus / Quantity Button */}
-        <TouchableOpacity
-          onPress={onAdd}
-          activeOpacity={0.8}
-          className="absolute -bottom-2 -right-1 w-8 h-8 rounded-full items-center justify-center shadow-sm shadow-black/10 border border-white"
-          style={{ backgroundColor: quantity > 0 ? "#FF7F50" : "#FF7F50" }}
+        {/* Quantity badge — only when > 0 */}
+        {quantity > 0 && (
+          <View
+            className="absolute top-2 right-2 w-5 h-5 rounded-full items-center justify-center"
+            style={{ backgroundColor: "#FF7F50" }}
+          >
+            <Text className="text-white font-black text-[10px]">{quantity}</Text>
+          </View>
+        )}
+
+        {/* "+" button — always stays as "+" */}
+        <Animated.View
+          style={{
+            transform: [{ scale }],
+            position: "absolute",
+            bottom: -8,
+            right: -4,
+          }}
         >
-          {quantity > 0 ? (
-            <Text className="text-white font-black text-[14px]">
-              {quantity}
-            </Text>
-          ) : (
+          <TouchableOpacity
+            onPress={handleAdd}
+            activeOpacity={0.8}
+            className="w-8 h-8 rounded-full bg-[#FF7F50] items-center justify-center shadow-sm shadow-black/10 border-2 border-white"
+          >
             <Feather name="plus" size={16} color="#FFF" />
-          )}
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </TouchableOpacity>
   );
