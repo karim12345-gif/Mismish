@@ -11,9 +11,11 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useCards, detectBrand } from "../../../context/CardsContext";
 
 export default function AddNewCardScreen() {
   const navigation = useNavigation();
+  const { addCard } = useCards();
   const [name, setName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -122,7 +124,13 @@ export default function AddNewCardScreen() {
             isFormValid ? "bg-[#FF7F50] shadow-[#FF7F50]/30" : "bg-[#E5E5E5]"
           }`}
           onPress={() => {
-            // Save logic here
+            const raw = cardNumber.replace(/\s/g, "");
+            addCard({
+              name,
+              last4: raw.slice(-4),
+              expiry,
+              brand: detectBrand(raw),
+            });
             navigation.goBack();
           }}
         >

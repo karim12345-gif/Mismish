@@ -18,6 +18,7 @@ interface ConfirmOrderBottomSheetProps {
   pickupStart?: string;
   pickupEnd?: string;
   pickupOffset?: number;
+  fulfillment?: "pickup" | "delivery";
 }
 
 const fmtTime = (iso: string) =>
@@ -39,6 +40,7 @@ export const ConfirmOrderBottomSheet = ({
   pickupStart,
   pickupEnd,
   pickupOffset = 0,
+  fulfillment = "pickup",
 }: ConfirmOrderBottomSheetProps) => {
   const slideAnim = useRef(new Animated.Value(500)).current;
 
@@ -90,7 +92,7 @@ export const ConfirmOrderBottomSheet = ({
               </Text>
               <View className="bg-[#FFF0EB] px-3 py-1 rounded-full border border-[#FFE0D6]">
                 <Text className="text-[#FF7F50] font-black text-[12px]">
-                  Self Pickup
+                  {fulfillment === "delivery" ? "Delivery" : "Self Pickup"}
                 </Text>
               </View>
             </View>

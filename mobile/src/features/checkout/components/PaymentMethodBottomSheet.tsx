@@ -8,6 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
+import { useCards } from "../../../context/CardsContext";
 
 interface PaymentMethodBottomSheetProps {
   visible: boolean;
@@ -25,6 +26,7 @@ export const PaymentMethodBottomSheet = ({
   onAddCardPress,
 }: PaymentMethodBottomSheetProps) => {
   const slideAnim = useRef(new Animated.Value(500)).current;
+  const { cards } = useCards();
 
   useEffect(() => {
     if (visible) {
@@ -68,78 +70,41 @@ export const PaymentMethodBottomSheet = ({
 
           {/* Options */}
           <View className="space-y-3">
-            {/* Apple Pay List Item */}
+            {/* Apple Pay */}
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => {
-                onSelectMethod?.("apple_pay");
-                onClose();
-              }}
-              className={`flex-row items-center p-4 rounded-xl border ${
-                selectedMethod === "apple_pay"
-                  ? "border-black"
-                  : "border-gray-100"
-              }`}
+              onPress={() => { onSelectMethod?.("apple_pay"); onClose(); }}
+              className={`flex-row items-center p-4 rounded-xl border ${selectedMethod === "apple_pay" ? "border-[#366150]" : "border-gray-100"}`}
             >
               <View className="w-8 items-center justify-center mr-3">
                 <FontAwesome name="apple" size={22} color="#111" />
               </View>
-              <Text className="text-[#111] font-bold text-[14px]">
-                Apple Pay
-              </Text>
+              <Text className="text-[#111] font-bold text-[14px] flex-1">Apple Pay</Text>
+              {selectedMethod === "apple_pay" && <Feather name="check-circle" size={18} color="#366150" />}
             </TouchableOpacity>
 
-            {/* STC Pay New */}
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                onSelectMethod?.("stc_pay_new");
-                onClose();
-              }}
-              className={`flex-row items-center p-4 rounded-xl border ${
-                selectedMethod === "stc_pay_new"
-                  ? "border-[#FF7F50]"
-                  : "border-gray-100"
-              }`}
-            >
-              <View className="w-8 flex-row items-center justify-center mr-3">
-                <Text className="text-purple-700 font-black italic text-[11px] leading-none tracking-tighter">
-                  stc
-                </Text>
-                <Text className="text-gray-500 font-bold italic text-[10px] leading-none ml-0.5">
-                  pay
-                </Text>
-              </View>
-              <Text className="text-[#111] font-bold text-[14px]">
-                New stc Pay Account
-              </Text>
-            </TouchableOpacity>
-
-            {/* STC Pay Number */}
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                onSelectMethod?.("stc_pay_number");
-                onClose();
-              }}
-              className={`flex-row items-center p-4 rounded-xl border ${
-                selectedMethod === "stc_pay_number"
-                  ? "border-[#FF7F50]"
-                  : "border-gray-100"
-              }`}
-            >
-              <View className="w-8 flex-row items-center justify-center mr-3">
-                <Text className="text-purple-700 font-black italic text-[11px] leading-none tracking-tighter">
-                  stc
-                </Text>
-                <Text className="text-gray-500 font-bold italic text-[10px] leading-none ml-0.5">
-                  pay
-                </Text>
-              </View>
-              <Text className="text-[#111] font-bold text-[14px]">
-                0546725578
-              </Text>
-            </TouchableOpacity>
+            {/* Saved cards */}
+            {cards.map((card) => (
+              <TouchableOpacity
+                key={card.id}
+                activeOpacity={0.7}
+                onPress={() => { onSelectMethod?.(`card_${card.id}`); onClose(); }}
+                className={`flex-row items-center p-4 rounded-xl border ${selectedMethod === `card_${card.id}` ? "border-[#366150]" : "border-gray-100"}`}
+              >
+                <View className="w-8 items-center justify-center mr-3">
+                  <FontAwesome
+                    name={card.brand === "visa" ? "cc-visa" : card.brand === "mastercard" ? "cc-mastercard" : "credit-card"}
+                    size={22}
+                    color="#111"
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-[#111] font-bold text-[14px]">•••• {card.last4}</Text>
+                  <Text className="text-gray-400 text-[11px] font-medium">{card.name} · {card.expiry}</Text>
+                </View>
+                {selectedMethod === `card_${card.id}` && <Feather name="check-circle" size={18} color="#366150" />}
+              </TouchableOpacity>
+            ))}
           </View>
 
           {/* Add New Card Action */}

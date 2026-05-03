@@ -21,7 +21,7 @@ export const HomeHeader = () => {
       : "Tap to set location";
 
   return (
-    <View className="flex-row justify-between items-center w-full bg-white px-5 pt-8 pb-4">
+    <View className="flex-row justify-between items-center w-full bg-white px-5 pt-2 pb-4">
       {/* Left side: Location Info */}
       <TouchableOpacity
         className="flex-row items-center flex-1 pr-6"

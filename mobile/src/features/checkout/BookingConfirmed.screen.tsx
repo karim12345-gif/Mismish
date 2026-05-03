@@ -10,7 +10,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import QRCode from "react-native-qrcode-svg";
 import { AuthenticatedStackParamList } from "../../navigation/AuthenticatedNavigator";
 import { useCart } from "../../context/CartContext";
 
@@ -29,7 +28,8 @@ const formatPickupTime = (iso: string) => {
 
 export default function BookingConfirmedScreen() {
   const navigation = useNavigation<any>();
-  const route = useRoute<RouteProp<AuthenticatedStackParamList, "BookingConfirmed">>();
+  const route =
+    useRoute<RouteProp<AuthenticatedStackParamList, "BookingConfirmed">>();
   const { clearCart } = useCart();
   const { order } = route.params;
 
@@ -74,7 +74,6 @@ export default function BookingConfirmedScreen() {
 
         {/* ── Card ── */}
         <View style={styles.card}>
-
           {/* Store info */}
           <View style={styles.storeRow}>
             <View style={styles.storeInfo}>
@@ -93,22 +92,20 @@ export default function BookingConfirmedScreen() {
             </View>
           </View>
 
-          {/* QR code */}
-          <View style={styles.qrWrapper}>
-            <View style={styles.qrBox}>
-              <QRCode
-                value={order.orderCode}
-                size={160}
-                color="#111"
-                backgroundColor="#fff"
-              />
-              {/* Corner brackets */}
-              <View style={[styles.corner, styles.cornerTL]} />
-              <View style={[styles.corner, styles.cornerTR]} />
-              <View style={[styles.corner, styles.cornerBL]} />
-              <View style={[styles.corner, styles.cornerBR]} />
+          {/* PIN Display */}
+          <View style={styles.pinWrapper}>
+            <Text style={styles.pinTitle}>Your order requires a PIN</Text>
+            <Text style={styles.pinSubtitle}>
+              Give this 4-digit code to the cashier to pick up your bag.
+            </Text>
+
+            <View style={styles.pinBoxContainer}>
+              {order.orderCode.split("").map((digit: string, i: number) => (
+                <View key={i} style={styles.pinDigitBox}>
+                  <Text style={styles.pinDigitText}>{digit}</Text>
+                </View>
+              ))}
             </View>
-            <Text style={styles.qrLabel}>SHOW THIS CODE TO STORE STAFF</Text>
           </View>
 
           {/* Order details grid */}
@@ -119,13 +116,17 @@ export default function BookingConfirmedScreen() {
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.gridLabel}>BAG TYPE</Text>
-              <Text style={styles.gridValue}>{bag?.name ?? "Surprise Bag"}</Text>
+              <Text style={styles.gridValue}>
+                {bag?.name ?? "Surprise Bag"}
+              </Text>
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.gridLabel}>COLLECT BY</Text>
               <View style={styles.collectRow}>
                 <Ionicons name="time-outline" size={13} color={CORAL} />
-                <Text style={[styles.gridValue, { color: CORAL, marginLeft: 4 }]}>
+                <Text
+                  style={[styles.gridValue, { color: CORAL, marginLeft: 4 }]}
+                >
                   {bag?.pickupEnd ? formatPickupTime(bag.pickupEnd) : "—"}
                 </Text>
               </View>
@@ -133,8 +134,14 @@ export default function BookingConfirmedScreen() {
             <View style={styles.gridItem}>
               <Text style={styles.gridLabel}>QUANTITY</Text>
               <View style={styles.collectRow}>
-                <MaterialCommunityIcons name="shopping-outline" size={13} color="#111" />
-                <Text style={[styles.gridValue, { marginLeft: 4 }]}>1 Surprise Bag</Text>
+                <MaterialCommunityIcons
+                  name="shopping-outline"
+                  size={13}
+                  color="#111"
+                />
+                <Text style={[styles.gridValue, { marginLeft: 4 }]}>
+                  1 Surprise Bag
+                </Text>
               </View>
             </View>
           </View>
@@ -143,17 +150,35 @@ export default function BookingConfirmedScreen() {
         {/* ── Next Steps ── */}
         <View style={styles.stepsContainer}>
           <View style={styles.stepsHeader}>
-            <Ionicons name="information-circle-outline" size={18} color="#111" />
+            <Ionicons
+              name="information-circle-outline"
+              size={18}
+              color="#111"
+            />
             <Text style={styles.stepsTitle}>Next Steps</Text>
           </View>
 
           {[
-            { icon: "location-outline", text: `Go to ${vendor?.name ?? "the store"}` },
-            { icon: "chatbubble-ellipses-outline", text: "Tell the staff you have a Mismish booking" },
-            { icon: "qr-code-outline", text: "Let them scan the QR code above" },
+            {
+              icon: "location-outline",
+              text: `Go to ${vendor?.name ?? "the store"}`,
+            },
+            {
+              icon: "chatbubble-ellipses-outline",
+              text: "Tell the staff you have a Mismish booking",
+            },
+            {
+              icon: "key-outline",
+              text: "Show the 4-digit PIN above to collect",
+            },
           ].map((step, i) => (
             <View key={i} style={styles.stepRow}>
-              <Ionicons name={step.icon as any} size={18} color="#555" style={styles.stepIcon} />
+              <Ionicons
+                name={step.icon as any}
+                size={18}
+                color="#555"
+                style={styles.stepIcon}
+              />
               <Text style={styles.stepText}>{step.text}</Text>
             </View>
           ))}
@@ -161,12 +186,18 @@ export default function BookingConfirmedScreen() {
 
         {/* ── Actions ── */}
         <View style={styles.actions}>
-          <TouchableOpacity onPress={handleBackToHome} style={styles.primaryBtn}>
+          <TouchableOpacity
+            onPress={handleBackToHome}
+            style={styles.primaryBtn}
+          >
             <Text style={styles.primaryBtnText}>Back to Home</Text>
             <Feather name="arrow-right" size={18} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleViewOrders} style={styles.secondaryBtn}>
+          <TouchableOpacity
+            onPress={handleViewOrders}
+            style={styles.secondaryBtn}
+          >
             <Text style={styles.secondaryBtnText}>View My Orders</Text>
           </TouchableOpacity>
         </View>
@@ -175,7 +206,9 @@ export default function BookingConfirmedScreen() {
         <View style={styles.footer}>
           <Text style={styles.footerText}>Need help? </Text>
           <TouchableOpacity>
-            <Text style={[styles.footerText, { color: CORAL, fontWeight: "700" }]}>
+            <Text
+              style={[styles.footerText, { color: CORAL, fontWeight: "700" }]}
+            >
               Contact Support
             </Text>
           </TouchableOpacity>
@@ -243,7 +276,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   storeInfo: { flex: 1, marginRight: 12 },
-  storeName: { color: "#111", fontWeight: "900", fontSize: 16, marginBottom: 4 },
+  storeName: {
+    color: "#111",
+    fontWeight: "900",
+    fontSize: 16,
+    marginBottom: 4,
+  },
   addressRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   addressText: { color: "#888", fontSize: 12, flex: 1 },
   verifiedBadge: {
@@ -255,35 +293,55 @@ const styles = StyleSheet.create({
   },
   verifiedText: { color: "#555", fontSize: 11, fontWeight: "600" },
 
-  // QR
+  // PIN
   qrWrapper: { alignItems: "center", marginBottom: 20 },
-  qrBox: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#fff",
+  qrBox: { paddingBottom: 24 },
+  pinWrapper: {
+    alignItems: "center",
+    paddingVertical: 12,
+    marginBottom: 26,
+  },
+  pinTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#111",
+    marginBottom: 6,
+  },
+  pinSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 16,
+    paddingHorizontal: 20,
+    lineHeight: 20,
+  },
+  pinBoxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  pinDigitBox: {
+    flex: 1,
+    maxWidth: 60,
+    height: 70,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-    position: "relative",
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  corner: {
-    position: "absolute",
-    width: 20,
-    height: 20,
-    borderColor: CORAL,
-  },
-  cornerTL: { top: 6, left: 6, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 4 },
-  cornerTR: { top: 6, right: 6, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 4 },
-  cornerBL: { bottom: 6, left: 6, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 4 },
-  cornerBR: { bottom: 6, right: 6, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 4 },
-  qrLabel: {
-    color: "#888",
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-    marginTop: 12,
+  pinDigitText: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: "#111",
   },
 
   // Grid
@@ -296,7 +354,13 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   gridItem: { width: "45%" },
-  gridLabel: { color: "#aaa", fontSize: 10, fontWeight: "700", letterSpacing: 0.8, marginBottom: 4 },
+  gridLabel: {
+    color: "#aaa",
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
   gridValue: { color: "#111", fontSize: 13, fontWeight: "800" },
   collectRow: { flexDirection: "row", alignItems: "center" },
 
@@ -313,7 +377,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  stepsHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 6 },
+  stepsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+    gap: 6,
+  },
   stepsTitle: { color: "#111", fontWeight: "900", fontSize: 15 },
   stepRow: {
     flexDirection: "row",

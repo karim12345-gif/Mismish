@@ -7,8 +7,12 @@ import CompleteProfileScreen from "../features/profile/screens/CompleteProfileSc
 import CheckoutScreen from "../features/checkout/Checkout.screen";
 import CartScreen from "../features/cart/Cart.screen";
 import AddNewCardScreen from "../features/profile/screens/AddNewCardScreen";
+import PersonalInfoScreen from "../features/profile/screens/PersonalInfoScreen";
+import PaymentMethodScreen from "../features/profile/screens/PaymentMethodScreen";
+import CountryScreen from "../features/profile/screens/CountryScreen";
 import FavoritesScreen from "../features/favorites/Favorites.screen";
 import BookingConfirmedScreen from "../features/checkout/BookingConfirmed.screen";
+import DeliveryTrackingScreen from "../features/checkout/DeliveryTracking.screen";
 import SearchScreen from "../features/search/Search.screen";
 import ElevenUnderScreen from "../features/home/ElevenUnder.screen";
 import { Order } from "../services/order/order.service";
@@ -23,8 +27,12 @@ export type AuthenticatedStackParamList = {
   AddNewCard: undefined;
   Favorites: undefined;
   BookingConfirmed: { order: Order };
+  DeliveryTracking: { order: Order };
   Search: undefined;
   ElevenUnder: undefined;
+  PersonalInfo: undefined;
+  PaymentMethod: undefined;
+  Country: { selected?: { flag: string; name: string; code: string }; onSelect?: (c: any) => void };
 };
 
 const Stack = createStackNavigator<AuthenticatedStackParamList>();
@@ -44,8 +52,12 @@ export default function AuthenticatedNavigator() {
       <Stack.Screen name="AddNewCard" component={AddNewCardScreen} />
       <Stack.Screen name="Favorites" component={FavoritesScreen} />
       <Stack.Screen name="BookingConfirmed" component={BookingConfirmedScreen} />
+      <Stack.Screen name="DeliveryTracking" component={DeliveryTrackingScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="ElevenUnder" component={ElevenUnderScreen} />
+      <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+      <Stack.Screen name="PaymentMethod" component={PaymentMethodScreen} />
+      <Stack.Screen name="Country" component={CountryScreen} />
     </Stack.Navigator>
   );
 }

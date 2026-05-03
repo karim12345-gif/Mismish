@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useCards, detectBrand } from "../../../context/CardsContext";
 
 interface AddNewCardBottomSheetProps {
   visible: boolean;
@@ -24,6 +25,7 @@ export const AddNewCardBottomSheet = ({
   onSave,
 }: AddNewCardBottomSheetProps) => {
   const slideAnim = useRef(new Animated.Value(600)).current;
+  const { addCard } = useCards();
 
   const [name, setName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
@@ -146,6 +148,13 @@ export const AddNewCardBottomSheet = ({
               isFormValid ? "bg-[#FF7F50] shadow-[#FF7F50]/30" : "bg-[#E5E5E5]"
             }`}
             onPress={() => {
+              const raw = cardNumber.replace(/\s/g, "");
+              addCard({
+                name,
+                last4: raw.slice(-4),
+                expiry,
+                brand: detectBrand(raw),
+              });
               if (onSave) onSave();
               onClose();
             }}

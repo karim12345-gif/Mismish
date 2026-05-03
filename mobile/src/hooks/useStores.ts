@@ -10,5 +10,7 @@ export const useStores = () => {
       const response = await StoreServices.getStores();
       return response.data;
     },
+    staleTime: 60_000,
+    refetchInterval: 60_000,
   });
 };

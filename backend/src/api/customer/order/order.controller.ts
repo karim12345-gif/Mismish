@@ -4,11 +4,11 @@ import prisma from "../../../prismaClient";
 import { CreateOrderBody } from "./types";
 import { sendPushNotification } from "../../shared/utils/notification";
 
-// Helper to generate a 6-character alphanumeric code
+// Helper to generate a 4-digit PIN
 const generateOrderCode = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const chars = "0123456789";
   let code = "";
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 4; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
@@ -140,7 +140,7 @@ export const getMyOrders = async (
         surpriseBox: {
           include: {
             vendor: {
-              select: { name: true, address: true },
+              select: { name: true, address: true, latitude: true, longitude: true },
             },
           },
         },
@@ -193,7 +193,7 @@ export const collectOrder = async (
       data: { status: "COMPLETED", pickupStatus: "COLLECTED" },
       include: {
         surpriseBox: {
-          include: { vendor: { select: { name: true, address: true } } },
+          include: { vendor: { select: { name: true, address: true, latitude: true, longitude: true } } },
         },
       },
     });
@@ -278,11 +278,11 @@ export const getUserImpactStats = async (
       return;
     }
 
-    // Include COMPLETED and DELIVERED orders for impact stats
+    // Count all non-cancelled orders for impact stats
     const orders = await prisma.order.findMany({
       where: {
         userId,
-        status: { in: ["COMPLETED", "DELIVERED"] },
+        status: { notIn: ["CANCELLED"] },
       },
       select: {
         id: true,

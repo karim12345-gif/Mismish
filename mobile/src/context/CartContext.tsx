@@ -10,6 +10,7 @@ export interface CartItemProduct {
   imageUrl?: string;
   quantity: number;
   pickupOffset?: number;
+  pickupEnd?: string;
 }
 
 interface CartContextType {

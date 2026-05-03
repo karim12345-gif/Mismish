@@ -7,6 +7,7 @@ import {
   ScrollView,
   RefreshControl,
   Image,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -21,14 +22,7 @@ import {
 } from "../../services/order/order.service";
 import { MY_ORDERS_QUERY_KEY } from "../../hooks/useMyOrders";
 import { OrdersSkeleton } from "./components/OrdersSkeleton";
-import {
-  STATUS_CONFIG,
-  TAB_BADGE_SELECTED,
-  TAB_BADGE_UNSELECTED,
-  TAB_BADGE_TEXT_SELECTED,
-  TAB_BADGE_TEXT_UNSELECTED,
-  styles,
-} from "./Orders.styles";
+import { STATUS_CONFIG, styles } from "./Orders.styles";
 
 const ACTIVE_STATUSES: Order["status"][] = [
   "PENDING",
@@ -168,19 +162,48 @@ function OrderCard({ order }: { order: Order }) {
       {/* Action row — only for active orders */}
       {isActive && (
         <View className="flex-col gap-2">
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center justify-center  gap-2">
             <TouchableOpacity
               onPress={() => navigation.navigate("BookingConfirmed", { order })}
-              className="flex-1 h-11 rounded-xl bg-[#111] flex-row items-center justify-center gap-2"
+              className="flex-1 h-11 rounded-2xl bg-[#111] flex-row items-center justify-center gap-2"
             >
-              <Ionicons name="qr-code-outline" size={16} color="#fff" />
-              <Text className="text-white font-black text-[13px]">
-                View QR Code
+              <Ionicons name="keypad-outline" size={16} color="#fff" />
+              <Text
+                style={{
+                  color: "#fff",
+                  fontWeight: "600",
+                  fontSize: 14,
+                  letterSpacing: 0.1,
+                  includeFontPadding: false,
+                }}
+              >
+                View Pin
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="w-11 h-11 rounded-xl border border-gray-200 items-center justify-center bg-white">
-              <Feather name="map-pin" size={16} color="#FF7F50" />
+            <TouchableOpacity
+              className="flex-1 h-11 rounded-2xl border border-[#FF7F50]/30 bg-[#FFF5F2] flex-row items-center justify-center gap-2"
+              onPress={() => {
+                const query = vendor?.address
+                  ? encodeURIComponent(vendor.address)
+                  : `${vendor?.latitude},${vendor?.longitude}`;
+                Linking.openURL(
+                  `https://www.google.com/maps/dir/?api=1&destination=${query}`,
+                );
+              }}
+            >
+              <Feather name="navigation" size={15} color="#FF7F50" />
+              <Text
+                style={{
+                  color: "#FF7F50",
+                  fontWeight: "600",
+                  fontSize: 14,
+                  letterSpacing: 0.1,
+                  includeFontPadding: false,
+                }}
+              >
+                Directions
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -231,7 +254,7 @@ export default function OrdersScreen() {
 
       {/* Segmented control */}
       <View className="px-5 mb-5">
-        <View className="flex-row items-stretch h-10 bg-white rounded-2xl p-1 border border-gray-100 shadow-sm shadow-black/5">
+        <View className="flex-row p-1 h-12 bg-[#F1F1F1] rounded-2xl">
           {(["active", "past"] as const).map((tab) => {
             const isSelected = activeTab === tab;
             const count =
@@ -240,32 +263,28 @@ export default function OrdersScreen() {
               <TouchableOpacity
                 key={tab}
                 onPress={() => setActiveTab(tab)}
-                activeOpacity={0.8}
-                className={`flex-1 flex-row items-center justify-center gap-2 rounded-xl ${
+                activeOpacity={0.9}
+                className={`flex-1 flex-row items-center justify-center rounded-xl gap-2 ${
                   isSelected ? "bg-[#FF7F50]" : "bg-transparent"
                 }`}
               >
                 <Text
-                  className={`font-bold text-[14px] ${
-                    isSelected ? "text-white" : "text-gray-500"
+                  className={`font-black tracking-tight text-[14px] pb-[2px] ${
+                    isSelected ? "text-white" : "text-[#888]"
                   }`}
                 >
                   {tab === "active" ? "Active" : "Past Orders"}
                 </Text>
                 {tab === "active" && count > 0 && (
                   <View
-                    className="w-5 h-5 rounded-full items-center justify-center"
-                    style={
-                      isSelected ? TAB_BADGE_SELECTED : TAB_BADGE_UNSELECTED
-                    }
+                    className={`w-5 h-5 rounded-full items-center justify-center mb-[2px] ${
+                      isSelected ? "bg-white" : "bg-[#DDD]"
+                    }`}
                   >
                     <Text
-                      className="font-black text-[11px]"
-                      style={
-                        isSelected
-                          ? TAB_BADGE_TEXT_SELECTED
-                          : TAB_BADGE_TEXT_UNSELECTED
-                      }
+                      className={`font-black text-[11px] pb-[1px] ${
+                        isSelected ? "text-[#FF7F50]" : "text-[#777]"
+                      }`}
                     >
                       {count}
                     </Text>
@@ -332,10 +351,10 @@ export default function OrdersScreen() {
           {/* Info box — active tab only */}
           {activeTab === "active" && displayed.length > 0 && (
             <View className="flex-row items-center bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl px-4 py-3.5 mb-8 gap-3">
-              <Ionicons name="qr-code-outline" size={28} color="#16A34A" />
+              <Ionicons name="keypad-outline" size={26} color="#16A34A" />
               <Text className="flex-1 text-[#15803D] font-medium text-[13px] leading-5">
-                Show your QR code to the shop staff at the counter to collect
-                your surprise bag.
+                Show your pin to the shop staff at the counter to collect your
+                surprise bag.
               </Text>
             </View>
           )}

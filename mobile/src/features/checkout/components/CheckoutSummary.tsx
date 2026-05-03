@@ -2,13 +2,20 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useCart } from "../../../context/CartContext";
+import { useCards } from "../../../context/CardsContext";
 
 interface CheckoutSummaryProps {
   onChangePaymentPress: () => void;
+  selectedMethod?: string;
 }
 
-export const CheckoutSummary = ({ onChangePaymentPress }: CheckoutSummaryProps) => {
+export const CheckoutSummary = ({ onChangePaymentPress, selectedMethod = "apple_pay" }: CheckoutSummaryProps) => {
   const { cartItems, subtotal } = useCart();
+  const { cards } = useCards();
+
+  const selectedCard = selectedMethod.startsWith("card_")
+    ? cards.find((c) => c.id === selectedMethod.replace("card_", ""))
+    : null;
 
   const originalTotal = cartItems.reduce(
     (sum, item) => sum + (item.originalPrice ?? item.price) * item.quantity,
@@ -24,10 +31,24 @@ export const CheckoutSummary = ({ onChangePaymentPress }: CheckoutSummaryProps) 
         </Text>
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
-            <FontAwesome name="apple" size={24} color="#111" />
-            <Text className="text-gray-500 font-medium text-[14px] ml-3">
-              Apple Pay
-            </Text>
+            {selectedCard ? (
+              <>
+                <FontAwesome
+                  name={selectedCard.brand === "visa" ? "cc-visa" : selectedCard.brand === "mastercard" ? "cc-mastercard" : "credit-card"}
+                  size={24}
+                  color="#111"
+                />
+                <View className="ml-3">
+                  <Text className="text-gray-500 font-medium text-[14px]">•••• {selectedCard.last4}</Text>
+                  <Text className="text-gray-400 text-[11px]">{selectedCard.expiry}</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <FontAwesome name="apple" size={24} color="#111" />
+                <Text className="text-gray-500 font-medium text-[14px] ml-3">Apple Pay</Text>
+              </>
+            )}
           </View>
           <TouchableOpacity
             onPress={onChangePaymentPress}

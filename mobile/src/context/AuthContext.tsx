@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContextProps, AuthUser } from "./types";
+import { AuthServices } from "../services/auth/auth.service";
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: "accessToken",
@@ -85,12 +86,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
+      const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+      if (refreshToken) {
+        AuthServices.logout(refreshToken).catch(() => {});
+      }
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.ACCESS_TOKEN,
         STORAGE_KEYS.REFRESH_TOKEN,
         STORAGE_KEYS.USER,
+        STORAGE_KEYS.HAS_SEEN_INTRO,
       ]);
       setUser(null);
+      setHasSeenIntro(false);
       setIsAuthenticated(false);
     } catch (e) {
       console.error("Failed to clear session:", e);

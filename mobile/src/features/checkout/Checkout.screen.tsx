@@ -5,6 +5,8 @@ import { useNavigation } from "@react-navigation/native";
 import { CheckoutHeader } from "./components/CheckoutHeader";
 import { CheckoutFulfillmentToggle } from "./components/CheckoutFulfillmentToggle";
 import { CheckoutStoreDetails } from "./components/CheckoutStoreDetails";
+import { CheckoutDeliveryDetails } from "./components/CheckoutDeliveryDetails";
+import { useLocation } from "../../context/LocationContext";
 import { CheckoutOrderItems } from "./components/CheckoutOrderItems";
 import { CheckoutCoupon } from "./components/CheckoutCoupon";
 import { CheckoutSummary } from "./components/CheckoutSummary";
@@ -29,10 +31,17 @@ export default function CheckoutScreen() {
   );
   const activeBag = activeStore?.listings.find((l) => l.id === cartBoxId);
 
+  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
+  const { address } = useLocation();
+  const deliveryAddress = address
+    ? [address.street, address.district, address.city].filter(Boolean).join(", ")
+    : "";
+
   const [paymentSheetVisible, setPaymentSheetVisible] = useState(false);
   const [addCardSheetVisible, setAddCardSheetVisible] = useState(false);
   const [confirmSheetVisible, setConfirmSheetVisible] = useState(false);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState("apple_pay");
 
   const handleInitialPayPress = () => setConfirmSheetVisible(true);
 
@@ -59,13 +68,16 @@ export default function CheckoutScreen() {
     }
 
     createOrder(
-      { surpriseBoxId, deliveryMethod: "PICKUP" },
+      {
+        surpriseBoxId,
+        deliveryMethod: fulfillment === "delivery" ? "DELIVERY" : "PICKUP",
+        ...(fulfillment === "delivery" && deliveryAddress ? { deliveryAddress } : {}),
+      },
       {
         onSuccess: (response) => {
           setConfirmSheetVisible(false);
-          (navigation.navigate as any)("BookingConfirmed", {
-            order: response.data,
-          });
+          const screen = fulfillment === "delivery" ? "DeliveryTracking" : "BookingConfirmed";
+          (navigation.navigate as any)(screen, { order: response.data });
         },
         onError: (err: any) => {
           setConfirmSheetVisible(false);
@@ -89,7 +101,10 @@ export default function CheckoutScreen() {
       <CheckoutHeader />
 
       <ScrollView className="flex-1 pb-40" showsVerticalScrollIndicator={false}>
-        <CheckoutFulfillmentToggle />
+        <CheckoutFulfillmentToggle method={fulfillment} onChange={setFulfillment} />
+        {fulfillment === "delivery" && (
+          <CheckoutDeliveryDetails address={deliveryAddress} />
+        )}
         <CheckoutStoreDetails
           store={activeStore}
           bag={activeBag}
@@ -99,6 +114,7 @@ export default function CheckoutScreen() {
         <CheckoutCoupon />
         <CheckoutSummary
           onChangePaymentPress={() => setPaymentSheetVisible(true)}
+          selectedMethod={selectedMethod}
         />
       </ScrollView>
 
@@ -107,6 +123,8 @@ export default function CheckoutScreen() {
       <PaymentMethodBottomSheet
         visible={paymentSheetVisible}
         onClose={() => setPaymentSheetVisible(false)}
+        selectedMethod={selectedMethod}
+        onSelectMethod={setSelectedMethod}
         onAddCardPress={() => {
           setPaymentSheetVisible(false);
           setTimeout(() => setAddCardSheetVisible(true), 350);
@@ -127,6 +145,7 @@ export default function CheckoutScreen() {
         pickupStart={activeBag?.pickupStart}
         pickupEnd={activeBag?.pickupEnd}
         pickupOffset={cartItems[0]?.pickupOffset ?? 0}
+        fulfillment={fulfillment}
       />
 
       <OrderErrorModal

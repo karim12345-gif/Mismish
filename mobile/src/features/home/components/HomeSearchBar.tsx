@@ -7,7 +7,7 @@ export const HomeSearchBar = () => {
   const navigation = useNavigation<any>();
 
   return (
-    <View className="px-5 py-2">
+    <View className="px-5 py-2 bg-white">
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => navigation.navigate("Search")}

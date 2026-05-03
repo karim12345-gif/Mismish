@@ -38,6 +38,15 @@ const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
+const formatDistance = (
+  userLat: number, userLng: number,
+  storeLat: number | null, storeLng: number | null,
+): string => {
+  if (storeLat == null || storeLng == null) return "—";
+  const km = haversineKm(userLat, userLng, storeLat, storeLng);
+  return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+};
+
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
 
@@ -80,7 +89,8 @@ export default function HomeScreen() {
           : Infinity;
         return aEnd - bEnd;
       });
-    } else if (sortBy === "distance" && location) {
+    } else if (location) {
+      // Default: always sort by distance when we have a location
       const { latitude, longitude } = location.coords;
       result.sort((a, b) => {
         const distA =
@@ -98,18 +108,27 @@ export default function HomeScreen() {
     return result;
   }, [stores, activeCuisine, activePriceRange, sortBy, location]);
 
-  // Bags section: first active listing from each store that has one
+  // Bags section: closest stores with an active listing
   const activeBags: { store: Store; bag: SurpriseBox }[] = (stores ?? [])
     .filter((s) => s.listings.length > 0)
+    .sort((a, b) => {
+      if (!location) return 0;
+      const { latitude, longitude } = location.coords;
+      const distA = a.latitude != null && a.longitude != null
+        ? haversineKm(latitude, longitude, a.latitude, a.longitude) : Infinity;
+      const distB = b.latitude != null && b.longitude != null
+        ? haversineKm(latitude, longitude, b.latitude, b.longitude) : Infinity;
+      return distA - distB;
+    })
     .map((s) => ({ store: s, bag: s.listings[0] }))
     .slice(0, 5);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F9F9F9]">
-      <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
+    <SafeAreaView className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <HomeHeader />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} className="bg-[#F9F9F9]">
         <HomeSearchBar />
         <HomeHeroBanner />
         <HomeFeaturedCollections />
@@ -146,7 +165,11 @@ export default function HomeScreen() {
                       bag.originalPrice ? `${bag.originalPrice} SAR` : ""
                     }
                     timeRange={formatPickupTime(bag.pickupStart, bag.pickupEnd)}
-                    distance="—"
+                    distance={
+                      location
+                        ? formatDistance(location.coords.latitude, location.coords.longitude, store.latitude, store.longitude)
+                        : "—"
+                    }
                     imageUrl={bag.imageUrl ?? store.imageUrl ?? FALLBACK_IMAGE}
                     logoUrl={store.imageUrl ?? bag.imageUrl ?? FALLBACK_IMAGE}
                     leftCount={`${bag.quantity} left`}
@@ -214,7 +237,11 @@ export default function HomeScreen() {
                           )
                         : "—"
                     }
-                    distance={store.address?.split(",")[0] || "1.2 km"}
+                    distance={
+                      location
+                        ? formatDistance(location.coords.latitude, location.coords.longitude, store.latitude, store.longitude)
+                        : "—"
+                    }
                     rating={((store.id % 5) * 0.1 + 4.5).toFixed(1).toString()}
                     reviews={(120 + store.id * 14).toString()}
                     branches="1"

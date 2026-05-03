@@ -6,6 +6,7 @@ import { AuthProvider } from "./src/context/AuthContext";
 import { LocationProvider } from "./src/context/LocationContext";
 import { CartProvider } from "./src/context/CartContext";
 import { FavoritesProvider } from "./src/context/FavoritesContext";
+import { CardsProvider } from "./src/context/CardsContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePushNotifications } from "./src/hooks/usePushNotifications";
 
@@ -24,9 +25,11 @@ const App = () => {
           <AuthProvider>
             <LocationProvider>
               <CartProvider>
-                <FavoritesProvider>
-                  <AppInner />
-                </FavoritesProvider>
+                <CardsProvider>
+                  <FavoritesProvider>
+                    <AppInner />
+                  </FavoritesProvider>
+                </CardsProvider>
               </CartProvider>
             </LocationProvider>
           </AuthProvider>

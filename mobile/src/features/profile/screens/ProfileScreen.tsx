@@ -1,198 +1,342 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  Image,
+  Share,
   RefreshControl,
+  Image,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Animated,
 } from "react-native";
-import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useImpactStats } from "../../../hooks/useImpactStats";
-import { ActivityIndicator } from "react-native";
+import { GuestAuthModal } from "../../../components/GuestAuthModal";
+
+function getReferralCode(userId?: number | null): string {
+  if (!userId) return "MSMSH0";
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  let n = userId * 31 + 7;
+  for (let i = 0; i < 6; i++) {
+    code += chars[n % chars.length];
+    n = Math.floor(n / chars.length) + (i + 1) * 13;
+  }
+  return code;
+}
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { data: stats, isLoading: statsLoading, refetch } = useImpactStats();
+
+  const [selectedCountry, setSelectedCountry] = useState({ flag: "🇸🇦", name: "Saudi Arabia", code: "+966" });
+  const [countrySheet, setCountrySheet] = useState(false);
+  const [logoutSheet, setLogoutSheet] = useState(false);
+  const [signInVisible, setSignInVisible] = useState(false);
+  const slideAnim = useRef(new Animated.Value(400)).current;
+  const logoutSlideAnim = useRef(new Animated.Value(400)).current;
+
+  const openCountrySheet = () => {
+    setCountrySheet(true);
+    Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 18 }).start();
+  };
+  const closeCountrySheet = () => {
+    Animated.timing(slideAnim, { toValue: 400, duration: 200, useNativeDriver: true }).start(() => setCountrySheet(false));
+  };
+
+  const openLogoutSheet = () => {
+    setLogoutSheet(true);
+    Animated.spring(logoutSlideAnim, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 18 }).start();
+  };
+  const closeLogoutSheet = () => {
+    Animated.timing(logoutSlideAnim, { toValue: 400, duration: 200, useNativeDriver: true }).start(() => setLogoutSheet(false));
+  };
+
+  const referralCode = getReferralCode(user?.id);
+  const initials = user?.name
+    ? user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "ME";
 
   const handleReset = async () => {
     await AsyncStorage.removeItem("skipMismishInfoModal");
     logout();
   };
 
-  const renderStat = (
-    imageSource: any,
-    value: string | number,
-    label: string,
-  ) => (
-    <View className="bg-white rounded-[16px] w-[31%] py-6 items-center justify-center border border-gray-100 shadow-sm shadow-black/5">
-      <Image
-        source={imageSource}
-        className="w-8 h-8 mb-4 opacity-100"
-        resizeMode="contain"
-      />
-      {statsLoading ? (
-        <View className="items-center">
-          <View className="bg-gray-100 w-16 h-5 rounded-md mb-2 animate-pulse" />
-          <View className="bg-gray-50 w-12 h-3 rounded-md" />
-        </View>
-      ) : (
-        <>
-          <Text className="text-[#366150] font-black text-[17px] mb-1">
-            {value}
-          </Text>
-          <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">
-            {label}
-          </Text>
-        </>
-      )}
-    </View>
-  );
+  const handleShare = async () => {
+    await Share.share({
+      message: `Use my code ${referralCode} on Mismish to rescue food and save money! 🌱`,
+    });
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F6F2]">
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F6F2" />
-
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 pt-4 pb-6">
-        <TouchableOpacity className="flex-row items-center">
-          <Feather name="chevron-left" size={24} color="#333" />
-          <Text className="text-[#111] text-[18px] font-semibold ml-2">
-            Profile
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="bg-white p-2.5 rounded-full shadow-sm shadow-black/5 border border-gray-100 relative">
-          <Feather name="bell" size={20} color="#366150" />
-          <View className="absolute top-2 right-2.5 bg-[#FF7F50] w-2 h-2 rounded-full border border-white" />
+    <SafeAreaView className="flex-1 bg-[#F4F4F4]">
+      <View className="flex-row items-center justify-between px-5 pt-2 pb-4">
+        <Text className="text-[#111] text-[22px] font-black">Account</Text>
+        <TouchableOpacity className="bg-white w-10 h-10 rounded-full items-center justify-center shadow-sm shadow-black/5 border border-gray-100">
+          <Feather name="bell" size={18} color="#366150" />
         </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1"
         refreshControl={
-          <RefreshControl
-            refreshing={statsLoading}
-            onRefresh={refetch}
-            tintColor="#366150"
-          />
+          <RefreshControl refreshing={statsLoading} onRefresh={refetch} tintColor="#366150" />
         }
       >
-        {/* Impact Section */}
-        <View className="px-5 mb-10 mt-2">
-          <Text className="text-center text-[18px] font-bold text-[#1A1A1A] mb-7">
-            Your Impact
-          </Text>
-          <View className="flex-row justify-between">
-            {renderStat(
-              require("../../../../assets/images/money.png"),
-              stats?.sarSaved ?? 0,
-              "SAR Saved",
-            )}
-            {renderStat(
-              require("../../../../assets/images/co.png"),
-              stats?.mealsRescued ?? 0,
-              "Meals Rescued",
-            )}
-            {renderStat(
-              require("../../../../assets/images/enviroment.png"),
-              stats?.co2Reduced ?? 0,
-              "CO₂ Reduced",
-            )}
+        {/* User Card */}
+        {user?.name ? (
+          <View className="mx-5 mb-5">
+            <View className="bg-white rounded-2xl px-4 py-4 flex-row items-center border border-gray-100 shadow-sm shadow-black/5">
+              <View className="w-12 h-12 rounded-full bg-[#366150] items-center justify-center mr-3">
+                <Text className="text-white text-[16px] font-black">{initials}</Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-[#111] text-[16px] font-black">{user.name}</Text>
+                <Text className="text-gray-400 text-[12px] font-medium mt-0.5" numberOfLines={1}>
+                  {user.phoneNumber ?? user.email ?? ""}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("PersonalInfo")}
+                className="bg-[#F4F4F4] px-3 py-1.5 rounded-xl"
+              >
+                <Text className="text-[#366150] text-[12px] font-bold">Edit</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        ) : null}
 
-        {/* User Profile Section */}
-        <View className="px-6 flex-row items-center mb-10">
-          <View className="w-20 h-20 rounded-full bg-[#366150] items-center justify-center mr-5 shadow-sm shadow-black/10 border-2 border-white/50">
-            <Text className="text-white text-2xl font-black tracking-wider">
-              {user?.name
-                ? user.name
-                    .split(" ")
-                    .map((n: string) => n[0])
-                    .join("")
-                    .toUpperCase()
-                : "MU"}
-            </Text>
+        {/* Impact Stats */}
+        {user?.isVerified && (
+          <View className="mx-5 mb-5">
+            <Text className="text-[#111] text-[11px] font-bold uppercase tracking-widest mb-3 opacity-40">Your Impact</Text>
+            <View className="flex-row gap-2">
+              {[
+                { img: require("../../../../assets/images/money.png"), value: stats?.sarSaved ?? 0, label: "SAR Saved" },
+                { img: require("../../../../assets/images/co.png"), value: stats?.mealsRescued ?? 0, label: "Meals Rescued" },
+                { img: require("../../../../assets/images/enviroment.png"), value: stats?.co2Reduced ?? 0, label: "CO₂ kg" },
+              ].map(({ img, value, label }) => (
+                <View key={label} className="flex-1 bg-white rounded-2xl py-4 items-center border border-gray-100 shadow-sm shadow-black/5">
+                  <Image source={img} className="w-6 h-6 mb-2" resizeMode="contain" />
+                  {statsLoading ? (
+                    <ActivityIndicator size="small" color="#366150" />
+                  ) : (
+                    <>
+                      <Text className="text-[#366150] font-black text-[16px]">{value}</Text>
+                      <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-wider mt-0.5 text-center px-1">{label}</Text>
+                    </>
+                  )}
+                </View>
+              ))}
+            </View>
           </View>
-          <View>
-            <Text className="text-[#1A1A1A] text-[20px] font-black">
-              {user?.name ?? "Muhammad Uzair"}
-            </Text>
-            {__DEV__ && (
-              <Text className="text-gray-400 text-[11px] font-medium mt-0.5">
-                ID: {user?.id} · {user?.email}
+        )}
+
+        {/* Referral Card — only shown once profile is complete */}
+        {user?.name && <View className="mx-5 mb-5">
+          <Text className="text-[#111] text-[11px] font-bold uppercase tracking-widest mb-3 opacity-40">Invite Friends</Text>
+          <View className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-black/5 overflow-hidden">
+            <View className="bg-[#366150] px-5 py-4">
+              <Text className="text-white font-black text-[15px] mb-0.5">Invite friends, earn rewards 🎁</Text>
+              <Text className="text-white/70 text-[12px] font-medium">
+                Share your code — both of you get a bonus on the first rescue.
               </Text>
+            </View>
+            <View className="px-4 py-4">
+              <View className="flex-row items-center bg-[#F4F4F4] rounded-xl px-4 py-3 mb-3">
+                <View className="flex-1">
+                  <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Your code</Text>
+                  <Text className="text-[#111] text-[18px] font-black tracking-widest">{referralCode}</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={handleShare}
+                  className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg"
+                >
+                  <Text className="text-[#366150] text-[12px] font-bold">Share</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                onPress={handleShare}
+                className="bg-[#FF7F50] h-11 rounded-xl flex-row items-center justify-center gap-2"
+              >
+                <Feather name="share-2" size={14} color="#fff" />
+                <Text className="text-white font-bold text-[14px]">Share with Friends</Text>
+              </TouchableOpacity>
+
+              <View className="flex-row mt-4 pt-4 border-t border-gray-100">
+                {[["0", "Invited"], ["0", "Joined"], ["﷼ 0", "Earned"]].map(([val, label], i, arr) => (
+                  <React.Fragment key={label}>
+                    <View className="flex-1 items-center">
+                      <Text className="text-[#111] text-[17px] font-black">{val}</Text>
+                      <Text className="text-gray-400 text-[11px] font-medium mt-0.5">{label}</Text>
+                    </View>
+                    {i < arr.length - 1 && <View className="w-[1px] bg-gray-100" />}
+                  </React.Fragment>
+                ))}
+              </View>
+            </View>
+          </View>
+        </View>}
+
+        {/* Settings */}
+        <View className="mx-5 mb-5">
+          <Text className="text-[#111] text-[11px] font-bold uppercase tracking-widest mb-3 opacity-40">Account</Text>
+          <View className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-black/5 overflow-hidden">
+            {user?.isVerified ? (
+              <>
+                <SettingRow icon="user" label="Personal Info" onPress={() => navigation.navigate("PersonalInfo")} />
+                <SettingRow icon="credit-card" label="Payment Method" onPress={() => navigation.navigate("PaymentMethod")} />
+                <SettingRow icon="globe" label="Country" badge={selectedCountry.flag} onPress={openCountrySheet} />
+              </>
+            ) : (
+              <SettingRow icon="log-in" label="Sign In" onPress={() => setSignInVisible(true)} />
             )}
+            <SettingRow icon="help-circle" label="FAQs" />
+            <SettingRow icon="settings" label="Settings" onPress={() => navigation.navigate("Settings")} />
+            <SettingRow icon="file-text" label="Terms and Conditions" isLast />
           </View>
         </View>
 
-        {/* Settings Rows */}
-        <View className="px-6 pb-20">
-          <SettingRow
-            icon={<Feather name="user" size={20} color="#366150" />}
-            label="Personal Info"
-          />
-          <SettingRow
-            icon={<Feather name="map-pin" size={20} color="#366150" />}
-            label="Addresses"
-          />
-          <SettingRow
-            icon={<Feather name="credit-card" size={20} color="#366150" />}
-            label="Payment Method"
-            onPress={() => navigation.navigate("AddNewCard" as never)}
-          />
+        {/* Logout — only shown after phone + OTP verified */}
+        {user?.isVerified && (
+          <View className="mx-5 mb-4">
+            <TouchableOpacity
+              onPress={openLogoutSheet}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-black/5 py-4 flex-row items-center justify-center gap-2"
+            >
+              <Feather name="log-out" size={15} color="#366150" />
+              <Text className="text-[#366150] font-bold text-[14px]">Log Out</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-          <SettingRow
-            icon={<Feather name="help-circle" size={20} color="#366150" />}
-            label="FAQs"
-          />
-          <SettingRow
-            icon={<Feather name="star" size={20} color="#366150" />}
-            label="User Reviews"
-          />
-          <SettingRow
-            icon={<Feather name="settings" size={20} color="#366150" />}
-            label="Settings"
-          />
-          <SettingRow
-            icon={<Feather name="refresh-cw" size={20} color="#FF7F50" />}
-            label="Debug: Reset App State"
-            hasBorder={false}
-            onPress={handleReset}
-          />
-        </View>
+        {__DEV__ && (
+          <View className="mx-5 mb-10">
+            <TouchableOpacity
+              onPress={handleReset}
+              className="border border-dashed border-gray-300 rounded-2xl py-3 flex-row items-center justify-center gap-2"
+            >
+              <Feather name="refresh-cw" size={13} color="#bbb" />
+              <Text className="text-gray-300 font-bold text-[11px]">DEV: Reset App State</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
+
+      <GuestAuthModal
+        visible={signInVisible}
+        onClose={() => setSignInVisible(false)}
+        onLoginSuccess={() => setSignInVisible(false)}
+      />
+
+      {/* Logout confirmation sheet */}
+      <Modal visible={logoutSheet} transparent animationType="none">
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={closeLogoutSheet}>
+          <Pressable onPress={() => {}}>
+            <Animated.View style={{ transform: [{ translateY: logoutSlideAnim }] }}>
+              <View className="bg-white rounded-t-3xl px-5 pt-6 pb-10">
+                <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-6" />
+                {/* Icon */}
+                <View className="w-16 h-16 rounded-full bg-[#E8F0ED] items-center justify-center self-center mb-4">
+                  <Feather name="log-out" size={28} color="#366150" />
+                </View>
+                <Text className="text-[#111] text-[18px] font-black text-center mb-2">Logout</Text>
+                <Text className="text-gray-400 text-[13px] font-medium text-center mb-8">
+                  Are you sure you want to logout?
+                </Text>
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    onPress={closeLogoutSheet}
+                    className="flex-1 h-12 rounded-2xl items-center justify-center bg-[#F4F4F4]"
+                  >
+                    <Text className="text-[#111] font-bold text-[14px]">No</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => { closeLogoutSheet(); setTimeout(logout, 220); }}
+                    className="flex-1 h-12 rounded-2xl items-center justify-center bg-[#366150]"
+                  >
+                    <Text className="text-white font-bold text-[14px]">Yes, Logout</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Animated.View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Country bottom sheet */}
+      <Modal visible={countrySheet} transparent animationType="none">
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={closeCountrySheet}>
+          <Pressable onPress={() => {}}>
+            <Animated.View style={{ transform: [{ translateY: slideAnim }] }}>
+              <View className="bg-white rounded-t-3xl px-5 pt-4 pb-10">
+                <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-4" />
+                <Text className="text-[#111] text-[16px] font-black mb-4">Select Country</Text>
+                <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  {[{ flag: "🇸🇦", name: "Saudi Arabia", code: "+966" }].map((c, i, arr) => (
+                    <TouchableOpacity
+                      key={c.code}
+                      onPress={() => { setSelectedCountry(c); closeCountrySheet(); }}
+                      activeOpacity={0.6}
+                      className={`flex-row items-center px-4 py-4 ${i < arr.length - 1 ? "border-b border-gray-100" : ""}`}
+                    >
+                      <Text className="flex-1 text-[#222] text-[14px] font-semibold">{c.name}</Text>
+                      <View className="flex-row items-center gap-2">
+                        <Text style={{ fontSize: 18 }}>{c.flag}</Text>
+                        {selectedCountry.code === c.code
+                          ? <Feather name="check-circle" size={18} color="#366150" />
+                          : <Feather name="chevron-right" size={17} color="#CCC" />
+                        }
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </Animated.View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-const SettingRow = ({
+function SettingRow({
   icon,
   label,
-  hasBorder = true,
   onPress,
+  isLast,
+  badge,
 }: {
-  icon: React.ReactNode;
+  icon: React.ComponentProps<typeof Feather>["name"];
   label: string;
-  hasBorder?: boolean;
   onPress?: () => void;
-}) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.7}
-    className={`flex-row items-center justify-between py-5 ${hasBorder ? "border-b border-gray-200/60" : ""}`}
-  >
-    <View className="flex-row items-center">
-      <View className="w-8 items-start justify-center mr-2">{icon}</View>
-      <Text className="text-[#222] text-[15px] font-semibold">{label}</Text>
-    </View>
-    <Feather name="chevron-right" size={20} color="#CCC" />
-  </TouchableOpacity>
-);
+  isLast?: boolean;
+  badge?: string;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.6}
+      className={`flex-row items-center justify-between px-4 py-4 ${isLast ? "" : "border-b border-gray-100"}`}
+    >
+      <View className="flex-row items-center gap-3">
+        <View className="w-8 h-8 rounded-xl bg-[#F4F4F4] items-center justify-center">
+          <Feather name={icon} size={15} color="#366150" />
+        </View>
+        <Text className="text-[#222] text-[14px] font-semibold">{label}</Text>
+      </View>
+      <View className="flex-row items-center gap-2">
+        {badge && <Text className="text-[18px]">{badge}</Text>}
+        <Feather name="chevron-right" size={17} color="#CCC" />
+      </View>
+    </TouchableOpacity>
+  );
+}

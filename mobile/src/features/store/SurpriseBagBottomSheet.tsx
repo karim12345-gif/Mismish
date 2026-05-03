@@ -82,6 +82,7 @@ export const SurpriseBagBottomSheet = ({
         originalPrice: item.originalPrice ?? undefined,
         imageUrl: item.imageUrl ?? undefined,
         pickupOffset: offset,
+        pickupEnd: item.pickupEnd ?? undefined,
       });
     }
   };
