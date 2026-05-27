@@ -242,9 +242,6 @@ export default function HomeScreen() {
                         ? formatDistance(location.coords.latitude, location.coords.longitude, store.latitude, store.longitude)
                         : "—"
                     }
-                    rating={((store.id % 5) * 0.1 + 4.5).toFixed(1).toString()}
-                    reviews={(120 + store.id * 14).toString()}
-                    branches="1"
                     imageUrl={
                       store.name.includes("Coffee Address")
                         ? require("../../../assets/images/coffee_address_logo.png")
@@ -256,6 +253,8 @@ export default function HomeScreen() {
                         : (store.imageUrl ?? FALLBACK_IMAGE)
                     }
                     leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
+                    rating={store.rating}
+                    reviewCount={store.reviewCount}
                   />
                 );
               })}

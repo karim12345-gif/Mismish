@@ -13,6 +13,7 @@ import storesRoutes from "./modules/stores/stores.routes";
 import usersRoutes from "./modules/users/users.routes";
 import vendorsRoutes from "./modules/vendors/vendors.routes";
 import placesRoutes from "./modules/places/places.routes";
+import reviewsRoutes from "./modules/reviews/reviews.routes";
 import prisma from "./shared/lib/prisma";
 
 dotenv.config();
@@ -22,7 +23,7 @@ const PORT = process.env.PORT || 3000;
 
 // ─── Global Middleware ────────────────────────────────────────────────────────
 app.use(helmet());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
 app.use(cors({ origin: "*" })); // TODO: restrict in production
 
@@ -41,6 +42,7 @@ app.use("/api/stores/v1", storesRoutes);
 app.use("/api/users/v1", usersRoutes);
 app.use("/api/vendors/v1", vendorsRoutes);
 app.use("/api/places/v1", placesRoutes);
+app.use("/api/reviews/v1", reviewsRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);

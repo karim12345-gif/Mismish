@@ -29,6 +29,7 @@ export interface Order {
   deliveryAddress: string | null;
   createdAt: string;
   updatedAt: string;
+  review?: { id: number; rating: number } | null;
   surpriseBox?: {
     id: number;
     name: string;
@@ -107,6 +108,18 @@ const devSetStatus = async (
   return response.data;
 };
 
+const submitReview = async (
+  orderId: number,
+  rating: number,
+  comment?: string,
+): Promise<{ status: string; data: { id: number } }> => {
+  const response = await api.post(`/reviews/v1/orders/${orderId}`, {
+    rating,
+    comment,
+  });
+  return response.data;
+};
+
 const OrderServices = {
   createOrder,
   getMyOrders,
@@ -114,6 +127,7 @@ const OrderServices = {
   getOrderById,
   collectOrder,
   devSetStatus,
+  submitReview,
 };
 
 export { OrderServices };

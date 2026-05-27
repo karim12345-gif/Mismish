@@ -25,6 +25,7 @@ model User {
   pushToken         String?
   passwordChangedAt DateTime?
   orders            Order[]
+  reviews           Review[]
   refreshTokens     RefreshToken[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
@@ -45,7 +46,10 @@ model Vendor {
   phone        String?
   openingHours String?
   closingHours String?
+  rating       Float?
+  reviewCount  Int           @default(0)
   listings     SurpriseBox[]
+  reviews      Review[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -99,8 +103,22 @@ model Order {
   orderCode       String         @unique
   deliveryMethod  DeliveryMethod
   deliveryAddress String?
+  review          Review?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  vendorId  Int
+  vendor    Vendor   @relation(fields: [vendorId], references: [id])
+  orderId   Int      @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
 }
 
 model RefreshToken {

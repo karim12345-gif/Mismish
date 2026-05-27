@@ -11,12 +11,11 @@ interface StoreCardProps {
   price: string;
   timeRange: string;
   distance: string;
-  rating: string;
-  reviews: string;
-  branches: string;
   imageUrl: any;
   logoUrl: any;
   leftCount: string;
+  rating?: number | null;
+  reviewCount?: number;
 }
 
 export const StoreCard = ({
@@ -26,12 +25,11 @@ export const StoreCard = ({
   price,
   timeRange,
   distance,
-  rating,
-  reviews,
-  branches,
   imageUrl,
   logoUrl,
   leftCount,
+  rating,
+  reviewCount = 0,
 }: StoreCardProps) => {
   const navigation = useNavigation<any>();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -130,25 +128,15 @@ export const StoreCard = ({
               {distance}
             </Text>
           </View>
-          <View className="flex-row items-center mr-4">
-            <MaterialCommunityIcons name="star" size={14} color="#F5B224" />
-            <Text className="text-gray-500 text-[12px] font-semibold ml-1">
-              {rating} ({reviews})
-            </Text>
-          </View>
-          <View className="flex-row items-center flex-1">
-            <MaterialCommunityIcons
-              name="storefront-outline"
-              size={14}
-              color="#888"
-            />
-            <Text
-              className="text-gray-500 text-[12px] font-semibold ml-1"
-              numberOfLines={1}
-            >
-              {branches} branches available
-            </Text>
-          </View>
+          {reviewCount > 0 && rating != null && (
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons name="star" size={13} color="#F5B224" />
+              <Text className="text-gray-500 text-[12px] font-semibold ml-1">
+                {rating.toFixed(1)}{" "}
+                <Text className="text-gray-400">({reviewCount})</Text>
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </TouchableOpacity>

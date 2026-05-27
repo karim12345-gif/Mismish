@@ -23,6 +23,8 @@ export interface Store {
   address: string | null;
   latitude: number | null;
   longitude: number | null;
+  rating: number | null;
+  reviewCount: number;
   listings: SurpriseBox[];
 }
 

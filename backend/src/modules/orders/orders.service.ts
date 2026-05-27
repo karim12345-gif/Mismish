@@ -80,6 +80,7 @@ export const getMyOrders = async (userId: number) =>
           },
         },
       },
+      review: { select: { id: true, rating: true } },
     },
     orderBy: { createdAt: "desc" },
   });

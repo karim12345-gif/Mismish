@@ -10,7 +10,7 @@ import {
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { useCollectOrder } from "../../hooks/useCollectOrder";
@@ -22,7 +22,9 @@ import {
 } from "../../services/order/order.service";
 import { MY_ORDERS_QUERY_KEY } from "../../hooks/useMyOrders";
 import { OrdersSkeleton } from "./components/OrdersSkeleton";
+import { RatingModal } from "./components/RatingModal";
 import { STATUS_CONFIG, styles } from "./Orders.styles";
+import { useSubmitReview } from "../../hooks/useSubmitReview";
 
 const ACTIVE_STATUSES: Order["status"][] = [
   "PENDING",
@@ -69,7 +71,13 @@ const STATUS_CYCLE_LABELS: Record<OrderStatus, string> = {
   CANCELLED: "→ Pending",
 };
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({
+  order,
+  onRate,
+}: {
+  order: Order;
+  onRate: (order: Order) => void;
+}) {
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
   const { mutate: collectOrder, isPending: isCollecting } = useCollectOrder();
@@ -159,6 +167,29 @@ function OrderCard({ order }: { order: Order }) {
         </TouchableOpacity>
       )}
 
+      {/* Rate button — COMPLETED orders without a review */}
+      {order.status === "COMPLETED" && !order.review && (
+        <TouchableOpacity
+          onPress={() => onRate(order)}
+          className="mt-1 h-11 rounded-2xl border border-[#F5B224]/40 bg-[#FFFBEB] flex-row items-center justify-center gap-2"
+        >
+          <MaterialCommunityIcons name="star-outline" size={17} color="#F5B224" />
+          <Text className="text-[#D97706] font-black text-[13px]">
+            Rate this bag
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Already reviewed badge */}
+      {order.status === "COMPLETED" && order.review && (
+        <View className="mt-1 h-9 rounded-2xl bg-gray-50 flex-row items-center justify-center gap-1.5">
+          <MaterialCommunityIcons name="star" size={14} color="#F5B224" />
+          <Text className="text-gray-400 font-semibold text-[12px]">
+            You rated this {order.review.rating}/5
+          </Text>
+        </View>
+      )}
+
       {/* Action row — only for active orders */}
       {isActive && (
         <View className="flex-col gap-2">
@@ -234,7 +265,9 @@ function OrderCard({ order }: { order: Order }) {
 
 export default function OrdersScreen() {
   const [activeTab, setActiveTab] = useState<"active" | "past">("active");
+  const [ratingOrder, setRatingOrder] = useState<Order | null>(null);
   const { data: orders, isLoading, isError, refetch } = useMyOrders();
+  const { mutate: submitReview, isPending: isSubmittingReview } = useSubmitReview();
 
   const activeOrders = (orders ?? []).filter((o) =>
     ACTIVE_STATUSES.includes(o.status),
@@ -344,7 +377,11 @@ export default function OrdersScreen() {
         >
           <View className="pt-1 pb-4">
             {displayed.map((order) => (
-              <OrderCard key={order.id} order={order} />
+              <OrderCard
+                key={order.id}
+                order={order}
+                onRate={setRatingOrder}
+              />
             ))}
           </View>
 
@@ -360,6 +397,19 @@ export default function OrdersScreen() {
           )}
         </ScrollView>
       )}
+      <RatingModal
+        visible={ratingOrder !== null}
+        order={ratingOrder}
+        isSubmitting={isSubmittingReview}
+        onClose={() => setRatingOrder(null)}
+        onSubmit={(rating, comment) => {
+          if (!ratingOrder) return;
+          submitReview(
+            { orderId: ratingOrder.id, rating, comment },
+            { onSuccess: () => setRatingOrder(null) },
+          );
+        }}
+      />
     </SafeAreaView>
   );
 }
