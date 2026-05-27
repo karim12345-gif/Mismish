@@ -46,7 +46,7 @@ export const getOrderById = async (
   try {
     const order = await ordersService.getOrderById(
       req.user!.id,
-      parseInt(req.params.id),
+      parseInt(req.params.id as string),
     );
     res.status(200).json({ status: "success", data: order });
   } catch (e) {
@@ -62,7 +62,7 @@ export const collectOrder = async (
   try {
     const order = await ordersService.collectOrder(
       req.user!.id,
-      parseInt(req.params.id),
+      parseInt(req.params.id as string),
     );
     res.status(200).json({ status: "success", data: order });
   } catch (e) {
@@ -91,7 +91,7 @@ export const devSetOrderStatus = async (
 ): Promise<void> => {
   try {
     const order = await ordersService.devSetOrderStatus(
-      parseInt(req.params.id),
+      parseInt(req.params.id as string),
       req.body.status as OrderStatus,
     );
     res.status(200).json({ status: "success", data: order });

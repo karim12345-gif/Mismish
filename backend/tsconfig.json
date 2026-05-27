@@ -13,6 +13,8 @@
     "node_modules",
     "dist",
     "prisma",
-    "scripts"
+    "scripts",
+    "add_cafe.ts",
+    "add_extra_items.ts"
   ]
 }
