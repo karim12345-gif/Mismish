@@ -89,6 +89,7 @@ export const VendorSignupSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     address: z.string().optional(),
     description: z.string().optional(),
+    category: z.string().optional(),
     latitude: z.number().min(-90).max(90).optional(),
     longitude: z.number().min(-180).max(180).optional(),
   }),
