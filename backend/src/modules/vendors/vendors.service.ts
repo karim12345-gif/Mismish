@@ -8,9 +8,11 @@ export const getMyProfile = async (vendorId: number) => {
   const vendor = await prisma.vendor.findUnique({
     where: { id: vendorId },
     select: {
-      id: true, email: true, name: true, description: true,
-      category: true, address: true, imageUrl: true,
-      latitude: true, longitude: true, createdAt: true,
+      id: true, email: true, name: true, nameArabic: true,
+      description: true, category: true, address: true,
+      imageUrl: true, phone: true, openingHours: true,
+      closingHours: true, latitude: true, longitude: true,
+      createdAt: true,
     },
   });
   if (!vendor) throw new AppError(404, "Vendor not found");
@@ -20,8 +22,9 @@ export const getMyProfile = async (vendorId: number) => {
 export const updateMyProfile = async (
   vendorId: number,
   data: {
-    name?: string; description?: string; category?: string;
-    address?: string; imageUrl?: string;
+    name?: string; nameArabic?: string; description?: string;
+    category?: string; address?: string; imageUrl?: string;
+    phone?: string; openingHours?: string; closingHours?: string;
     latitude?: number; longitude?: number;
   },
 ) => {
@@ -29,9 +32,10 @@ export const updateMyProfile = async (
     where: { id: vendorId },
     data,
     select: {
-      id: true, email: true, name: true, description: true,
-      category: true, address: true, imageUrl: true,
-      latitude: true, longitude: true,
+      id: true, email: true, name: true, nameArabic: true,
+      description: true, category: true, address: true,
+      imageUrl: true, phone: true, openingHours: true,
+      closingHours: true, latitude: true, longitude: true,
     },
   });
 };

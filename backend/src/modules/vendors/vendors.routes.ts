@@ -16,8 +16,8 @@ const router = Router();
 router.use(authenticate, authorize("vendor"));
 
 // ─── Profile ──────────────────────────────────────────────────────────────────
-router.get("/me",    vendorsController.getMyProfile);
-router.patch("/me",  validate(UpdateProfileSchema), vendorsController.updateMyProfile);
+router.get("/profile",    vendorsController.getMyProfile);
+router.patch("/profile",  validate(UpdateProfileSchema), vendorsController.updateMyProfile);
 
 // ─── Listings ─────────────────────────────────────────────────────────────────
 router.get("/listings",        vendorsController.getMyListings);

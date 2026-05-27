@@ -31,19 +31,23 @@ model User {
 }
 
 model Vendor {
-  id          Int           @id @default(autoincrement())
-  email       String        @unique
-  password    String
-  name        String
-  description String?
-  imageUrl    String?
-  category    String?
-  latitude    Float?
-  longitude   Float?
-  address     String?
-  listings    SurpriseBox[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String
+  name         String
+  nameArabic   String?
+  description  String?
+  imageUrl     String?
+  category     String?
+  latitude     Float?
+  longitude    Float?
+  address      String?
+  phone        String?
+  openingHours String?
+  closingHours String?
+  listings     SurpriseBox[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model SurpriseBox {
