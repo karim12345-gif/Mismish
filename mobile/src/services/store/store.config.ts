@@ -1,4 +1,4 @@
-const STORE_ROOT = "/customer/stores";
+const STORE_ROOT = "/stores/v1";
 
 const STORE_ENDPOINTS = {
   LIST: STORE_ROOT,

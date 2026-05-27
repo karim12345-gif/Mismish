@@ -1,5 +1,5 @@
 const USER_ENDPOINTS = {
-  ME: "/customer/users/me",
+  ME: "/users/v1/me",
 };
 
 export default USER_ENDPOINTS;

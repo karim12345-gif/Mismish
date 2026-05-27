@@ -1,4 +1,4 @@
-const AUTH_ROOT = "/customer/auth";
+const AUTH_ROOT = "/auth/v1";
 
 const AUTH_ENDPOINTS = {
   SEND_OTP: `${AUTH_ROOT}/send-otp`,

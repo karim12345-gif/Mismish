@@ -1,13 +1,21 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
+// Base URL — no trailing slash, no module name.
+// Each service file appends its own /api/{module}/v1 path.
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
 });
+
+let _onSessionExpired: (() => void) | null = null;
+
+export const setSessionExpiredHandler = (handler: () => void) => {
+  _onSessionExpired = handler;
+};
 
 // Attach access token to every request
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
@@ -32,9 +40,12 @@ api.interceptors.response.use(
 
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
-      if (!refreshToken) return Promise.reject(error);
+      if (!refreshToken) {
+        _onSessionExpired?.();
+        return Promise.reject(error);
+      }
 
-      const { data } = await axios.post(`${API_URL}/customer/auth/refresh`, {
+      const { data } = await axios.post(`${BASE_URL}/auth/v1/refresh`, {
         refreshToken,
       });
 
@@ -44,8 +55,9 @@ api.interceptors.response.use(
 
       return api(original);
     } catch {
-      // Refresh failed — clear session so the app routes back to login
+      // Refresh failed — clear session and notify AuthContext
       await AsyncStorage.multiRemove(["accessToken", "refreshToken", "user"]);
+      _onSessionExpired?.();
       return Promise.reject(error);
     }
   },

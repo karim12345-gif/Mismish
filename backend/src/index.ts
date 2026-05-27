@@ -1,74 +1,56 @@
-import express from 'express';
-import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import morgan from "morgan";
+import rateLimit from "express-rate-limit";
 
-
-import { errorHandler } from './api/shared/middlewares/errorHandler';
-import { customerAuthRoutes, vendorAuthRoutes } from './routes';
-import listingRoutes from './routes/customer/listingRoutes';
-import orderRoutes from './routes/customer/orderRoutes';
-import userRoutes from './routes/customer/userRoutes';
-import storeRoutes from './routes/customer/storeRoutes';
+import { errorHandler } from "./shared/middleware/errorHandler";
+import authRoutes from "./modules/auth/auth.routes";
+import ordersRoutes from "./modules/orders/orders.routes";
+import listingsRoutes from "./modules/listings/listings.routes";
+import storesRoutes from "./modules/stores/stores.routes";
+import usersRoutes from "./modules/users/users.routes";
+import prisma from "./shared/lib/prisma";
 
 dotenv.config();
 
-const prisma = new PrismaClient({
-  accelerateUrl: process.env.DATABASE_URL,
-});
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-const app = express();
-
-// Security Headers
+// ─── Global Middleware ────────────────────────────────────────────────────────
 app.use(helmet());
-
-// Body Parser
 app.use(express.json());
+app.use(morgan("dev"));
+app.use(cors({ origin: "*" })); // TODO: restrict in production
 
-// Request Logging
-app.use(morgan('dev'));
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 min
+    max: 100,
+  }),
+);
 
-// Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
+// ─── Routes — /api/{module}/v1 ────────────────────────────────────────────────
+app.use("/api/auth/v1", authRoutes);
+app.use("/api/orders/v1", ordersRoutes);
+app.use("/api/listings/v1", listingsRoutes);
+app.use("/api/stores/v1", storesRoutes);
+app.use("/api/users/v1", usersRoutes);
 
-app.use(cors({
-  origin: '*', // Allow all for development, restrict in production
-}));
-
-// Customer API Routes
-app.use('/api/customer/auth', customerAuthRoutes);
-app.use('/api/customer/listings', listingRoutes);
-app.use('/api/customer/orders', orderRoutes);
-app.use('/api/customer/users', userRoutes);
-app.use('/api/customer/stores', storeRoutes);
-
-// Vendor API Routes
-app.use('/api/vendor/auth', vendorAuthRoutes);
-
-// Global Error Handler
+// ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);
 
-const startServer = async () => {
+// ─── Start ────────────────────────────────────────────────────────────────────
+const start = async () => {
   try {
-    // Test the connection via Prisma
     await prisma.$queryRaw`SELECT 1`;
-    console.log('✅ Connected to PostgreSQL database');
-    
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
+    console.log("✅ Connected to PostgreSQL");
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   } catch (error) {
-    console.error('❌ Failed to connect to database:', error);
+    console.error("❌ Failed to connect to database:", error);
     process.exit(1);
   }
 };
 
-startServer();
+start();

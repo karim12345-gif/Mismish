@@ -8,6 +8,7 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContextProps, AuthUser } from "./types";
 import { AuthServices } from "../services/auth/auth.service";
+import { setSessionExpiredHandler } from "../services/api";
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: "accessToken",
@@ -39,6 +40,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     restoreSession();
+    setSessionExpiredHandler(() => {
+      setUser(null);
+      setIsAuthenticated(false);
+    });
   }, []);
 
   const restoreSession = async () => {
