@@ -12,6 +12,7 @@ import listingsRoutes from "./modules/listings/listings.routes";
 import storesRoutes from "./modules/stores/stores.routes";
 import usersRoutes from "./modules/users/users.routes";
 import vendorsRoutes from "./modules/vendors/vendors.routes";
+import placesRoutes from "./modules/places/places.routes";
 import prisma from "./shared/lib/prisma";
 
 dotenv.config();
@@ -39,6 +40,7 @@ app.use("/api/listings/v1", listingsRoutes);
 app.use("/api/stores/v1", storesRoutes);
 app.use("/api/users/v1", usersRoutes);
 app.use("/api/vendors/v1", vendorsRoutes);
+app.use("/api/places/v1", placesRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);
