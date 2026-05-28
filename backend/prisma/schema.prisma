@@ -46,11 +46,13 @@ model Vendor {
   phone        String?
   openingHours String?
   closingHours String?
-  rating       Float?
-  reviewCount  Int           @default(0)
-  listings     SurpriseBox[]
-  reviews      Review[]
-  createdAt    DateTime      @default(now())
+  rating                  Float?
+  reviewCount             Int           @default(0)
+  passwordResetToken      String?
+  passwordResetExpiresAt  DateTime?
+  listings                SurpriseBox[]
+  reviews                 Review[]
+  createdAt               DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
 

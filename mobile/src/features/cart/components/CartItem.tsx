@@ -8,9 +8,12 @@ interface CartItemProps {
   item: CartItemProduct;
   onIncrement: () => void;
   onDecrement: () => void;
+  maxQuantity?: number;
 }
 
-export const CartItem = ({ item, onIncrement, onDecrement }: CartItemProps) => {
+export const CartItem = ({ item, onIncrement, onDecrement, maxQuantity }: CartItemProps) => {
+  const effectiveMax = maxQuantity ?? item.maxQuantity;
+  const atMax = effectiveMax !== undefined && item.quantity >= effectiveMax;
   return (
     <View className="flex-row items-center justify-between px-5 py-6 border-b border-gray-100 bg-white">
       {/* Item Info */}
@@ -64,8 +67,9 @@ export const CartItem = ({ item, onIncrement, onDecrement }: CartItemProps) => {
         <TouchableOpacity
           className="w-8 h-8 items-center justify-center rounded-lg"
           onPress={onIncrement}
+          disabled={atMax}
         >
-          <Feather name="plus" size={16} color="#E7246A" />
+          <Feather name="plus" size={16} color={atMax ? "#CCC" : "#E7246A"} />
         </TouchableOpacity>
       </View>
     </View>

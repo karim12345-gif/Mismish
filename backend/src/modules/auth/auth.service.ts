@@ -1,10 +1,12 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import appleSignin from "apple-signin-auth";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
 import { generateOTP, sendOTP, maskPhoneNumber } from "../../shared/lib/sms";
+import { sendPasswordResetEmail } from "../../shared/lib/email";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -319,6 +321,49 @@ export const loginVendor = async (
     token: signVendorToken(vendor.id),
     vendor: { id: vendor.id, email: vendor.email, name: vendor.name },
   };
+};
+
+export const forgotVendorPassword = async (email: string): Promise<void> => {
+  const vendor = await prisma.vendor.findUnique({ where: { email } });
+  // Always respond with success — don't leak whether the email exists
+  if (!vendor) return;
+
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+
+  await prisma.vendor.update({
+    where: { email },
+    data: {
+      passwordResetToken: hashedToken,
+      passwordResetExpiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min
+    },
+  });
+
+  await sendPasswordResetEmail(email, rawToken);
+};
+
+export const resetVendorPassword = async (
+  rawToken: string,
+  newPassword: string,
+): Promise<void> => {
+  const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+
+  const vendor = await prisma.vendor.findFirst({
+    where: {
+      passwordResetToken: hashedToken,
+      passwordResetExpiresAt: { gt: new Date() },
+    },
+  });
+  if (!vendor) throw new AppError(400, "Reset link is invalid or has expired");
+
+  await prisma.vendor.update({
+    where: { id: vendor.id },
+    data: {
+      password: await bcrypt.hash(newPassword, 10),
+      passwordResetToken: null,
+      passwordResetExpiresAt: null,
+    },
+  });
 };
 
 export { maskPhoneNumber };

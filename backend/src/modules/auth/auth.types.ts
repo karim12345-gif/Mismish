@@ -72,3 +72,10 @@ export interface VendorAuthResult {
   token: string;
   vendor: { id: number; email: string; name: string };
 }
+export interface VendorForgotPasswordBody {
+  email: string;
+}
+export interface VendorResetPasswordBody {
+  token: string;
+  newPassword: string;
+}

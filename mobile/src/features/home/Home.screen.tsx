@@ -105,6 +105,13 @@ export default function HomeScreen() {
       });
     }
 
+    // Always push stores with no active bags to the bottom
+    result.sort((a, b) => {
+      const aHas = a.listings.length > 0 ? 0 : 1;
+      const bHas = b.listings.length > 0 ? 0 : 1;
+      return aHas - bHas;
+    });
+
     return result;
   }, [stores, activeCuisine, activePriceRange, sortBy, location]);
 
@@ -197,7 +204,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Available Now */}
-        <View className="px-5 mt-6 mb-8">
+        <View className="px-5 mt-6 pb-32">
           <Text className="text-[#111] text-[18px] font-black tracking-tight mb-5">
             Available Now ⚡
           </Text>
@@ -253,6 +260,7 @@ export default function HomeScreen() {
                         : (store.imageUrl ?? FALLBACK_IMAGE)
                     }
                     leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
+                    hasListings={totalLeft > 0}
                     rating={store.rating}
                     reviewCount={store.reviewCount}
                   />

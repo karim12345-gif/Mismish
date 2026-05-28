@@ -42,13 +42,17 @@ interface Props {
 }
 
 const CUISINE_EMOJI: Record<string, string> = {
-  Bakery: "🥐", Café: "☕", Coffee: "☕", Restaurant: "🍽️",
-  Japanese: "🍱", Grill: "🥩", Sweets: "🍬", Dessert: "🍰",
-  Pizza: "🍕", Burgers: "🍔", Shawarma: "🌯", Sushi: "🍣",
-  Indian: "🍛", Chinese: "🥡", Italian: "🍝", Mexican: "🌮",
-  Seafood: "🦐", Salads: "🥗", Breakfast: "🍳", Sandwiches: "🥪",
-  Grocery: "🛒", Protein: "💪", Drinks: "🥤",
-  "Fruits and Vegetables": "🥦", "Meat Products": "🥩", Flowers: "🌸",
+  Restaurant: "🍽️",
+  "Café": "☕",
+  Bakery: "🥐",
+  Grocery: "🛒",
+  Sweets: "🍬",
+  "Fast Food": "🍔",
+  Pizza: "🍕",
+  Sandwiches: "🥪",
+  "Juice & Smoothies": "🥤",
+  "Sushi / Japanese": "🍱",
+  Other: "🛍️",
 };
 
 const AVAILABILITY_OPTIONS: { value: MapAvailability; label: string; icon?: boolean }[] = [

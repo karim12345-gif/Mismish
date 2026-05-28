@@ -9,6 +9,7 @@ export interface CartItemProduct {
   originalPrice?: number;
   imageUrl?: string;
   quantity: number;
+  maxQuantity?: number;
   pickupOffset?: number;
   pickupEnd?: string;
 }
@@ -63,7 +64,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const incrementItem = (id: string) => {
     setCartItems((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, quantity: p.quantity + 1 } : p)),
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        if (p.maxQuantity !== undefined && p.quantity >= p.maxQuantity) return p;
+        return { ...p, quantity: p.quantity + 1 };
+      }),
     );
   };
 

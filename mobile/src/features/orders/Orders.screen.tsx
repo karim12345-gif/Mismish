@@ -14,13 +14,7 @@ import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { useCollectOrder } from "../../hooks/useCollectOrder";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  Order,
-  OrderStatus,
-  OrderServices,
-} from "../../services/order/order.service";
-import { MY_ORDERS_QUERY_KEY } from "../../hooks/useMyOrders";
+import { Order } from "../../services/order/order.service";
 import { OrdersSkeleton } from "./components/OrdersSkeleton";
 import { RatingModal } from "./components/RatingModal";
 import { STATUS_CONFIG, styles } from "./Orders.styles";
@@ -50,27 +44,6 @@ const dayLabel = (iso: string) => {
     : "Tomorrow";
 };
 
-import { IMPACT_STATS_QUERY_KEY } from "../../hooks/useImpactStats";
-
-const STATUS_CYCLE: OrderStatus[] = [
-  "PENDING",
-  "CONFIRMED",
-  "READY_FOR_PICKUP",
-  "ON_THE_WAY",
-  "DELIVERED",
-  "COMPLETED",
-  "CANCELLED",
-];
-const STATUS_CYCLE_LABELS: Record<OrderStatus, string> = {
-  PENDING: "→ Confirmed",
-  CONFIRMED: "→ Ready",
-  READY_FOR_PICKUP: "→ On the Way",
-  ON_THE_WAY: "→ Delivered",
-  DELIVERED: "→ Collected",
-  COMPLETED: "→ Cancelled",
-  CANCELLED: "→ Pending",
-};
-
 function OrderCard({
   order,
   onRate,
@@ -79,23 +52,12 @@ function OrderCard({
   onRate: (order: Order) => void;
 }) {
   const navigation = useNavigation<any>();
-  const queryClient = useQueryClient();
   const { mutate: collectOrder, isPending: isCollecting } = useCollectOrder();
   const bag = order.surpriseBox;
   const vendor = bag?.vendor;
   const status = STATUS_CONFIG[order.status];
   const isActive = ACTIVE_STATUSES.includes(order.status);
   const isConfirmed = order.status === "CONFIRMED";
-
-  const cycleStatus = async () => {
-    const next =
-      STATUS_CYCLE[
-        (STATUS_CYCLE.indexOf(order.status) + 1) % STATUS_CYCLE.length
-      ];
-    await OrderServices.devSetStatus(order.id, next);
-    queryClient.invalidateQueries({ queryKey: MY_ORDERS_QUERY_KEY });
-    queryClient.invalidateQueries({ queryKey: IMPACT_STATS_QUERY_KEY });
-  };
 
   return (
     <View className="bg-white rounded-2xl border border-gray-100 p-4 mb-3 shadow-sm shadow-black/5">
@@ -154,18 +116,6 @@ function OrderCard({
           )}
         </View>
       </View>
-
-      {/* DEV: cycle order status */}
-      {__DEV__ && (
-        <TouchableOpacity
-          onPress={cycleStatus}
-          className="mb-3 h-8 rounded-lg border border-dashed border-gray-300 items-center justify-center"
-        >
-          <Text className="text-gray-400 font-bold text-[11px]">
-            [DEV] {order.status} {STATUS_CYCLE_LABELS[order.status]}
-          </Text>
-        </TouchableOpacity>
-      )}
 
       {/* Rate button — COMPLETED orders without a review */}
       {order.status === "COMPLETED" && !order.review && (

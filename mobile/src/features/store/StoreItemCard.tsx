@@ -9,7 +9,8 @@ interface StoreItemCardProps {
   originalPrice: string;
   imageUrl: string;
   leftCount: string;
-  quantity: number;
+  quantity: number;     // how many user has in cart
+  maxQuantity: number;  // actual stock available
   onAdd: () => void;
   onItemPress: () => void;
 }
@@ -22,12 +23,15 @@ export const StoreItemCard = ({
   imageUrl,
   leftCount,
   quantity,
+  maxQuantity,
   onAdd,
   onItemPress,
 }: StoreItemCardProps) => {
   const scale = useRef(new Animated.Value(1)).current;
+  const isSoldOut = quantity >= maxQuantity;
 
   const handleAdd = () => {
+    if (isSoldOut) return;
     Animated.sequence([
       Animated.spring(scale, { toValue: 1.35, useNativeDriver: true, speed: 50, bounciness: 10 }),
       Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 6 }),
@@ -68,17 +72,31 @@ export const StoreItemCard = ({
           source={{ uri: imageUrl }}
           className="w-full h-full rounded-2xl bg-gray-100"
           resizeMode="cover"
+          style={{ opacity: isSoldOut ? 0.45 : 1 }}
         />
 
-        {/* "X left" badge */}
-        <View className="absolute top-2 left-2 bg-[#FFF2C2] px-2 py-0.5 rounded-md">
-          <Text className="text-[#D7402B] text-[9px] font-black">
-            {leftCount}
-          </Text>
-        </View>
+        {/* "X left" badge — hide when sold out */}
+        {!isSoldOut && (
+          <View className="absolute top-2 left-2 bg-[#FFF2C2] px-2 py-0.5 rounded-md">
+            <Text className="text-[#D7402B] text-[9px] font-black">
+              {leftCount}
+            </Text>
+          </View>
+        )}
 
-        {/* Quantity badge — only when > 0 */}
-        {quantity > 0 && (
+        {/* Sold out overlay badge */}
+        {isSoldOut && (
+          <View className="absolute inset-0 items-center justify-center rounded-2xl">
+            <View className="bg-black/60 px-2.5 py-1 rounded-lg">
+              <Text className="text-white text-[10px] font-black tracking-wide">
+                SOLD OUT
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Quantity badge — only when in cart and not sold out */}
+        {quantity > 0 && !isSoldOut && (
           <View
             className="absolute top-2 right-2 w-5 h-5 rounded-full items-center justify-center"
             style={{ backgroundColor: "#FF7F50" }}
@@ -87,23 +105,25 @@ export const StoreItemCard = ({
           </View>
         )}
 
-        {/* "+" button — always stays as "+" */}
-        <Animated.View
-          style={{
-            transform: [{ scale }],
-            position: "absolute",
-            bottom: -8,
-            right: -4,
-          }}
-        >
-          <TouchableOpacity
-            onPress={handleAdd}
-            activeOpacity={0.8}
-            className="w-8 h-8 rounded-full bg-[#FF7F50] items-center justify-center shadow-sm shadow-black/10 border-2 border-white"
+        {/* "+" button — hidden when sold out */}
+        {!isSoldOut && (
+          <Animated.View
+            style={{
+              transform: [{ scale }],
+              position: "absolute",
+              bottom: -8,
+              right: -4,
+            }}
           >
-            <Feather name="plus" size={16} color="#FFF" />
-          </TouchableOpacity>
-        </Animated.View>
+            <TouchableOpacity
+              onPress={handleAdd}
+              activeOpacity={0.8}
+              className="w-8 h-8 rounded-full bg-[#FF7F50] items-center justify-center shadow-sm shadow-black/10 border-2 border-white"
+            >
+              <Feather name="plus" size={16} color="#FFF" />
+            </TouchableOpacity>
+          </Animated.View>
+        )}
       </View>
     </TouchableOpacity>
   );

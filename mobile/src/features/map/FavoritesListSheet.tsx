@@ -67,11 +67,13 @@ export function FavoritesListSheet({
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => {
             const bag = item.listings?.[0];
+            const hasListings = !!bag;
             return (
               <TouchableOpacity
-                onPress={() => onSelectStore(item)}
-                activeOpacity={0.85}
-                style={styles.card}
+                onPress={() => hasListings && onSelectStore(item)}
+                disabled={!hasListings}
+                activeOpacity={hasListings ? 0.85 : 1}
+                style={[styles.card, !hasListings && { opacity: 0.45 }]}
               >
                 {/* Store image */}
                 <Image

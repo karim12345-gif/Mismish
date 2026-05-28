@@ -5,6 +5,7 @@ import { Store } from "../../../services/store/store.service";
 import { SortBottomSheet, SortOption } from "./SortBottomSheet";
 import { CuisineBottomSheet } from "./CuisineBottomSheet";
 import { PriceBottomSheet, PriceRange } from "./PriceBottomSheet";
+import { ALL_CUISINES } from "../../../constants/cuisines";
 
 const CORAL = "#FF7F50";
 
@@ -31,7 +32,7 @@ export const HomeFilters = ({
   const [cuisineOpen, setCuisineOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
 
-  const categories = [...new Set(stores.map(s => s.category).filter(Boolean) as string[])].sort();
+  const categories = ALL_CUISINES;
 
   const sortActive = sortBy !== "";
   const cuisineActive = activeCuisine !== "";

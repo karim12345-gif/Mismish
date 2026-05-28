@@ -13,6 +13,8 @@ import type {
   ChangePasswordBody,
   RegisterVendorBody,
   LoginVendorBody,
+  VendorForgotPasswordBody,
+  VendorResetPasswordBody,
 } from "./auth.types";
 
 const handle = (error: unknown, res: Response, next: NextFunction): void => {
@@ -219,6 +221,39 @@ export const loginVendor = async (
   try {
     const result = await authService.loginVendor(req.body);
     res.status(200).json({ status: "success", data: result });
+  } catch (e) {
+    handle(e, res, next);
+  }
+};
+
+export const forgotVendorPassword = async (
+  req: Request<{}, {}, VendorForgotPasswordBody>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    await authService.forgotVendorPassword(req.body.email);
+    // Always return success so we don't leak whether the email exists
+    res.status(200).json({
+      status: "success",
+      message: "If that email is registered, a reset link has been sent.",
+    });
+  } catch (e) {
+    handle(e, res, next);
+  }
+};
+
+export const resetVendorPassword = async (
+  req: Request<{}, {}, VendorResetPasswordBody>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    await authService.resetVendorPassword(req.body.token, req.body.newPassword);
+    res.status(200).json({
+      status: "success",
+      message: "Password reset successfully. You can now log in.",
+    });
   } catch (e) {
     handle(e, res, next);
   }

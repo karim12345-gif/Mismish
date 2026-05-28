@@ -58,7 +58,7 @@ export function StoreBottomCard({
           />
         </TouchableOpacity>
 
-        <View style={styles.storeRow}>
+        <View style={[styles.storeRow, !bag && { opacity: 0.45 }]}>
           <Image
             source={{ uri: store.imageUrl ?? FALLBACK_IMAGE }}
             style={styles.storeImage}
@@ -102,7 +102,9 @@ export function StoreBottomCard({
             </TouchableOpacity>
           </View>
         ) : (
-          <Text style={styles.noBagsText}>No bags available right now</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, opacity: 0.45 }}>
+            <Text style={styles.noBagsText}>Not available today</Text>
+          </View>
         )}
       </View>
     </Animated.View>

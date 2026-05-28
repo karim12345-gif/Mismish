@@ -3,10 +3,7 @@ import { ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { CheckoutHeader } from "./components/CheckoutHeader";
-import { CheckoutFulfillmentToggle } from "./components/CheckoutFulfillmentToggle";
 import { CheckoutStoreDetails } from "./components/CheckoutStoreDetails";
-import { CheckoutDeliveryDetails } from "./components/CheckoutDeliveryDetails";
-import { useLocation } from "../../context/LocationContext";
 import { CheckoutOrderItems } from "./components/CheckoutOrderItems";
 import { CheckoutCoupon } from "./components/CheckoutCoupon";
 import { CheckoutSummary } from "./components/CheckoutSummary";
@@ -30,12 +27,6 @@ export default function CheckoutScreen() {
     s.listings.some((l) => l.id === cartBoxId),
   );
   const activeBag = activeStore?.listings.find((l) => l.id === cartBoxId);
-
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
-  const { address } = useLocation();
-  const deliveryAddress = address
-    ? [address.street, address.district, address.city].filter(Boolean).join(", ")
-    : "";
 
   const [paymentSheetVisible, setPaymentSheetVisible] = useState(false);
   const [addCardSheetVisible, setAddCardSheetVisible] = useState(false);
@@ -70,26 +61,21 @@ export default function CheckoutScreen() {
     createOrder(
       {
         surpriseBoxId,
-        deliveryMethod: fulfillment === "delivery" ? "DELIVERY" : "PICKUP",
-        ...(fulfillment === "delivery" && deliveryAddress ? { deliveryAddress } : {}),
+        deliveryMethod: "PICKUP",
       },
       {
         onSuccess: (response) => {
           setConfirmSheetVisible(false);
-          const screen = fulfillment === "delivery" ? "DeliveryTracking" : "BookingConfirmed";
-          (navigation.navigate as any)(screen, { order: response.data });
+          clearCart(); // ← fix: cart was never cleared after order
+          (navigation.navigate as any)("BookingConfirmed", { order: response.data });
         },
         onError: (err: any) => {
           setConfirmSheetVisible(false);
           const msg = err?.response?.data?.message ?? "";
-
           if (msg === "Pickup time has ended") {
             setErrorModalVisible(true);
           } else {
-            Alert.alert(
-              "Order Failed",
-              msg || "Could not place order. Try again.",
-            );
+            Alert.alert("Order Failed", msg || "Could not place order. Try again.");
           }
         },
       },
@@ -101,10 +87,6 @@ export default function CheckoutScreen() {
       <CheckoutHeader />
 
       <ScrollView className="flex-1 pb-40" showsVerticalScrollIndicator={false}>
-        <CheckoutFulfillmentToggle method={fulfillment} onChange={setFulfillment} />
-        {fulfillment === "delivery" && (
-          <CheckoutDeliveryDetails address={deliveryAddress} />
-        )}
         <CheckoutStoreDetails
           store={activeStore}
           bag={activeBag}
@@ -145,7 +127,7 @@ export default function CheckoutScreen() {
         pickupStart={activeBag?.pickupStart}
         pickupEnd={activeBag?.pickupEnd}
         pickupOffset={cartItems[0]?.pickupOffset ?? 0}
-        fulfillment={fulfillment}
+        fulfillment="pickup"
       />
 
       <OrderErrorModal

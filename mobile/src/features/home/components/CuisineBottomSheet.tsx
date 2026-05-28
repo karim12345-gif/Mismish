@@ -15,22 +15,17 @@ const CORAL = "#FF7F50";
 const TILE_WIDTH = (Dimensions.get("window").width - 48 - 24) / 3;
 
 const CATEGORY_EMOJI: Record<string, string> = {
-  Bakery: "🥐",
-  Café: "☕",
-  Cafe: "☕",
   Restaurant: "🍽️",
-  Japanese: "🍱",
-  Grill: "🥩",
+  "Café": "☕",
+  Bakery: "🥐",
+  Grocery: "🛒",
   Sweets: "🍬",
+  "Fast Food": "🍔",
   Pizza: "🍕",
-  Burgers: "🍔",
   Sandwiches: "🥪",
-  Seafood: "🦞",
-  Healthy: "🥗",
-  Desserts: "🍰",
-  Drinks: "🧃",
-  Mexican: "🌮",
-  Italian: "🍝",
+  "Juice & Smoothies": "🥤",
+  "Sushi / Japanese": "🍱",
+  Other: "🛍️",
 };
 
 interface Props {

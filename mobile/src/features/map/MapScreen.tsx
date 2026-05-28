@@ -39,6 +39,7 @@ import {
   MapFilters,
   DEFAULT_MAP_FILTERS,
 } from "./MapFilterSheet";
+import { ALL_CUISINES } from "../../constants/cuisines";
 
 export default function MapScreen() {
   const { data: stores = [] } = useStores();
@@ -54,13 +55,7 @@ export default function MapScreen() {
   const [mapFilters, setMapFilters] = useState<MapFilters>(DEFAULT_MAP_FILTERS);
   const mapRef = useRef<MapView>(null);
 
-  const cuisines = useMemo(
-    () =>
-      [
-        ...new Set(stores.map((s) => s.category).filter(Boolean) as string[]),
-      ].sort(),
-    [stores],
-  );
+  const cuisines = ALL_CUISINES;
 
   const handleSelectFavorite = useCallback((store: Store) => {
     setSelectedStore(store);

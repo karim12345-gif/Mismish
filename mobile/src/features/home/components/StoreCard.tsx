@@ -14,6 +14,7 @@ interface StoreCardProps {
   imageUrl: any;
   logoUrl: any;
   leftCount: string;
+  hasListings: boolean;
   rating?: number | null;
   reviewCount?: number;
 }
@@ -28,6 +29,7 @@ export const StoreCard = ({
   imageUrl,
   logoUrl,
   leftCount,
+  hasListings,
   rating,
   reviewCount = 0,
 }: StoreCardProps) => {
@@ -37,25 +39,37 @@ export const StoreCard = ({
 
   return (
     <TouchableOpacity
-      onPress={() => navigation.push("SurpriseBag", { storeId })}
-      className="w-full bg-white rounded-2xl overflow-hidden border border-gray-200 mb-6"
+      onPress={() => hasListings && navigation.push("SurpriseBag", { storeId })}
+      disabled={!hasListings}
+      activeOpacity={hasListings ? 0.85 : 1}
+      className="w-full bg-white rounded-2xl mb-5"
+      style={{
+        opacity: hasListings ? 1 : 0.45,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.07,
+        shadowRadius: 10,
+        elevation: 3,
+      }}
     >
-      {/* Top Banner Image */}
-      <View className="relative h-[160px] w-full bg-gray-100">
+      {/* Top Banner Image — overflow-hidden lives here, not on outer container */}
+      <View className="relative h-[160px] w-full bg-gray-100 rounded-t-2xl overflow-hidden">
         <Image
           source={typeof imageUrl === "string" ? { uri: imageUrl } : imageUrl}
           className="w-full h-full"
           resizeMode="cover"
         />
 
-        {/* Left Count Badge */}
-        <View className="absolute top-4 left-4 bg-[#FFF2C2] px-3 py-1 rounded-full">
-          <Text className="text-[#D7402B] text-[11px] font-black">
-            {leftCount}
-          </Text>
-        </View>
+        {/* Left Count Badge — hidden when unavailable */}
+        {hasListings && (
+          <View className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#FFF2C2]">
+            <Text className="text-[11px] font-black text-[#D7402B]">
+              {leftCount}
+            </Text>
+          </View>
+        )}
 
-        {/* Heart Icon Top Right */}
+        {/* Heart Icon */}
         <TouchableOpacity
           onPress={(e) => {
             e.stopPropagation();
@@ -81,8 +95,7 @@ export const StoreCard = ({
       </View>
 
       {/* Bottom Information */}
-      <View className="pt-8 px-4 pb-4">
-        {/* Title & Price Row */}
+      <View className="pt-8 px-4 pb-4 rounded-b-2xl border border-t-0 border-gray-100">
         <View className="flex-row justify-between items-start mb-2">
           <View className="flex-1 pr-2">
             <Text
@@ -95,32 +108,40 @@ export const StoreCard = ({
                 ({branch})
               </Text>
             </Text>
-            <View className="flex-row items-center border border-green-100 bg-green-50 self-start px-2 py-0.5 rounded-full">
-              <MaterialCommunityIcons
-                name="clock-outline"
-                size={12}
-                color="#18C96D"
-              />
-              <Text className="text-[#18C96D] text-[10px] font-bold ml-1">
-                Now{" "}
-                <Text className="font-medium text-gray-500">, {timeRange}</Text>
-              </Text>
-            </View>
+            {hasListings ? (
+              <View className="flex-row items-center border border-green-100 bg-green-50 self-start px-2 py-0.5 rounded-full">
+                <MaterialCommunityIcons name="clock-outline" size={12} color="#18C96D" />
+                <Text className="text-[#18C96D] text-[10px] font-bold ml-1">
+                  Now{" "}
+                  <Text className="font-medium text-gray-500">, {timeRange}</Text>
+                </Text>
+              </View>
+            ) : (
+              <View className="flex-row items-center border border-gray-200 bg-gray-100 self-start px-2 py-0.5 rounded-full">
+                <MaterialCommunityIcons name="clock-remove-outline" size={12} color="#999" />
+                <Text className="text-gray-400 text-[10px] font-bold ml-1">
+                  Not available today
+                </Text>
+              </View>
+            )}
           </View>
           <View className="items-end shrink-0">
-            <Text className="text-gray-500 text-[11px] font-bold mb-0.5">
-              Starts at
-            </Text>
+            {hasListings && (
+              <Text className="text-gray-500 text-[11px] font-bold mb-0.5">
+                Starts at
+              </Text>
+            )}
             <Text
-              className="text-[#FF2C55] font-black text-[15px]"
+              className="font-black text-[15px]"
+              style={{ color: hasListings ? "#FF2C55" : "#aaa" }}
               adjustsFontSizeToFit
             >
-              {price}
+              {hasListings ? price : "—"}
             </Text>
           </View>
         </View>
 
-        {/* Footer Metrics Row */}
+        {/* Footer */}
         <View className="flex-row items-center mt-3 pt-3 border-t border-gray-100">
           <View className="flex-row items-center mr-4">
             <Feather name="map-pin" size={12} color="#888" />

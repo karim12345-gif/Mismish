@@ -48,23 +48,36 @@ export const CheckoutOrderItems = () => {
               </View>
 
               {/* Quantity stepper */}
-              <View className="flex-row items-center gap-2">
-                <TouchableOpacity
-                  onPress={() => decrementItem(item.id)}
-                  className="w-8 h-8 rounded-full bg-white border border-gray-200 items-center justify-center shadow-sm shadow-black/5"
-                >
-                  <Feather name="minus" size={14} color="#111" />
-                </TouchableOpacity>
-                <Text className="text-[#111] font-black text-[15px] w-5 text-center">
-                  {item.quantity}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => incrementItem(item.id)}
-                  className="w-8 h-8 rounded-full bg-[#FF7F50] items-center justify-center shadow-sm shadow-[#FF7F50]/30"
-                >
-                  <Feather name="plus" size={14} color="#fff" />
-                </TouchableOpacity>
-              </View>
+              {(() => {
+                const atMax =
+                  item.maxQuantity !== undefined &&
+                  item.quantity >= item.maxQuantity;
+                return (
+                  <View className="flex-row items-center gap-2">
+                    <TouchableOpacity
+                      onPress={() => decrementItem(item.id)}
+                      className="w-8 h-8 rounded-full bg-white border border-gray-200 items-center justify-center shadow-sm shadow-black/5"
+                    >
+                      <Feather name="minus" size={14} color="#111" />
+                    </TouchableOpacity>
+                    <Text className="text-[#111] font-black text-[15px] w-5 text-center">
+                      {item.quantity}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => !atMax && incrementItem(item.id)}
+                      disabled={atMax}
+                      className="w-8 h-8 rounded-full items-center justify-center shadow-sm"
+                      style={{
+                        backgroundColor: atMax ? "#E5E5E5" : "#FF7F50",
+                        shadowColor: atMax ? "transparent" : "#FF7F50",
+                        shadowOpacity: atMax ? 0 : 0.3,
+                      }}
+                    >
+                      <Feather name="plus" size={14} color={atMax ? "#AAA" : "#fff"} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
             </View>
           ))}
         </View>

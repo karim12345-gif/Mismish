@@ -279,12 +279,17 @@ export default function SurpriseBagScreen() {
                   </Text>
                 </View>
               </View>
-              <View className="flex-row items-center mt-1">
-                <Ionicons name="star" size={14} color="#FFB300" />
-                <Text className="text-[#111] font-black text-[13px] mx-1">
-                  4.9
-                </Text>
-              </View>
+              {store?.reviewCount > 0 && store?.rating != null && (
+                <View className="flex-row items-center mt-1">
+                  <Ionicons name="star" size={14} color="#FFB300" />
+                  <Text className="text-[#111] font-black text-[13px] mx-1">
+                    {store.rating.toFixed(1)}
+                  </Text>
+                  <Text className="text-gray-400 text-[11px]">
+                    ({store.reviewCount})
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View className="border-t border-gray-100 pt-3 flex-row items-center">
@@ -381,6 +386,7 @@ export default function SurpriseBagScreen() {
                     imageUrl={bag.imageUrl ?? FALLBACK_IMAGE}
                     leftCount={`${bag.quantity} left`}
                     quantity={cartQty}
+                    maxQuantity={bag.quantity}
                     onAdd={() =>
                       handleAddToCart({
                         id: String(bag.id),

@@ -62,6 +62,7 @@ export const SurpriseBagBottomSheet = ({
   const cartQty = item
     ? (cartItems.find((i) => i.id === String(item.id))?.quantity ?? 0)
     : 0;
+  const atMaxQty = cartQty >= (item?.quantity ?? 0);
 
   const handleAddToCart = () => {
     if (item) {
@@ -81,6 +82,7 @@ export const SurpriseBagBottomSheet = ({
         price: item.price,
         originalPrice: item.originalPrice ?? undefined,
         imageUrl: item.imageUrl ?? undefined,
+        maxQuantity: item.quantity,
         pickupOffset: offset,
         pickupEnd: item.pickupEnd ?? undefined,
       });
@@ -184,21 +186,24 @@ export const SurpriseBagBottomSheet = ({
 
           {/* Sticky Footer */}
           <View className="absolute bottom-0 w-full bg-white border-t border-gray-100 shadow-md shadow-black/10 px-5 pt-4 pb-8 flex-row items-center justify-between z-10">
-            {/* Stepper */}
             {cartQty > 0 ? (
               <View className="flex-row items-center bg-[#F9F9F9] rounded-xl py-3 px-3 border border-gray-200 mr-4 flex-1 justify-between">
-                <TouchableOpacity
-                  onPress={() => decrementItem(String(item.id))}
-                >
+                <TouchableOpacity onPress={() => decrementItem(String(item.id))}>
                   <Feather name="minus" size={18} color="#FF7F50" />
                 </TouchableOpacity>
                 <Text className="text-center font-black text-[15px] text-[#111]">
                   {cartQty}
                 </Text>
+                {/* Disable "+" when all available stock is already in cart */}
                 <TouchableOpacity
-                  onPress={() => incrementItem(String(item.id))}
+                  onPress={() => !atMaxQty && incrementItem(String(item.id))}
+                  disabled={atMaxQty}
                 >
-                  <Feather name="plus" size={18} color="#FF7F50" />
+                  <Feather
+                    name="plus"
+                    size={18}
+                    color={atMaxQty ? "#CCC" : "#FF7F50"}
+                  />
                 </TouchableOpacity>
               </View>
             ) : (

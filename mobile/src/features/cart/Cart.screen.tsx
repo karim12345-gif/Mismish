@@ -71,6 +71,7 @@ export default function CartScreen() {
         title: bag.name,
         price: bag.price,
         originalPrice: bag.originalPrice,
+        quantity: bag.quantity,
         imageUrl:
           bag.imageUrl ??
           "https://images.unsplash.com/photo-1559525839-b184a4d698c7?q=80&w=200",
@@ -132,6 +133,9 @@ export default function CartScreen() {
                   const blockItem = cartItems.find((i) => i.id === upsell.id);
                   const qty = blockItem?.quantity || 0;
 
+                  const maxQty = (upsell as any).quantity ?? undefined;
+                  const atMax = maxQty !== undefined && qty >= maxQty;
+
                   return (
                     <View
                       key={upsell.id}
@@ -160,15 +164,16 @@ export default function CartScreen() {
                               {qty}
                             </Text>
                             <TouchableOpacity
-                              onPress={() => incrementItem(upsell.id)}
+                              onPress={() => !atMax && incrementItem(upsell.id)}
+                              disabled={atMax}
                               className="px-1"
                             >
-                              <Feather name="plus" size={14} color="#E7246A" />
+                              <Feather name="plus" size={14} color={atMax ? "#CCC" : "#E7246A"} />
                             </TouchableOpacity>
                           </View>
                         ) : (
                           <TouchableOpacity
-                            onPress={() => addToCart(upsell)}
+                            onPress={() => addToCart({ ...upsell, maxQuantity: maxQty })}
                             className="absolute bottom-2 left-2 bg-white w-7 h-7 rounded-full items-center justify-center shadow-sm shadow-black/10"
                           >
                             <Feather name="plus" size={14} color="#E7246A" />

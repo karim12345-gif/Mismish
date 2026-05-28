@@ -33,11 +33,14 @@ export default function FavoritesScreen() {
       ? Math.round((1 - bag.price / bag.originalPrice) * 100)
       : null;
 
+    const hasListings = !!bag;
+
     return (
       <TouchableOpacity
-        onPress={() => navigation.push("SurpriseBag", { storeId: item.id })}
-        activeOpacity={0.85}
-        style={styles.row}
+        onPress={() => hasListings && navigation.push("SurpriseBag", { storeId: item.id })}
+        disabled={!hasListings}
+        activeOpacity={hasListings ? 0.85 : 1}
+        style={[styles.row, !hasListings && { opacity: 0.45 }]}
       >
         <Image
           source={{ uri: item.imageUrl ?? FALLBACK_IMAGE }}

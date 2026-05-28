@@ -147,12 +147,12 @@ export default function SearchScreen() {
           firstBag ? `${fmtTime(firstBag.pickupStart)} - ${fmtTime(firstBag.pickupEnd)}` : "—"
         }
         distance="—"
-        rating="4.9"
-        reviews="—"
-        branches="1"
         imageUrl={store.imageUrl ?? FALLBACK}
         logoUrl={store.imageUrl ?? FALLBACK}
         leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
+        hasListings={totalLeft > 0}
+        rating={store.rating}
+        reviewCount={store.reviewCount}
       />
     );
   };
