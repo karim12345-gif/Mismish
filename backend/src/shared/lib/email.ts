@@ -14,7 +14,10 @@ export const sendPasswordResetEmail = async (
   to: string,
   resetToken: string,
 ): Promise<void> => {
-  const resetUrl = `${process.env.DASHBOARD_URL ?? "http://localhost:3001"}/reset-password?token=${resetToken}`;
+  // DASHBOARD_URL should be the full reset page path, e.g.
+  // https://dashboard.mismish.com/merchant/reset-password
+  const base = process.env.DASHBOARD_URL ?? "http://localhost:5173/merchant/reset-password";
+  const resetUrl = `${base}?token=${resetToken}`;
 
   await transporter.sendMail({
     from: `"Mismish" <${process.env.SMTP_USER}>`,

@@ -285,7 +285,7 @@ export const changePassword = async (
 
 const signVendorToken = (vendorId: number): string =>
   jwt.sign({ id: vendorId, type: "vendor" }, process.env.JWT_SECRET as string, {
-    expiresIn: "1d",
+    expiresIn: "14d",
   });
 
 export const registerVendor = async (
