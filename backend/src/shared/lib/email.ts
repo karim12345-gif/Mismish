@@ -1,26 +1,16 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST ?? "smtp.gmail.com",
-  port: Number(process.env.SMTP_PORT ?? 587),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendPasswordResetEmail = async (
   to: string,
   resetToken: string,
 ): Promise<void> => {
-  // DASHBOARD_URL should be the full reset page path, e.g.
-  // https://dashboard.mismish.com/merchant/reset-password
-  const base = process.env.DASHBOARD_URL ?? "http://localhost:5173/merchant/reset-password";
-  const resetUrl = `${base}?token=${resetToken}`;
+  const dashboardUrl = process.env.DASHBOARD_URL ?? "http://localhost:5173";
+  const resetUrl = `${dashboardUrl}/merchant/reset-password?token=${resetToken}`;
 
-  await transporter.sendMail({
-    from: `"Mismish" <${process.env.SMTP_USER}>`,
+  await resend.emails.send({
+    from: "Mismish <noreply@mismish.com>",
     to,
     subject: "Reset your Mismish password",
     html: `
@@ -33,7 +23,6 @@ export const sendPasswordResetEmail = async (
           Reset Password
         </a>
         <p style="color:#888;font-size:13px;">If you didn't request this, you can safely ignore this email.</p>
-        <p style="color:#bbb;font-size:12px;">Link: ${resetUrl}</p>
       </div>
     `,
   });
