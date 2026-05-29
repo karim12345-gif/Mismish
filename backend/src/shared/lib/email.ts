@@ -12,7 +12,7 @@ export const sendPasswordResetEmail = async (
   const resetUrl = `${dashboardUrl}/merchant/reset-password?token=${resetToken}`;
 
   await resend.emails.send({
-    from: "Mismish <noreply@mismish.com>",
+    from: "Mismish <onboarding@resend.dev>",
     to,
     subject: "Reset your Mismish password",
     html: `
