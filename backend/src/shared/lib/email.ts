@@ -1,11 +1,13 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export const sendPasswordResetEmail = async (
   to: string,
   resetToken: string,
 ): Promise<void> => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error("RESEND_API_KEY is not set");
+
+  const resend = new Resend(apiKey);
   const dashboardUrl = process.env.DASHBOARD_URL ?? "http://localhost:5173";
   const resetUrl = `${dashboardUrl}/merchant/reset-password?token=${resetToken}`;
 
