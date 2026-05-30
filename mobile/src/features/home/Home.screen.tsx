@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "../../context/LocationContext";
 import { View, ScrollView, Text, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HomeHeader } from "./components/HomeHeader";
 import { HomeSearchBar } from "./components/HomeSearchBar";
 import { HomeHeroBanner } from "./components/HomeHeroBanner";
@@ -15,6 +16,7 @@ import { useStores } from "../../hooks/useStores";
 import { Store, SurpriseBox } from "../../services/store/store.service";
 import { SortOption } from "./components/SortBottomSheet";
 import { PriceRange } from "./components/PriceBottomSheet";
+import { AllergyOnboardingSheet, ALLERGY_ONBOARDED_KEY } from "../../components/AllergyOnboarding/AllergyOnboardingSheet";
 
 const formatPickupTime = (start: string, end: string): string => {
   const fmt = (d: string) =>
@@ -51,16 +53,24 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
 
 export default function HomeScreen() {
-  const { requestLocation, location } = useLocation();
+  const { location } = useLocation();
   const { data: stores, isLoading, isError } = useStores();
 
   const [sortBy, setSortBy] = useState<SortOption>("");
   const [activeCuisine, setActiveCuisine] = useState("");
   const [activePriceRange, setActivePriceRange] = useState<PriceRange>("");
+  const [showAllergySheet, setShowAllergySheet] = useState(false);
 
+  // Show allergy sheet once after stores load — before they ever order
   useEffect(() => {
-    requestLocation();
-  }, []);
+    if (isLoading || !stores) return;
+    AsyncStorage.getItem(ALLERGY_ONBOARDED_KEY).then((val) => {
+      if (!val) {
+        const timer = setTimeout(() => setShowAllergySheet(true), 1500);
+        return () => clearTimeout(timer);
+      }
+    });
+  }, [isLoading, stores]);
 
   const filteredStores = useMemo(() => {
     let result = [...(stores ?? [])];
@@ -180,6 +190,7 @@ export default function HomeScreen() {
                     imageUrl={bag.imageUrl ?? store.imageUrl ?? FALLBACK_IMAGE}
                     logoUrl={store.imageUrl ?? bag.imageUrl ?? FALLBACK_IMAGE}
                     leftCount={`${bag.quantity} left`}
+                    allergens={bag.allergens}
                   />
                 </View>
               ))}
@@ -263,6 +274,7 @@ export default function HomeScreen() {
                     hasListings={totalLeft > 0}
                     rating={store.rating}
                     reviewCount={store.reviewCount}
+                    allergens={firstBag?.allergens}
                   />
                 );
               })}
@@ -270,6 +282,11 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
+
+      <AllergyOnboardingSheet
+        visible={showAllergySheet}
+        onDone={() => setShowAllergySheet(false)}
+      />
     </SafeAreaView>
   );
 }

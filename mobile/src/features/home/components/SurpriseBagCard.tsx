@@ -1,7 +1,9 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity, Pressable } from "react-native";
+import { View, Text, Image, TouchableOpacity, Pressable, Alert } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useUserAllergies } from "../../../context/AllergyContext";
+import { ALL_ALLERGENS } from "../../../constants/allergens";
 
 interface SurpriseBagCardProps {
   storeId: number;
@@ -13,6 +15,7 @@ interface SurpriseBagCardProps {
   imageUrl: string;
   logoUrl: string;
   leftCount: string;
+  allergens?: string[];
 }
 
 export const SurpriseBagCard = ({
@@ -25,16 +28,35 @@ export const SurpriseBagCard = ({
   imageUrl,
   logoUrl,
   leftCount,
+  allergens = [],
 }: SurpriseBagCardProps) => {
   const navigation = useNavigation<any>();
+  const { userAllergies } = useUserAllergies();
+
+  const matchedAllergens = allergens.filter((a) => userAllergies.includes(a));
+  const hasWarning = matchedAllergens.length > 0;
+
+  const showAllergenInfo = () => {
+    if (allergens.length === 0) return;
+    const list = allergens
+      .map((id) => {
+        const found = ALL_ALLERGENS.find((a) => a.id === id);
+        return found ? `${found.emoji} ${found.label}` : id;
+      })
+      .join("\n");
+
+    Alert.alert(
+      "Contains allergens",
+      list,
+      [{ text: "Got it", style: "default" }],
+    );
+  };
 
   return (
     <TouchableOpacity
       onPress={() => navigation.push("SurpriseBag", { storeId })}
       className="bg-white rounded-2xl overflow-hidden border border-gray-200 mb-5"
-      style={{
-        width: 260,
-      }}
+      style={{ width: 260 }}
     >
       {/* Top Image Area */}
       <View className="relative h-[120px] w-full bg-gray-100">
@@ -74,13 +96,45 @@ export const SurpriseBagCard = ({
 
       {/* Bottom Content Area */}
       <View className="pt-6 px-3 pb-4">
-        <Text
-          className="text-[#111] font-extrabold text-[12px] mb-1.5"
-          numberOfLines={1}
-          adjustsFontSizeToFit
-        >
-          {title}
-        </Text>
+        {/* Title row with optional warning */}
+        <View className="flex-row items-center mb-1.5">
+          <Text
+            className="text-[#111] font-extrabold text-[12px] flex-1"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {title}
+          </Text>
+          {allergens.length > 0 && (
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                showAllergenInfo();
+              }}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              className="ml-1.5"
+            >
+              <MaterialCommunityIcons
+                name={hasWarning ? "alert-circle" : "information-outline"}
+                size={16}
+                color={hasWarning ? "#DC2626" : "#aaa"}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Allergen warning label */}
+        {hasWarning && (
+          <View className="flex-row items-center mb-2">
+            <View className="flex-row items-center bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+              <MaterialCommunityIcons name="alert" size={10} color="#DC2626" />
+              <Text className="text-red-600 text-[10px] font-bold ml-1">
+                Contains {matchedAllergens.slice(0, 2).join(", ")}
+                {matchedAllergens.length > 2 ? ` +${matchedAllergens.length - 2}` : ""}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Price Row */}
         <View className="flex-row items-end mb-3">
@@ -95,14 +149,10 @@ export const SurpriseBagCard = ({
           </Text>
         </View>
 
-        {/* Info Rows in Flex Row */}
+        {/* Info Rows */}
         <View className="flex-row items-center justify-between border-t border-gray-50 pt-2 opacity-70">
           <View className="flex-row items-center flex-1 mr-1.5">
-            <MaterialCommunityIcons
-              name="clock-outline"
-              size={12}
-              color="#18C96D"
-            />
+            <MaterialCommunityIcons name="clock-outline" size={12} color="#18C96D" />
             <Text
               className="text-gray-600 text-[10px] font-bold ml-1"
               numberOfLines={1}

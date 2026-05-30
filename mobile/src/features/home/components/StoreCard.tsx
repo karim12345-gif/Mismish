@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useFavorites } from "../../../hooks/useFavorites";
+import { useUserAllergies } from "../../../context/AllergyContext";
+import { ALL_ALLERGENS } from "../../../constants/allergens";
 
 interface StoreCardProps {
   storeId: number;
@@ -17,6 +19,7 @@ interface StoreCardProps {
   hasListings: boolean;
   rating?: number | null;
   reviewCount?: number;
+  allergens?: string[];
 }
 
 export const StoreCard = ({
@@ -32,10 +35,26 @@ export const StoreCard = ({
   hasListings,
   rating,
   reviewCount = 0,
+  allergens,
 }: StoreCardProps) => {
   const navigation = useNavigation<any>();
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(storeId);
+  const { userAllergies } = useUserAllergies();
+
+  const matchedAllergens = (allergens ?? []).filter((a) => userAllergies.includes(a));
+  const hasWarning = matchedAllergens.length > 0;
+
+  const showAllergenInfo = () => {
+    if (!allergens || allergens.length === 0) return;
+    const list = allergens
+      .map((id) => {
+        const found = ALL_ALLERGENS.find((a) => a.id === id);
+        return found ? `${found.emoji} ${found.label}` : id;
+      })
+      .join("\n");
+    Alert.alert("Contains allergens", list, [{ text: "Got it" }]);
+  };
 
   return (
     <TouchableOpacity
@@ -98,16 +117,40 @@ export const StoreCard = ({
       <View className="pt-8 px-4 pb-4 rounded-b-2xl border border-t-0 border-gray-100">
         <View className="flex-row justify-between items-start mb-2">
           <View className="flex-1 pr-2">
-            <Text
-              className="text-[#111] font-black text-[14px] mb-0.5"
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
-              {title}{" "}
-              <Text className="font-semibold text-gray-500 text-[13px]">
-                ({branch})
+            <View className="flex-row items-center mb-0.5">
+              <Text
+                className="text-[#111] font-black text-[14px] flex-1"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {title}{" "}
+                <Text className="font-semibold text-gray-500 text-[13px]">
+                  ({branch})
+                </Text>
               </Text>
-            </Text>
+              {allergens && allergens.length > 0 && (
+                <TouchableOpacity
+                  onPress={(e) => { e.stopPropagation(); showAllergenInfo(); }}
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  className="ml-1.5"
+                >
+                  <MaterialCommunityIcons
+                    name={hasWarning ? "alert-circle" : "information-outline"}
+                    size={17}
+                    color={hasWarning ? "#DC2626" : "#bbb"}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+            {hasWarning && hasListings && (
+              <View className="flex-row items-center bg-red-50 border border-red-200 self-start px-2 py-0.5 rounded-full mb-1">
+                <MaterialCommunityIcons name="alert" size={10} color="#DC2626" />
+                <Text className="text-red-600 text-[10px] font-bold ml-1">
+                  Contains {matchedAllergens.slice(0, 2).join(", ")}
+                  {matchedAllergens.length > 2 ? ` +${matchedAllergens.length - 2}` : ""}
+                </Text>
+              </View>
+            )}
             {hasListings ? (
               <View className="flex-row items-center border border-green-100 bg-green-50 self-start px-2 py-0.5 rounded-full">
                 <MaterialCommunityIcons name="clock-outline" size={12} color="#18C96D" />

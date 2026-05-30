@@ -132,6 +132,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const completeIntro = async () => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.HAS_SEEN_INTRO, "true");
+      // Reset location + allergy every time onboarding completes
+      // so they always appear fresh after the slides
+      await AsyncStorage.multiRemove([
+        STORAGE_KEYS.HAS_SELECTED_LOCATION,
+        "@mismish_allergy_onboarded",
+      ]);
+      setHasSelectedLocation(false);
       setHasSeenIntro(true);
     } catch (e) {
       console.error("Failed to save intro status:", e);

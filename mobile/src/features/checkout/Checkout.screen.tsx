@@ -32,6 +32,7 @@ export default function CheckoutScreen() {
   const [addCardSheetVisible, setAddCardSheetVisible] = useState(false);
   const [confirmSheetVisible, setConfirmSheetVisible] = useState(false);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorReason, setErrorReason] = useState<"expired" | "sold_out">("expired");
   const [selectedMethod, setSelectedMethod] = useState("apple_pay");
 
   const handleInitialPayPress = () => setConfirmSheetVisible(true);
@@ -72,7 +73,11 @@ export default function CheckoutScreen() {
         onError: (err: any) => {
           setConfirmSheetVisible(false);
           const msg = err?.response?.data?.message ?? "";
-          if (msg === "Pickup time has ended") {
+          if (msg === "Sorry, this bag just sold out") {
+            setErrorReason("sold_out");
+            setErrorModalVisible(true);
+          } else if (msg === "Pickup time has ended") {
+            setErrorReason("expired");
             setErrorModalVisible(true);
           } else {
             Alert.alert("Order Failed", msg || "Could not place order. Try again.");
@@ -134,6 +139,7 @@ export default function CheckoutScreen() {
         visible={errorModalVisible}
         onClose={() => setErrorModalVisible(false)}
         onHomePress={handleGoHomeAndClear}
+        reason={errorReason}
       />
     </SafeAreaView>
   );

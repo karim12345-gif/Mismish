@@ -9,6 +9,7 @@ export interface SurpriseBox {
   price: number;
   originalPrice: number | null;
   quantity: number;
+  allergens: string[];
   pickupStart: string;
   pickupEnd: string;
   vendorId: number;

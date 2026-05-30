@@ -3,6 +3,7 @@ import React from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import RootNavigator from "./src/navigation/RootNavigator";
 import { AuthProvider } from "./src/context/AuthContext";
+import { AllergyProvider } from "./src/context/AllergyContext";
 import { LocationProvider } from "./src/context/LocationContext";
 import { CartProvider } from "./src/context/CartContext";
 import { FavoritesProvider } from "./src/context/FavoritesContext";
@@ -23,6 +24,7 @@ const App = () => {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
+            <AllergyProvider>
             <LocationProvider>
               <CartProvider>
                 <CardsProvider>
@@ -32,6 +34,7 @@ const App = () => {
                 </CardsProvider>
               </CartProvider>
             </LocationProvider>
+            </AllergyProvider>
           </AuthProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

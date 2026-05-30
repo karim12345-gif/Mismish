@@ -15,29 +15,33 @@ interface OrderErrorModalProps {
   visible: boolean;
   onClose: () => void;
   onHomePress: () => void;
+  reason?: "expired" | "sold_out";
 }
 
 export const OrderErrorModal = ({
   visible,
   onClose,
   onHomePress,
+  reason = "expired",
 }: OrderErrorModalProps) => {
+  const isSoldOut = reason === "sold_out";
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.iconContainer}>
             <MaterialCommunityIcons
-              name="clock-alert-outline"
+              name={isSoldOut ? "basket-remove-outline" : "clock-alert-outline"}
               size={48}
               color="#FF7F50"
             />
           </View>
 
-          <Text style={styles.title}>Time's Up!</Text>
+          <Text style={styles.title}>{isSoldOut ? "Just Sold Out!" : "Time's Up!"}</Text>
           <Text style={styles.description}>
-            This bag's rescue window has closed. Don't worry, there are plenty
-            of other bags waiting for you to save them!
+            {isSoldOut
+              ? "Someone just grabbed the last one before you. Check out other bags nearby!"
+              : "This bag's rescue window has closed. Don't worry, there are plenty of other bags waiting for you to save them!"}
           </Text>
 
           <TouchableOpacity style={styles.primaryButton} onPress={onHomePress}>

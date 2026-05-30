@@ -1,6 +1,8 @@
 import React, { useRef } from "react";
-import { View, Text, Image, TouchableOpacity, Animated } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { View, Text, Image, TouchableOpacity, Animated, Alert } from "react-native";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useUserAllergies } from "../../context/AllergyContext";
+import { ALL_ALLERGENS } from "../../constants/allergens";
 
 interface StoreItemCardProps {
   title: string;
@@ -9,8 +11,9 @@ interface StoreItemCardProps {
   originalPrice: string;
   imageUrl: string;
   leftCount: string;
-  quantity: number;     // how many user has in cart
-  maxQuantity: number;  // actual stock available
+  quantity: number;
+  maxQuantity: number;
+  allergens?: string[];
   onAdd: () => void;
   onItemPress: () => void;
 }
@@ -24,11 +27,27 @@ export const StoreItemCard = ({
   leftCount,
   quantity,
   maxQuantity,
+  allergens = [],
   onAdd,
   onItemPress,
 }: StoreItemCardProps) => {
   const scale = useRef(new Animated.Value(1)).current;
   const isSoldOut = quantity >= maxQuantity;
+  const { userAllergies } = useUserAllergies();
+
+  const matchedAllergens = allergens.filter((a) => userAllergies.includes(a));
+  const hasWarning = matchedAllergens.length > 0;
+
+  const showAllergenInfo = () => {
+    if (allergens.length === 0) return;
+    const list = allergens
+      .map((id) => {
+        const found = ALL_ALLERGENS.find((a) => a.id === id);
+        return found ? `${found.emoji} ${found.label}` : id;
+      })
+      .join("\n");
+    Alert.alert("Contains allergens", list, [{ text: "Got it" }]);
+  };
 
   const handleAdd = () => {
     if (isSoldOut) return;
@@ -47,9 +66,37 @@ export const StoreItemCard = ({
     >
       {/* Left Details */}
       <View className="flex-1 pr-4">
-        <Text className="text-[#111] font-black text-[16px] mb-1.5">
-          {title}
-        </Text>
+        {/* Title + allergen icon */}
+        <View className="flex-row items-center mb-1.5">
+          <Text className="text-[#111] font-black text-[16px] flex-1" numberOfLines={1}>
+            {title}
+          </Text>
+          {allergens.length > 0 && (
+            <TouchableOpacity
+              onPress={(e) => { e.stopPropagation(); showAllergenInfo(); }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              className="ml-2"
+            >
+              <MaterialCommunityIcons
+                name={hasWarning ? "alert-circle" : "information-outline"}
+                size={18}
+                color={hasWarning ? "#DC2626" : "#bbb"}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Warning badge */}
+        {hasWarning && (
+          <View className="flex-row items-center bg-red-50 border border-red-200 self-start px-2 py-0.5 rounded-full mb-2">
+            <MaterialCommunityIcons name="alert" size={10} color="#DC2626" />
+            <Text className="text-red-600 text-[10px] font-bold ml-1">
+              Contains {matchedAllergens.slice(0, 2).join(", ")}
+              {matchedAllergens.length > 2 ? ` +${matchedAllergens.length - 2}` : ""}
+            </Text>
+          </View>
+        )}
+
         <Text
           className="text-gray-500 font-medium text-[12px] leading-5 mb-3"
           numberOfLines={3}
@@ -75,27 +122,20 @@ export const StoreItemCard = ({
           style={{ opacity: isSoldOut ? 0.45 : 1 }}
         />
 
-        {/* "X left" badge — hide when sold out */}
         {!isSoldOut && (
           <View className="absolute top-2 left-2 bg-[#FFF2C2] px-2 py-0.5 rounded-md">
-            <Text className="text-[#D7402B] text-[9px] font-black">
-              {leftCount}
-            </Text>
+            <Text className="text-[#D7402B] text-[9px] font-black">{leftCount}</Text>
           </View>
         )}
 
-        {/* Sold out overlay badge */}
         {isSoldOut && (
           <View className="absolute inset-0 items-center justify-center rounded-2xl">
             <View className="bg-black/60 px-2.5 py-1 rounded-lg">
-              <Text className="text-white text-[10px] font-black tracking-wide">
-                SOLD OUT
-              </Text>
+              <Text className="text-white text-[10px] font-black tracking-wide">SOLD OUT</Text>
             </View>
           </View>
         )}
 
-        {/* Quantity badge — only when in cart and not sold out */}
         {quantity > 0 && !isSoldOut && (
           <View
             className="absolute top-2 right-2 w-5 h-5 rounded-full items-center justify-center"
@@ -105,15 +145,9 @@ export const StoreItemCard = ({
           </View>
         )}
 
-        {/* "+" button — hidden when sold out */}
         {!isSoldOut && (
           <Animated.View
-            style={{
-              transform: [{ scale }],
-              position: "absolute",
-              bottom: -8,
-              right: -4,
-            }}
+            style={{ transform: [{ scale }], position: "absolute", bottom: -8, right: -4 }}
           >
             <TouchableOpacity
               onPress={handleAdd}
