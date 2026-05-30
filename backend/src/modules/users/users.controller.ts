@@ -49,3 +49,29 @@ export const savePushToken = async (
     handle(e, res, next);
   }
 };
+
+export const updateAllergies = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const allergies = await usersService.updateAllergies(req.user!.id, req.body.allergies ?? []);
+    res.status(200).json({ status: "success", data: { allergies } });
+  } catch (e) {
+    handle(e, res, next);
+  }
+};
+
+export const getAllergies = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const allergies = await usersService.getAllergies(req.user!.id);
+    res.status(200).json({ status: "success", data: { allergies } });
+  } catch (e) {
+    handle(e, res, next);
+  }
+};

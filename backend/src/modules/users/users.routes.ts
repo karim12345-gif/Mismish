@@ -10,5 +10,7 @@ router.use(authenticate, authorize("user"));
 router.get("/me", usersController.getMyProfile);
 router.patch("/me", usersController.updateMyProfile);
 router.post("/push-token", usersController.savePushToken);
+router.get("/allergies", usersController.getAllergies);
+router.patch("/allergies", usersController.updateAllergies);
 
 export default router;

@@ -29,6 +29,7 @@ async function main() {
   const exp   = { s: h(-3),    e: h(-1)   };
 
   // Wipe listings first so re-running doesn't produce duplicates or stale dates
+  await prisma.review.deleteMany({});
   await prisma.order.deleteMany({});
   await prisma.surpriseBox.deleteMany({});
 
@@ -56,6 +57,7 @@ async function main() {
           quantity: 8,
           pickupStart: now1.s,
           pickupEnd: now1.e,
+          allergens: ["Gluten", "Dairy", "Eggs"],
         },
         {
           name: "Bread Mystery Bag",
@@ -67,6 +69,7 @@ async function main() {
           quantity: 5,
           pickupStart: now1.s,
           pickupEnd: now2.e,
+          allergens: ["Gluten", "Sesame"],
         },
       ],
     },
@@ -92,6 +95,7 @@ async function main() {
           quantity: 6,
           pickupStart: now1.s,
           pickupEnd: now1.e,
+          allergens: ["Dairy"],
         },
       ],
     },
@@ -144,6 +148,7 @@ async function main() {
           quantity: 3,
           pickupStart: now1.s,
           pickupEnd: now3.e,
+          allergens: ["Fish", "Shellfish", "Soy", "Gluten"],
         },
       ],
     },
@@ -266,6 +271,7 @@ async function main() {
           quantity: 8,
           pickupStart: tmr.s,
           pickupEnd: tmr.e,
+          allergens: ["Gluten", "Dairy"],
         },
       ],
     },
@@ -290,6 +296,7 @@ async function main() {
           quantity: 5,
           pickupStart: now1.s,
           pickupEnd: now3.e,
+          allergens: ["Gluten", "Eggs", "Dairy"],
         },
       ],
     },
@@ -435,6 +442,7 @@ async function main() {
           quantity: 5,
           pickupStart: now1.s,
           pickupEnd: now1.e,
+          allergens: ["Gluten", "Dairy", "Eggs", "Nuts"],
         },
       ],
     },
@@ -459,6 +467,7 @@ async function main() {
           quantity: 4,
           pickupStart: now1.s,
           pickupEnd: now3.e,
+          allergens: ["Fish", "Shellfish", "Soy"],
         },
       ],
     },
@@ -511,6 +520,7 @@ async function main() {
           quantity: 5,
           pickupStart: now1.s,
           pickupEnd: now3.e,
+          allergens: ["Gluten", "Dairy", "Eggs"],
         },
       ],
     },
@@ -563,6 +573,7 @@ async function main() {
           quantity: 8,
           pickupStart: now1.s,
           pickupEnd: now2.e,
+          allergens: ["Gluten", "Dairy", "Eggs"],
         },
       ],
     },
@@ -588,6 +599,7 @@ async function main() {
           quantity: 7,
           pickupStart: now1.s,
           pickupEnd: now3.e,
+          allergens: ["Gluten", "Dairy"],
         },
       ],
     },

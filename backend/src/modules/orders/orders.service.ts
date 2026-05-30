@@ -14,15 +14,17 @@ export const createOrder = async (userId: number, data: CreateOrderBody) => {
         where: { id: data.surpriseBoxId },
       });
       if (!box) throw new AppError(400, "Surprise Box not found");
-      if (box.quantity <= 0)
-        throw new AppError(400, "Surprise Box is out of stock");
       if (new Date(box.pickupEnd) < new Date())
         throw new AppError(400, "Pickup time has ended");
 
-      await tx.surpriseBox.update({
-        where: { id: data.surpriseBoxId },
+      // Atomic decrement — only succeeds if quantity > 0 right now
+      // Prevents race condition where 10 users order the last 1 bag simultaneously
+      const decremented = await tx.surpriseBox.updateMany({
+        where: { id: data.surpriseBoxId, quantity: { gt: 0 } },
         data: { quantity: { decrement: 1 } },
       });
+      if (decremented.count === 0)
+        throw new AppError(400, "Sorry, this bag just sold out");
 
       let orderCode = generateOrderCode();
       while (await tx.order.findUnique({ where: { orderCode } })) {

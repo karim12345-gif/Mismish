@@ -24,6 +24,7 @@ model User {
   address           String?
   pushToken         String?
   passwordChangedAt DateTime?
+  allergies         String[]
   orders            Order[]
   reviews           Review[]
   refreshTokens     RefreshToken[]
@@ -64,6 +65,7 @@ model SurpriseBox {
   price         Float
   originalPrice Float?
   quantity      Int
+  allergens     String[]
   pickupStart   DateTime
   pickupEnd     DateTime
   vendorId      Int

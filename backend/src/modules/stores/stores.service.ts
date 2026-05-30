@@ -15,10 +15,12 @@ export const getStores = async () =>
         select: {
           id: true,
           name: true,
+          description: true,
           imageUrl: true,
           price: true,
           originalPrice: true,
           quantity: true,
+          allergens: true,
           pickupStart: true,
           pickupEnd: true,
         },
@@ -33,7 +35,22 @@ export const getStoreById = async (id: number) => {
   const store = await prisma.vendor.findUnique({
     where: { id },
     include: {
-      listings: { where: activeInventoryFilter, orderBy: { pickupEnd: "asc" } },
+      listings: {
+        where: activeInventoryFilter,
+        orderBy: { pickupEnd: "asc" },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          imageUrl: true,
+          price: true,
+          originalPrice: true,
+          quantity: true,
+          allergens: true,
+          pickupStart: true,
+          pickupEnd: true,
+        },
+      },
     },
   });
 
@@ -49,6 +66,18 @@ export const getStoreInventory = async (storeId: number) => {
 
   return prisma.surpriseBox.findMany({
     where: { vendorId: storeId, ...activeInventoryFilter },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      imageUrl: true,
+      price: true,
+      originalPrice: true,
+      quantity: true,
+      allergens: true,
+      pickupStart: true,
+      pickupEnd: true,
+    },
     orderBy: { pickupEnd: "asc" },
   });
 };

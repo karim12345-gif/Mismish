@@ -52,3 +52,24 @@ export const savePushToken = async (
   if (!pushToken) throw new AppError(400, "pushToken is required");
   await prisma.user.update({ where: { id: userId }, data: { pushToken } });
 };
+
+export const updateAllergies = async (
+  userId: number,
+  allergies: string[],
+): Promise<string[]> => {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { allergies },
+    select: { allergies: true },
+  });
+  return user.allergies;
+};
+
+export const getAllergies = async (userId: number): Promise<string[]> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { allergies: true },
+  });
+  if (!user) throw new AppError(404, "User not found");
+  return user.allergies;
+};
