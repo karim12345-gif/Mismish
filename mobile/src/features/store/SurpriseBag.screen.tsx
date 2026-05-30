@@ -388,6 +388,7 @@ export default function SurpriseBagScreen() {
                     quantity={cartQty}
                     maxQuantity={bag.quantity}
                     allergens={bag.allergens ?? []}
+                    ingredients={bag.ingredients ?? []}
                     onAdd={() =>
                       handleAddToCart({
                         id: String(bag.id),

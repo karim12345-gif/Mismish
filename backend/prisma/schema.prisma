@@ -66,6 +66,7 @@ model SurpriseBox {
   originalPrice Float?
   quantity      Int
   allergens     String[]
+  ingredients   String[]
   pickupStart   DateTime
   pickupEnd     DateTime
   vendorId      Int

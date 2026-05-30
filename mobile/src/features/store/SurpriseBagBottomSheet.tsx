@@ -7,7 +7,9 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { ALL_ALLERGENS } from "../../constants/allergens";
+import { useUserAllergies } from "../../context/AllergyContext";
 
 import { useCart } from "../../context/CartContext";
 
@@ -53,6 +55,11 @@ export const SurpriseBagBottomSheet = ({
 }: SurpriseBagBottomSheetProps) => {
   const [showAllergies, setShowAllergies] = React.useState(false);
   const { addToCart, cartItems, incrementItem, decrementItem } = useCart();
+  const { userAllergies } = useUserAllergies();
+
+  const allergens: string[] = item?.allergens ?? [];
+  const ingredients: string[] = item?.ingredients ?? [];
+  const hasAllergenSection = allergens.length > 0 || ingredients.length > 0;
 
   const bagImg = item?.imageUrl ?? FALLBACK_IMAGE;
   const bagPrice = (item?.price ?? 0).toFixed(2);
@@ -158,28 +165,83 @@ export const SurpriseBagBottomSheet = ({
               <View className="h-[1px] w-full bg-gray-100 mb-5" />
 
               {/* Ingredients & Allergies Accordion */}
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => setShowAllergies(!showAllergies)}
-                className={`flex-row items-center justify-between ${showAllergies ? "mb-2" : "mb-4"}`}
-              >
-                <Text className="text-[#111] font-bold text-[15px]">
-                  Ingredients & Allergies
-                </Text>
-                <Feather
-                  name={showAllergies ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#111"
-                />
-              </TouchableOpacity>
+              {hasAllergenSection && (
+                <>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setShowAllergies(!showAllergies)}
+                    className={`flex-row items-center justify-between ${showAllergies ? "mb-4" : "mb-4"}`}
+                  >
+                    <View className="flex-row items-center">
+                      <Text className="text-[#111] font-bold text-[15px]">
+                        Ingredients & Allergens
+                      </Text>
+                      {allergens.some((a) => userAllergies.includes(a)) && (
+                        <View className="ml-2 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+                          <Text className="text-red-600 text-[10px] font-bold">Warning</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Feather
+                      name={showAllergies ? "chevron-up" : "chevron-down"}
+                      size={20}
+                      color="#111"
+                    />
+                  </TouchableOpacity>
 
-              {showAllergies && (
-                <View className="mb-6">
-                  <Text className="text-[#444] font-medium text-[12px] leading-5">
-                    Bag may contain allergens. Please call restaurant for
-                    details.
-                  </Text>
-                </View>
+                  {showAllergies && (
+                    <View className="mb-6">
+                      {/* Ingredients chips */}
+                      {ingredients.length > 0 && (
+                        <>
+                          <Text style={{ fontSize: 11, fontWeight: "700", color: "#BBB", letterSpacing: 0.8, marginBottom: 10 }}>
+                            INGREDIENTS
+                          </Text>
+                          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+                            {ingredients.map((ing) => (
+                              <View key={ing} style={{ backgroundColor: "#F5F5F5", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 }}>
+                                <Text style={{ fontSize: 12, color: "#555", fontWeight: "500" }}>{ing}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </>
+                      )}
+
+                      {/* Allergen list */}
+                      {allergens.length > 0 && (
+                        <>
+                          <Text style={{ fontSize: 11, fontWeight: "700", color: "#BBB", letterSpacing: 0.8, marginBottom: 4 }}>
+                            ALLERGENS
+                          </Text>
+                          {allergens.map((id, index) => {
+                            const found = ALL_ALLERGENS.find((a) => a.id === id);
+                            const isMatch = userAllergies.includes(id);
+                            return (
+                              <View
+                                key={id}
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  paddingVertical: 12,
+                                  borderBottomWidth: index < allergens.length - 1 ? 1 : 0,
+                                  borderBottomColor: "#F0F0F0",
+                                }}
+                              >
+                                <Text style={{ fontSize: 20, marginRight: 12, width: 28 }}>{found?.emoji ?? "⚠️"}</Text>
+                                <Text style={{ fontSize: 14, fontWeight: "600", color: "#111", flex: 1 }}>
+                                  {found?.label ?? id}
+                                </Text>
+                                {isMatch && (
+                                  <MaterialCommunityIcons name="alert-circle" size={18} color="#DC2626" />
+                                )}
+                              </View>
+                            );
+                          })}
+                        </>
+                      )}
+                    </View>
+                  )}
+                </>
               )}
             </View>
           </ScrollView>
