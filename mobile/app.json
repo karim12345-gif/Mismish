@@ -29,6 +29,7 @@
       "package": "com.mismish.app"
     },
     "plugins": [
+      "@react-native-firebase/app",
       [
         "expo-location",
         {

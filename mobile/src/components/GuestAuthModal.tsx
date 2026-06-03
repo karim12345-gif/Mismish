@@ -11,8 +11,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useSendOtp } from "../hooks/useSendOtp";
-import { useVerifyOtp } from "../hooks/useVerifyOtp";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthServices } from "../services/auth/auth.service";
+import { AllergiesService } from "../services/user/allergies.service";
+import { ALLERGY_PENDING_KEY } from "./AllergyOnboarding/AllergyOnboardingSheet";
+import { useAuth } from "../context/AuthContext";
+import { useUserAllergies } from "../context/AllergyContext";
 
 const COUNTRY_CODE = "+966";
 const OTP_LENGTH = 6;
@@ -28,18 +33,20 @@ export const GuestAuthModal = ({
   onClose,
   onLoginSuccess,
 }: GuestAuthModalProps) => {
+  const { login } = useAuth();
+  const { setUserAllergies } = useUserAllergies();
+
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [timer, setTimer] = useState(56);
   const [errorMsg, setErrorMsg] = useState("");
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
+  const confirmationRef = useRef<FirebaseAuthTypes.ConfirmationResult | null>(null);
   const otpRefs = useRef<Array<TextInput | null>>(Array(OTP_LENGTH).fill(null));
 
-  const sendOtp = useSendOtp();
-  const verifyOtp = useVerifyOtp();
-
-  // Reset when modal opens
   useEffect(() => {
     if (visible) {
       setStep("phone");
@@ -47,10 +54,10 @@ export const GuestAuthModal = ({
       setOtp(Array(OTP_LENGTH).fill(""));
       setTimer(56);
       setErrorMsg("");
+      confirmationRef.current = null;
     }
   }, [visible]);
 
-  // Countdown timer
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (step === "otp" && timer > 0) {
@@ -61,53 +68,75 @@ export const GuestAuthModal = ({
 
   const fullPhone = `${COUNTRY_CODE}${phone}`;
 
-  const handlePhoneSubmit = () => {
-    setErrorMsg("");
-    sendOtp.mutate(
-      { phoneNumber: fullPhone },
-      {
-        onSuccess: (response) => {
-          setStep("otp");
-          setTimer(56);
-          // Dev mode: auto-fill the OTP boxes so you don't need to check the terminal
-          if (response.devOtp) {
-            setOtp(response.devOtp.split(""));
-          }
-        },
-        onError: (err: any) => {
-          setErrorMsg(
-            err?.response?.data?.message || "Failed to send code. Try again.",
-          );
-        },
-      },
-    );
+  const syncAllergiesAfterLogin = async () => {
+    const pending = await AsyncStorage.getItem(ALLERGY_PENDING_KEY);
+    if (pending) {
+      try {
+        const allergies: string[] = JSON.parse(pending);
+        if (allergies.length > 0) {
+          await AllergiesService.updateAllergies(allergies);
+          setUserAllergies(allergies);
+        }
+      } catch {}
+      await AsyncStorage.removeItem(ALLERGY_PENDING_KEY);
+    } else {
+      try {
+        const existing = await AllergiesService.getAllergies();
+        if (existing.length > 0) setUserAllergies(existing);
+      } catch {}
+    }
   };
 
-  const handleOtpSubmit = () => {
+  const handlePhoneSubmit = async () => {
     setErrorMsg("");
-    verifyOtp.mutate(
-      { phoneNumber: fullPhone, otp: otp.join("") },
-      {
-        onSuccess: () => onLoginSuccess(),
-        onError: (err: any) => {
-          setErrorMsg(err?.response?.data?.message || "Invalid code.");
-          setOtp(Array(OTP_LENGTH).fill(""));
-          otpRefs.current[0]?.focus();
-        },
-      },
-    );
+    setSending(true);
+    try {
+      confirmationRef.current = await auth().signInWithPhoneNumber(fullPhone);
+      setStep("otp");
+      setTimer(56);
+    } catch (e: any) {
+      setErrorMsg(e?.message ?? "Failed to send code. Try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleOtpSubmit = async () => {
     setErrorMsg("");
-    sendOtp.mutate(
-      { phoneNumber: fullPhone },
-      {
-        onSuccess: () => setTimer(56),
-        onError: (err: any) =>
-          setErrorMsg(err?.response?.data?.message || "Could not resend."),
-      },
-    );
+    setVerifying(true);
+    try {
+      const credential = await confirmationRef.current!.confirm(otp.join(""));
+      const idToken = await credential!.user.getIdToken();
+
+      const response = await AuthServices.socialLogin({
+        provider: "firebase_phone",
+        idToken,
+      });
+
+      const { accessToken, refreshToken, user } = response.data;
+      await login(accessToken, refreshToken, user);
+      await syncAllergiesAfterLogin();
+      onLoginSuccess();
+    } catch (e: any) {
+      setErrorMsg(e?.message ?? "Invalid code. Try again.");
+      setOtp(Array(OTP_LENGTH).fill(""));
+      otpRefs.current[0]?.focus();
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setErrorMsg("");
+    setSending(true);
+    try {
+      confirmationRef.current = await auth().signInWithPhoneNumber(fullPhone);
+      setTimer(56);
+    } catch (e: any) {
+      setErrorMsg(e?.message ?? "Could not resend.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleOtpChange = (val: string, index: number) => {
@@ -134,11 +163,7 @@ export const GuestAuthModal = ({
         className="flex-1 justify-end"
       >
         <View className="absolute inset-0 bg-black/40">
-          <TouchableOpacity
-            className="flex-1"
-            activeOpacity={1}
-            onPress={onClose}
-          />
+          <TouchableOpacity className="flex-1" activeOpacity={1} onPress={onClose} />
         </View>
 
         <View className="bg-white rounded-t-3xl min-h-[55%] pb-10 shadow-xl overflow-hidden relative">
@@ -151,9 +176,7 @@ export const GuestAuthModal = ({
                 className="w-8 h-8 mr-2"
                 resizeMode="contain"
               />
-              <Text className="text-[#3A141A] font-black text-xl tracking-tight">
-                Mismish
-              </Text>
+              <Text className="text-[#3A141A] font-black text-xl tracking-tight">Mismish</Text>
             </View>
             <View className="flex-1 items-end">
               <TouchableOpacity
@@ -167,9 +190,7 @@ export const GuestAuthModal = ({
 
           {step === "phone" ? (
             <View className="px-5 pt-6 flex-1">
-              <Text className="text-[#111] font-black text-2xl mb-1.5">
-                Salam there 👋
-              </Text>
+              <Text className="text-[#111] font-black text-2xl mb-1.5">Salam there 👋</Text>
               <Text className="text-gray-500 font-medium text-[14px] mb-8">
                 Create an account or login to an existing account
               </Text>
@@ -178,9 +199,7 @@ export const GuestAuthModal = ({
                 <View className="flex-row items-center border-r border-gray-200 pr-3 mr-3">
                   <Text className="text-[18px] mr-1">🇸🇦</Text>
                   <Feather name="chevron-down" size={14} color="#111" />
-                  <Text className="text-[#111] font-bold text-[15px] ml-2">
-                    {COUNTRY_CODE}
-                  </Text>
+                  <Text className="text-[#111] font-bold text-[15px] ml-2">{COUNTRY_CODE}</Text>
                 </View>
                 <TextInput
                   className="flex-1 font-medium text-[16px] text-[#111]"
@@ -195,22 +214,18 @@ export const GuestAuthModal = ({
               </View>
 
               {!!errorMsg && (
-                <Text className="text-red-500 text-[13px] font-medium mb-4">
-                  {errorMsg}
-                </Text>
+                <Text className="text-red-500 text-[13px] font-medium mb-4">{errorMsg}</Text>
               )}
 
               <View className="flex-1 justify-end">
                 <TouchableOpacity
                   onPress={handlePhoneSubmit}
-                  disabled={phone.length < 8 || sendOtp.isPending}
+                  disabled={phone.length < 8 || sending}
                   className={`h-[56px] rounded-xl items-center justify-center ${
-                    phone.length >= 8 && !sendOtp.isPending
-                      ? "bg-[#FF7F50]"
-                      : "bg-gray-200"
+                    phone.length >= 8 && !sending ? "bg-[#FF7F50]" : "bg-gray-200"
                   }`}
                 >
-                  {sendOtp.isPending ? (
+                  {sending ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <Text
@@ -226,9 +241,7 @@ export const GuestAuthModal = ({
             </View>
           ) : (
             <View className="px-5 pt-6 flex-1">
-              <Text className="text-[#111] font-black text-2xl mb-1.5">
-                Verify your number
-              </Text>
+              <Text className="text-[#111] font-black text-2xl mb-1.5">Verify your number</Text>
               <View className="flex-row flex-wrap mb-8">
                 <Text className="text-gray-500 font-medium text-[15px] leading-6">
                   Enter the 6-digit code sent to{" "}
@@ -238,14 +251,11 @@ export const GuestAuthModal = ({
                 </Text>
                 <TouchableOpacity onPress={() => setStep("phone")}>
                   <View className="bg-[#FF7F50] px-2.5 py-0.5 rounded-full">
-                    <Text className="text-white font-bold text-[10px]">
-                      Edit
-                    </Text>
+                    <Text className="text-white font-bold text-[10px]">Edit</Text>
                   </View>
                 </TouchableOpacity>
               </View>
 
-              {/* 6-digit OTP boxes */}
               <View className="flex-row justify-between mb-4">
                 {Array(OTP_LENGTH)
                   .fill(null)
@@ -261,9 +271,7 @@ export const GuestAuthModal = ({
                       }`}
                     >
                       <TextInput
-                        ref={(ref) => {
-                          otpRefs.current[index] = ref;
-                        }}
+                        ref={(ref) => { otpRefs.current[index] = ref; }}
                         className="text-center font-black text-2xl text-[#FF7F50]"
                         maxLength={1}
                         keyboardType="number-pad"
@@ -277,28 +285,19 @@ export const GuestAuthModal = ({
               </View>
 
               {!!errorMsg && (
-                <Text className="text-red-500 text-[13px] font-medium mb-2">
-                  {errorMsg}
-                </Text>
+                <Text className="text-red-500 text-[13px] font-medium mb-2">{errorMsg}</Text>
               )}
 
               <View className="flex-row items-center justify-between mb-8">
                 <View className="flex-row items-center">
-                  <Text className="text-[#111] font-black text-[12px] mr-1">
-                    Time remaining:
-                  </Text>
+                  <Text className="text-[#111] font-black text-[12px] mr-1">Time remaining:</Text>
                   <Text className="text-[#00C853] font-black text-[12px]">
                     00:{timer.toString().padStart(2, "0")}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  onPress={handleResend}
-                  disabled={timer > 0 || sendOtp.isPending}
-                >
+                <TouchableOpacity onPress={handleResend} disabled={timer > 0 || sending}>
                   <Text
-                    className={`font-black text-[12px] ${
-                      timer > 0 ? "text-gray-300" : "text-[#FF7F50]"
-                    }`}
+                    className={`font-black text-[12px] ${timer > 0 ? "text-gray-300" : "text-[#FF7F50]"}`}
                   >
                     Resend code
                   </Text>
@@ -308,20 +307,16 @@ export const GuestAuthModal = ({
               <View className="flex-1 justify-end">
                 <TouchableOpacity
                   onPress={handleOtpSubmit}
-                  disabled={!otpComplete || verifyOtp.isPending}
+                  disabled={!otpComplete || verifying}
                   className={`h-[56px] rounded-xl items-center justify-center ${
-                    otpComplete && !verifyOtp.isPending
-                      ? "bg-[#FF7F50]"
-                      : "bg-gray-200"
+                    otpComplete && !verifying ? "bg-[#FF7F50]" : "bg-gray-200"
                   }`}
                 >
-                  {verifyOtp.isPending ? (
+                  {verifying ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <Text
-                      className={`font-bold text-[16px] ${
-                        otpComplete ? "text-white" : "text-gray-400"
-                      }`}
+                      className={`font-bold text-[16px] ${otpComplete ? "text-white" : "text-gray-400"}`}
                     >
                       Continue
                     </Text>

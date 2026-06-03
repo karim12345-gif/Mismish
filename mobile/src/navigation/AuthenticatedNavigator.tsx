@@ -10,6 +10,9 @@ import AddNewCardScreen from "../features/profile/screens/AddNewCardScreen";
 import PersonalInfoScreen from "../features/profile/screens/PersonalInfoScreen";
 import PaymentMethodScreen from "../features/profile/screens/PaymentMethodScreen";
 import CountryScreen from "../features/profile/screens/CountryScreen";
+import AllergiesScreen from "../features/profile/screens/AllergiesScreen";
+import SettingsScreen from "../features/profile/screens/SettingsScreen";
+import FAQScreen from "../features/profile/screens/FAQScreen";
 import FavoritesScreen from "../features/favorites/Favorites.screen";
 import BookingConfirmedScreen from "../features/checkout/BookingConfirmed.screen";
 import DeliveryTrackingScreen from "../features/checkout/DeliveryTracking.screen";
@@ -33,6 +36,9 @@ export type AuthenticatedStackParamList = {
   PersonalInfo: undefined;
   PaymentMethod: undefined;
   Country: { selected?: { flag: string; name: string; code: string }; onSelect?: (c: any) => void };
+  Allergies: undefined;
+  Settings: undefined;
+  FAQ: undefined;
 };
 
 const Stack = createStackNavigator<AuthenticatedStackParamList>();
@@ -58,6 +64,9 @@ export default function AuthenticatedNavigator() {
       <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
       <Stack.Screen name="PaymentMethod" component={PaymentMethodScreen} />
       <Stack.Screen name="Country" component={CountryScreen} />
+      <Stack.Screen name="Allergies" component={AllergiesScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="FAQ" component={FAQScreen} />
     </Stack.Navigator>
   );
 }

@@ -1,5 +1,7 @@
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import React from "react";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "./src/components/ToastConfig";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import RootNavigator from "./src/navigation/RootNavigator";
 import { AuthProvider } from "./src/context/AuthContext";
@@ -30,6 +32,7 @@ const App = () => {
                 <CardsProvider>
                   <FavoritesProvider>
                     <AppInner />
+                    <Toast config={toastConfig} />
                   </FavoritesProvider>
                 </CardsProvider>
               </CartProvider>

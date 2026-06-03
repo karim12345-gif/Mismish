@@ -13,7 +13,7 @@ import {
   Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -40,9 +40,11 @@ export default function ProfileScreen() {
   const [selectedCountry, setSelectedCountry] = useState({ flag: "🇸🇦", name: "Saudi Arabia", code: "+966" });
   const [countrySheet, setCountrySheet] = useState(false);
   const [logoutSheet, setLogoutSheet] = useState(false);
+  const [languageSheet, setLanguageSheet] = useState(false);
   const [signInVisible, setSignInVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(400)).current;
   const logoutSlideAnim = useRef(new Animated.Value(400)).current;
+  const languageSlideAnim = useRef(new Animated.Value(400)).current;
 
   const openCountrySheet = () => {
     setCountrySheet(true);
@@ -58,6 +60,14 @@ export default function ProfileScreen() {
   };
   const closeLogoutSheet = () => {
     Animated.timing(logoutSlideAnim, { toValue: 400, duration: 200, useNativeDriver: true }).start(() => setLogoutSheet(false));
+  };
+
+  const openLanguageSheet = () => {
+    setLanguageSheet(true);
+    Animated.spring(languageSlideAnim, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 18 }).start();
+  };
+  const closeLanguageSheet = () => {
+    Animated.timing(languageSlideAnim, { toValue: 400, duration: 200, useNativeDriver: true }).start(() => setLanguageSheet(false));
   };
 
   const referralCode = getReferralCode(user?.id);
@@ -104,12 +114,6 @@ export default function ProfileScreen() {
                   {user.phoneNumber ?? user.email ?? ""}
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("PersonalInfo")}
-                className="bg-[#F4F4F4] px-3 py-1.5 rounded-xl"
-              >
-                <Text className="text-[#366150] text-[12px] font-bold">Edit</Text>
-              </TouchableOpacity>
             </View>
           </View>
         ) : null}
@@ -186,7 +190,7 @@ export default function ProfileScreen() {
           </View>
         </View>}
 
-        {/* Settings */}
+        {/* Account section */}
         <View className="mx-5 mb-5">
           <Text className="text-[#111] text-[11px] font-bold uppercase tracking-widest mb-3 opacity-40">Account</Text>
           <View className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-black/5 overflow-hidden">
@@ -199,8 +203,16 @@ export default function ProfileScreen() {
             ) : (
               <SettingRow icon="log-in" label="Sign In" onPress={() => setSignInVisible(true)} />
             )}
-            <SettingRow icon="alert-circle" label="Food Allergies" onPress={() => navigation.navigate("Settings")} />
-            <SettingRow icon="help-circle" label="FAQs" />
+            <SettingRow mciIcon="food-variant" label="Food Allergies" onPress={() => navigation.navigate("Allergies")} />
+            <SettingRow icon="globe" label="Language" badge="🇺🇸" onPress={openLanguageSheet} isLast />
+          </View>
+        </View>
+
+        {/* Help section */}
+        <View className="mx-5 mb-5">
+          <Text className="text-[#111] text-[11px] font-bold uppercase tracking-widest mb-3 opacity-40">Help</Text>
+          <View className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-black/5 overflow-hidden">
+            <SettingRow icon="help-circle" label="FAQs" onPress={() => navigation.navigate("FAQ")} />
             <SettingRow icon="settings" label="Settings" onPress={() => navigation.navigate("Settings")} />
             <SettingRow icon="file-text" label="Terms and Conditions" isLast />
           </View>
@@ -273,6 +285,37 @@ export default function ProfileScreen() {
         </Pressable>
       </Modal>
 
+      {/* Language bottom sheet */}
+      <Modal visible={languageSheet} transparent animationType="none">
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={closeLanguageSheet}>
+          <Pressable onPress={() => {}}>
+            <Animated.View style={{ transform: [{ translateY: languageSlideAnim }] }}>
+              <View className="bg-white rounded-t-3xl px-5 pt-4 pb-10">
+                <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-4" />
+                <Text className="text-[#111] text-[16px] font-black mb-4">Language</Text>
+                <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  {[
+                    { flag: "🇺🇸", label: "English", value: "en" },
+                    { flag: "🇸🇦", label: "Arabic", value: "ar" },
+                  ].map((lang, i, arr) => (
+                    <TouchableOpacity
+                      key={lang.value}
+                      onPress={closeLanguageSheet}
+                      activeOpacity={0.6}
+                      className={`flex-row items-center px-4 py-4 ${i < arr.length - 1 ? "border-b border-gray-100" : ""}`}
+                    >
+                      <Text style={{ fontSize: 20, marginRight: 12 }}>{lang.flag}</Text>
+                      <Text className="flex-1 text-[#222] text-[14px] font-semibold">{lang.label}</Text>
+                      <Feather name="chevron-right" size={17} color="#CCC" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </Animated.View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       {/* Country bottom sheet */}
       <Modal visible={countrySheet} transparent animationType="none">
         <Pressable className="flex-1 bg-black/40 justify-end" onPress={closeCountrySheet}>
@@ -311,12 +354,14 @@ export default function ProfileScreen() {
 
 function SettingRow({
   icon,
+  mciIcon,
   label,
   onPress,
   isLast,
   badge,
 }: {
-  icon: React.ComponentProps<typeof Feather>["name"];
+  icon?: React.ComponentProps<typeof Feather>["name"];
+  mciIcon?: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
   label: string;
   onPress?: () => void;
   isLast?: boolean;
@@ -330,7 +375,10 @@ function SettingRow({
     >
       <View className="flex-row items-center gap-3">
         <View className="w-8 h-8 rounded-xl bg-[#F4F4F4] items-center justify-center">
-          <Feather name={icon} size={15} color="#366150" />
+          {mciIcon
+            ? <MaterialCommunityIcons name={mciIcon} size={17} color="#366150" />
+            : <Feather name={icon!} size={15} color="#366150" />
+          }
         </View>
         <Text className="text-[#222] text-[14px] font-semibold">{label}</Text>
       </View>

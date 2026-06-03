@@ -1,194 +1,154 @@
-import { useTranslation } from "react-i18next";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  Switch,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  Pressable,
+  Animated,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import * as Notifications from "expo-notifications";
 import { useAuth } from "../../../context/AuthContext";
-import { InView } from "@components/Inview";
-import React, { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View, I18nManager, ScrollView, Alert } from "react-native";
-import { styled } from "nativewind";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Updates from "expo-updates";
-import { ALL_ALLERGENS } from "../../../constants/allergens";
-import { useUserAllergies } from "../../../context/AllergyContext";
-import { useUpdateAllergies } from "../../../hooks/useAllergies";
-import { ALLERGY_PENDING_KEY } from "../../../components/AllergyOnboarding/AllergyOnboardingSheet";
+import { AuthServices } from "../../../services/auth/auth.service";
 
-const StyledText = styled(Text);
-const StyledTouchable = styled(TouchableOpacity);
-
-const SettingsScreen = () => {
-  const { t, i18n } = useTranslation();
-  const { logout, isAuthenticated } = useAuth();
-  const { userAllergies, setUserAllergies } = useUserAllergies();
-  const { mutate: saveAllergies } = useUpdateAllergies();
-
-  const [selected, setSelected] = useState<string[]>(userAllergies ?? []);
-  const [saved, setSaved] = useState(false);
+export default function SettingsScreen() {
+  const navigation = useNavigation<any>();
+  const { logout } = useAuth();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [deleteSheet, setDeleteSheet] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const slideAnim = useRef(new Animated.Value(400)).current;
 
   useEffect(() => {
-    setSelected(userAllergies ?? []);
-  }, [userAllergies]);
+    Notifications.getPermissionsAsync().then(({ status }) => {
+      setNotificationsEnabled(status === "granted");
+    });
+  }, []);
 
-  const toggle = (id: string) => {
-    setSaved(false);
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
+  const openDeleteSheet = () => {
+    setDeleteSheet(true);
+    Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 18 }).start();
+  };
+
+  const closeDeleteSheet = () => {
+    Animated.timing(slideAnim, { toValue: 400, duration: 200, useNativeDriver: true }).start(() =>
+      setDeleteSheet(false)
     );
   };
 
-  const handleSaveAllergens = async () => {
-    setUserAllergies(selected);
-    await AsyncStorage.setItem(ALLERGY_PENDING_KEY, JSON.stringify(selected));
-    if (isAuthenticated) {
-      saveAllergies(selected, {
-        onSuccess: () => setSaved(true),
-        onError: () => Alert.alert("Error", "Could not save allergens. Try again."),
-      });
+  const toggleNotifications = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== "granted") {
+      const { status: newStatus } = await Notifications.requestPermissionsAsync();
+      setNotificationsEnabled(newStatus === "granted");
     } else {
-      setSaved(true);
+      Alert.alert(
+        "Turn off notifications",
+        "To disable, go to your phone Settings → Mismish → Notifications.",
+        [{ text: "OK" }]
+      );
     }
   };
 
-  const changeLanguage = async (lang: "en" | "ar") => {
-    await AsyncStorage.setItem("language", lang);
-    await i18n.changeLanguage(lang);
-    const isRTL = lang === "ar";
-    if (I18nManager.isRTL !== isRTL) {
-      I18nManager.allowRTL(isRTL);
-      I18nManager.forceRTL(isRTL);
-      try {
-        await Updates.reloadAsync();
-      } catch (e) {
-        console.warn("Please reload the app manually to apply RTL changes.");
-      }
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await AuthServices.deleteAccount();
+      closeDeleteSheet();
+      setTimeout(logout, 250);
+    } catch {
+      setDeleting(false);
+      Alert.alert("Error", "Could not delete account. Please try again.");
     }
   };
 
   return (
-    <InView className="flex-1 bg-[#F9F9F9]">
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24, paddingTop: 80, paddingBottom: 60 }}>
+    <SafeAreaView className="flex-1 bg-[#F4F4F4]">
+      <View className="flex-row items-center px-5 pt-2 pb-4">
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="w-9 h-9 rounded-full bg-white border border-gray-100 items-center justify-center mr-3 shadow-sm shadow-black/5"
+        >
+          <Feather name="arrow-left" size={16} color="#111" />
+        </TouchableOpacity>
+        <Text className="text-[#111] text-[20px] font-black">Settings</Text>
+      </View>
 
-        {/* Allergens */}
-        <View className="mb-8">
-          <StyledText className="text-[18px] font-black text-[#111] mb-1">
-            Food Allergies 🥜
-          </StyledText>
-          <StyledText className="text-gray-400 text-[13px] font-medium mb-5">
-            We'll warn you before ordering bags that contain these.
-          </StyledText>
-
-          <View className="flex-row flex-wrap gap-3">
-            {ALL_ALLERGENS.map((allergen) => {
-              const active = selected.includes(allergen.id);
-              return (
-                <TouchableOpacity
-                  key={allergen.id}
-                  onPress={() => toggle(allergen.id)}
-                  activeOpacity={0.75}
-                  className="flex-row items-center px-4 py-2.5 rounded-2xl border-2"
-                  style={{
-                    borderColor: active ? "#FF7F50" : "#E5E7EB",
-                    backgroundColor: active ? "#FFF4F0" : "#fff",
-                  }}
-                >
-                  <Text style={{ fontSize: 18, marginRight: 6 }}>{allergen.emoji}</Text>
-                  <Text
-                    className="font-bold text-[13px]"
-                    style={{ color: active ? "#FF7F50" : "#444" }}
-                  >
-                    {allergen.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+      <View className="mx-5 mt-2">
+        <View className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-black/5 overflow-hidden">
+          <View className="flex-row items-center px-4 py-4 border-b border-gray-100">
+            <View className="w-8 h-8 rounded-xl bg-[#F4F4F4] items-center justify-center mr-3">
+              <Feather name="bell" size={15} color="#366150" />
+            </View>
+            <Text className="flex-1 text-[#222] text-[14px] font-semibold">Push notifications</Text>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={toggleNotifications}
+              trackColor={{ false: "#E5E7EB", true: "#366150" }}
+              thumbColor="#fff"
+            />
           </View>
 
           <TouchableOpacity
-            onPress={handleSaveAllergens}
-            className="mt-5 h-12 rounded-2xl items-center justify-center"
-            style={{ backgroundColor: saved ? "#18C96D" : "#FF7F50" }}
+            onPress={openDeleteSheet}
+            activeOpacity={0.6}
+            className="flex-row items-center px-4 py-4"
           >
-            <Text className="text-white font-black text-[15px]">
-              {saved ? "✓ Saved" : selected.length > 0 ? `Save ${selected.length} Allergen${selected.length > 1 ? "s" : ""}` : "Save — No Allergies"}
-            </Text>
+            <View className="w-8 h-8 rounded-xl bg-[#FEF2F2] items-center justify-center mr-3">
+              <Feather name="user-x" size={15} color="#EF4444" />
+            </View>
+            <Text className="flex-1 text-[#EF4444] text-[14px] font-semibold">Delete account</Text>
+            <Feather name="chevron-right" size={17} color="#CCC" />
           </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Divider */}
-        <View className="h-px bg-gray-200 mb-8" />
+      {/* Delete account sheet */}
+      <Modal visible={deleteSheet} transparent animationType="none">
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={closeDeleteSheet}>
+          <Pressable onPress={() => {}}>
+            <Animated.View style={{ transform: [{ translateY: slideAnim }] }}>
+              <View className="bg-white rounded-t-3xl px-5 pt-6 pb-10">
+                <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-6" />
 
-        {/* Language */}
-        <View className="mb-8">
-          <StyledText className="text-[18px] font-black text-[#111] mb-5">
-            {t("settings.language")}
-          </StyledText>
+                <View className="w-16 h-16 rounded-full bg-[#FEF2F2] items-center justify-center self-center mb-4">
+                  <Feather name="user-x" size={28} color="#EF4444" />
+                </View>
 
-          <View className="flex-row gap-4">
-            <StyledTouchable
-              onPress={() => changeLanguage("en")}
-              className={`flex-1 p-4 rounded-xl border-2 items-center flex-row justify-center gap-2 ${
-                i18n.language === "en"
-                  ? "border-[#FF7F50] bg-[#FFF4F0]"
-                  : "border-gray-200 bg-white"
-              }`}
-            >
-              <Text>🇺🇸</Text>
-              <StyledText className={i18n.language === "en" ? "font-bold" : ""}>
-                {t("settings.english")}
-              </StyledText>
-            </StyledTouchable>
+                <Text className="text-[#111] text-[18px] font-black text-center mb-2">
+                  Delete Account
+                </Text>
+                <Text className="text-gray-400 text-[13px] font-medium text-center mb-8 leading-5">
+                  This will permanently delete your account and all your data. This action cannot be undone.
+                </Text>
 
-            <StyledTouchable
-              onPress={() => changeLanguage("ar")}
-              className={`flex-1 p-4 rounded-xl border-2 items-center flex-row justify-center gap-2 ${
-                i18n.language === "ar"
-                  ? "border-[#FF7F50] bg-[#FFF4F0]"
-                  : "border-gray-200 bg-white"
-              }`}
-            >
-              <Text>🇸🇦</Text>
-              <StyledText className={i18n.language === "ar" ? "font-bold" : ""}>
-                {t("settings.arabic")}
-              </StyledText>
-            </StyledTouchable>
-          </View>
-        </View>
-
-        {/* Divider */}
-        <View className="h-px bg-gray-200 mb-8" />
-
-        {/* Account */}
-        <View className="gap-4">
-          {!isAuthenticated ? (
-            <StyledTouchable
-              onPress={() => console.log("Sign In pressed")}
-              className="w-full p-4 rounded-xl bg-[#146566] items-center"
-            >
-              <StyledText className="text-white font-bold">Sign In</StyledText>
-            </StyledTouchable>
-          ) : (
-            <StyledTouchable
-              onPress={logout}
-              className="w-full p-4 rounded-xl bg-red-50 border border-red-200 items-center"
-            >
-              <StyledText className="text-red-600 font-bold">Logout</StyledText>
-            </StyledTouchable>
-          )}
-
-          <StyledTouchable
-            onPress={async () => {
-              await AsyncStorage.removeItem("hasSeenIntro");
-              await Updates.reloadAsync();
-            }}
-            className="w-full p-4 rounded-xl bg-gray-100 items-center"
-          >
-            <StyledText className="text-gray-600 font-bold">
-              Reset Onboarding (Debug)
-            </StyledText>
-          </StyledTouchable>
-        </View>
-
-      </ScrollView>
-    </InView>
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    onPress={closeDeleteSheet}
+                    className="flex-1 h-12 rounded-2xl items-center justify-center bg-[#F4F4F4]"
+                  >
+                    <Text className="text-[#111] font-bold text-[14px]">Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleDeleteAccount}
+                    disabled={deleting}
+                    className="flex-1 h-12 rounded-2xl items-center justify-center bg-[#EF4444]"
+                  >
+                    <Text className="text-white font-bold text-[14px]">
+                      {deleting ? "Deleting…" : "Yes, Delete"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Animated.View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </SafeAreaView>
   );
-};
-
-export default SettingsScreen;
+}

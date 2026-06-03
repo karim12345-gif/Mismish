@@ -29,7 +29,7 @@ export interface AuthResponse {
 }
 
 export interface SocialLoginRequest {
-  provider: "google" | "apple";
+  provider: "google" | "apple" | "firebase_phone";
   idToken: string;
 }
 
@@ -70,12 +70,17 @@ const logout = async (refreshToken: string): Promise<void> => {
   await api.post(AUTH_ENDPOINTS.LOGOUT, { refreshToken });
 };
 
+const deleteAccount = async (): Promise<void> => {
+  await api.delete("/user/me");
+};
+
 const AuthServices = {
   sendOtp,
   verifyOtp,
   resendOtp,
   socialLogin,
   logout,
+  deleteAccount,
 };
 
 export { AuthServices };

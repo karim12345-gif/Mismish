@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
 import { ALL_ALLERGENS } from "../../../constants/allergens";
 import { useUserAllergies } from "../../../context/AllergyContext";
 import { useUpdateAllergies } from "../../../hooks/useAllergies";
@@ -33,13 +34,22 @@ export default function AllergiesScreen() {
   const handleSave = async () => {
     setUserAllergies(selected);
     await AsyncStorage.setItem(ALLERGY_PENDING_KEY, JSON.stringify(selected));
-    if (isAuthenticated) {
-      saveAllergies(selected, {
-        onSuccess: () => setSaved(true),
-        onError: () => Alert.alert("Error", "Could not save. Try again."),
+
+    const finish = () => {
+      Toast.show({
+        type: "success",
+        text1: "Preferences saved ✓",
+        text2: `${selected.length} allergen${selected.length > 1 ? "s" : ""} saved`,
+        visibilityTime: 2000,
+        topOffset: 60,
       });
+      setTimeout(() => navigation.goBack(), 300);
+    };
+
+    if (isAuthenticated) {
+      saveAllergies(selected, { onSuccess: finish, onError: finish });
     } else {
-      setSaved(true);
+      finish();
     }
   };
 
@@ -91,15 +101,22 @@ export default function AllergiesScreen() {
         {/* Save button */}
         <TouchableOpacity
           onPress={handleSave}
+          disabled={selected.length === 0}
+          activeOpacity={0.8}
           className="w-full h-14 rounded-2xl items-center justify-center"
-          style={{ backgroundColor: saved ? "#18C96D" : "#FF7F50" }}
+          style={{
+            backgroundColor: selected.length === 0 ? "#E5E7EB" : saved ? "#18C96D" : "#FF7F50",
+          }}
         >
-          <Text className="text-white font-black text-[16px]">
+          <Text
+            className="font-black text-[16px]"
+            style={{ color: selected.length === 0 ? "#9CA3AF" : "#fff" }}
+          >
             {saved
               ? "✓ Saved"
               : selected.length > 0
               ? `Save ${selected.length} Allergen${selected.length > 1 ? "s" : ""}`
-              : "Save — No Allergies"}
+              : "Select an allergen to save"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
