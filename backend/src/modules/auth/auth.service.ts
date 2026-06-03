@@ -3,7 +3,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import appleSignin from "apple-signin-auth";
-import admin from "../../shared/lib/firebase";
+import { getFirebaseAdmin } from "../../shared/lib/firebase";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
 import { generateOTP, sendOTP, maskPhoneNumber } from "../../shared/lib/sms";
@@ -198,7 +198,7 @@ export const socialLogin = async (
     appleId = sub;
     email = appleEmail;
   } else if (data.provider === "firebase_phone") {
-    const decoded = await admin.auth().verifyIdToken(data.idToken);
+    const decoded = await getFirebaseAdmin().auth().verifyIdToken(data.idToken);
     if (!decoded.phone_number)
       throw new AppError(401, "Firebase token has no phone number");
     phoneNumber = decoded.phone_number;

@@ -1,11 +1,14 @@
 import admin from "firebase-admin";
+import { AppError } from "./AppError";
 
-if (!admin.apps.length) {
+export function getFirebaseAdmin(): admin.app.App {
+  if (admin.apps.length) return admin.apps[0]!;
   const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!serviceAccount) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT env var is required");
+    // TODO: set FIREBASE_SERVICE_ACCOUNT in Railway to enable phone login
+    throw new AppError(503, "Firebase phone login is not configured yet");
   }
-  admin.initializeApp({
+  return admin.initializeApp({
     credential: admin.credential.cert(JSON.parse(serviceAccount)),
   });
 }
