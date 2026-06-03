@@ -73,3 +73,11 @@ export const getAllergies = async (userId: number): Promise<string[]> => {
   if (!user) throw new AppError(404, "User not found");
   return user.allergies;
 };
+
+export const deleteAccount = async (userId: number): Promise<void> => {
+  await prisma.$transaction([
+    prisma.review.deleteMany({ where: { userId } }),
+    prisma.order.deleteMany({ where: { userId } }),
+    prisma.user.delete({ where: { id: userId } }),
+  ]);
+};

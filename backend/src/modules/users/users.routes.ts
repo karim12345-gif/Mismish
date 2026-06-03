@@ -9,6 +9,7 @@ router.use(authenticate, authorize("user"));
 
 router.get("/me", usersController.getMyProfile);
 router.patch("/me", usersController.updateMyProfile);
+router.delete("/me", usersController.deleteMyAccount);
 router.post("/push-token", usersController.savePushToken);
 router.get("/allergies", usersController.getAllergies);
 router.patch("/allergies", usersController.updateAllergies);

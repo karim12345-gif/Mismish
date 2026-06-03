@@ -23,7 +23,7 @@ export interface ResendOTPBody {
   phoneNumber: string;
 }
 export interface SocialLoginBody {
-  provider: "google" | "apple";
+  provider: "google" | "apple" | "firebase_phone";
   idToken: string;
 }
 export interface RefreshTokenBody {

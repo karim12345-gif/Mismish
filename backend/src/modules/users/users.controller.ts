@@ -75,3 +75,16 @@ export const getAllergies = async (
     handle(e, res, next);
   }
 };
+
+export const deleteMyAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    await usersService.deleteAccount(req.user!.id);
+    res.status(200).json({ status: "success", message: "Account deleted" });
+  } catch (e) {
+    handle(e, res, next);
+  }
+};

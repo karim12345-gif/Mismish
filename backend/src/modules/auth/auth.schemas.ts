@@ -54,7 +54,7 @@ export const ResendOTPSchema = z.object({
 
 export const SocialLoginSchema = z.object({
   body: z.object({
-    provider: z.enum(["google", "apple"]),
+    provider: z.enum(["google", "apple", "firebase_phone"]),
     idToken: z.string().min(1, "Identity token is required"),
   }),
 });

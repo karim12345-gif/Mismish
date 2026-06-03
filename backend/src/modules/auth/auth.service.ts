@@ -3,6 +3,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import appleSignin from "apple-signin-auth";
+import admin from "../../shared/lib/firebase";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
 import { generateOTP, sendOTP, maskPhoneNumber } from "../../shared/lib/sms";
@@ -169,6 +170,7 @@ export const socialLogin = async (
   let email: string | undefined;
   let googleId: string | undefined;
   let appleId: string | undefined;
+  let phoneNumber: string | undefined;
   let name = "User";
 
   if (data.provider === "google") {
@@ -195,17 +197,23 @@ export const socialLogin = async (
     );
     appleId = sub;
     email = appleEmail;
+  } else if (data.provider === "firebase_phone") {
+    const decoded = await admin.auth().verifyIdToken(data.idToken);
+    if (!decoded.phone_number)
+      throw new AppError(401, "Firebase token has no phone number");
+    phoneNumber = decoded.phone_number;
   }
 
-  if (!email && !googleId && !appleId)
+  if (!email && !googleId && !appleId && !phoneNumber)
     throw new AppError(400, "Could not verify identity from provider");
 
   let user = await prisma.user.findFirst({
     where: {
       OR: [
-        { googleId: googleId || undefined },
-        { appleId: appleId || undefined },
-        { email: email || undefined },
+        ...(googleId ? [{ googleId }] : []),
+        ...(appleId ? [{ appleId }] : []),
+        ...(email ? [{ email }] : []),
+        ...(phoneNumber ? [{ phoneNumber }] : []),
       ],
     },
   });
@@ -221,9 +229,14 @@ export const socialLogin = async (
         where: { id: user.id },
         data: { appleId },
       });
+    if (data.provider === "firebase_phone" && !user.isVerified)
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: true },
+      });
   } else {
     user = await prisma.user.create({
-      data: { email, googleId, appleId, name, isVerified: true },
+      data: { email, googleId, appleId, phoneNumber, name, isVerified: true },
     });
   }
 
