@@ -1,10 +1,11 @@
-import React from "react";
-import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useFavorites } from "../../../hooks/useFavorites";
 import { useUserAllergies } from "../../../context/AllergyContext";
-import { ALL_ALLERGENS } from "../../../constants/allergens";
+import { hasAllergenWarning } from "../../../utils/allergenUtils";
+import { AllergenPopover, AllergenAnchor } from "../../../components/AllergenPopover/AllergenPopover";
 
 interface StoreCardProps {
   storeId: number;
@@ -20,6 +21,7 @@ interface StoreCardProps {
   rating?: number | null;
   reviewCount?: number;
   allergens?: string[];
+  ingredients?: string[];
 }
 
 export const StoreCard = ({
@@ -36,173 +38,175 @@ export const StoreCard = ({
   rating,
   reviewCount = 0,
   allergens,
+  ingredients = [],
 }: StoreCardProps) => {
   const navigation = useNavigation<any>();
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(storeId);
   const { userAllergies } = useUserAllergies();
+  const allergenBtnRef = useRef<View>(null);
 
-  const matchedAllergens = (allergens ?? []).filter((a) => userAllergies.includes(a));
-  const hasWarning = matchedAllergens.length > 0;
+  const [popoverVisible, setPopoverVisible] = useState(false);
+  const [anchor, setAnchor] = useState<AllergenAnchor | null>(null);
 
-  const showAllergenInfo = () => {
-    if (!allergens || allergens.length === 0) return;
-    const list = allergens
-      .map((id) => {
-        const found = ALL_ALLERGENS.find((a) => a.id === id);
-        return found ? `${found.emoji} ${found.label}` : id;
-      })
-      .join("\n");
-    Alert.alert("Contains allergens", list, [{ text: "Got it" }]);
+  const hasWarning = hasAllergenWarning(allergens ?? [], userAllergies);
+  const hasAllergenInfo = (allergens ?? []).length > 0;
+
+  const openAllergenPopover = () => {
+    allergenBtnRef.current?.measureInWindow((x, y, w, h) => {
+      setAnchor({ x, y, width: w, height: h });
+      setPopoverVisible(true);
+    });
   };
 
   return (
-    <TouchableOpacity
-      onPress={() => hasListings && navigation.push("SurpriseBag", { storeId })}
-      disabled={!hasListings}
-      activeOpacity={hasListings ? 0.85 : 1}
-      className="w-full bg-white rounded-2xl mb-5"
-      style={{
-        opacity: hasListings ? 1 : 0.45,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.07,
-        shadowRadius: 10,
-        elevation: 3,
-      }}
-    >
-      {/* Top Banner Image — overflow-hidden lives here, not on outer container */}
-      <View className="relative h-[160px] w-full bg-gray-100 rounded-t-2xl overflow-hidden">
-        <Image
-          source={typeof imageUrl === "string" ? { uri: imageUrl } : imageUrl}
-          className="w-full h-full"
-          resizeMode="cover"
-        />
-
-        {/* Left Count Badge — hidden when unavailable */}
-        {hasListings && (
-          <View className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#FFF2C2]">
-            <Text className="text-[11px] font-black text-[#D7402B]">
-              {leftCount}
-            </Text>
-          </View>
-        )}
-
-        {/* Heart Icon */}
-        <TouchableOpacity
-          onPress={(e) => {
-            e.stopPropagation();
-            toggleFavorite(storeId);
-          }}
-          className="absolute top-4 right-4 bg-white/90 p-2 rounded-full border border-gray-100"
-        >
-          <Ionicons
-            name={favorited ? "heart" : "heart-outline"}
-            size={18}
-            color={favorited ? "#FF7F50" : "#555"}
-          />
-        </TouchableOpacity>
-
-        {/* Square Logo Overlap */}
-        <View className="absolute -bottom-5 left-4 w-12 h-12 bg-white rounded-xl items-center justify-center border border-gray-200 overflow-hidden">
+    <>
+      <TouchableOpacity
+        onPress={() => hasListings && navigation.push("SurpriseBag", { storeId })}
+        disabled={!hasListings}
+        activeOpacity={hasListings ? 0.85 : 1}
+        className="w-full bg-white rounded-2xl mb-5"
+        style={{
+          opacity: hasListings ? 1 : 0.45,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.07,
+          shadowRadius: 10,
+          elevation: 3,
+        }}
+      >
+        {/* Banner */}
+        <View className="relative h-[160px] w-full bg-gray-100 rounded-t-2xl overflow-hidden">
           <Image
-            source={typeof logoUrl === "string" ? { uri: logoUrl } : logoUrl}
-            className="w-[85%] h-[85%] rounded-lg"
-            resizeMode="contain"
+            source={typeof imageUrl === "string" ? { uri: imageUrl } : imageUrl}
+            className="w-full h-full"
+            resizeMode="cover"
           />
-        </View>
-      </View>
 
-      {/* Bottom Information */}
-      <View className="pt-8 px-4 pb-4 rounded-b-2xl border border-t-0 border-gray-100">
-        <View className="flex-row justify-between items-start mb-2">
-          <View className="flex-1 pr-2">
-            <View className="flex-row items-center mb-0.5">
-              <Text
-                className="text-[#111] font-black text-[14px] flex-1"
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {title}{" "}
-                <Text className="font-semibold text-gray-500 text-[13px]">
-                  ({branch})
-                </Text>
-              </Text>
-              {allergens && allergens.length > 0 && (
-                <TouchableOpacity
-                  onPress={(e) => { e.stopPropagation(); showAllergenInfo(); }}
-                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                  className="ml-1.5"
-                >
-                  <MaterialCommunityIcons
-                    name={hasWarning ? "alert-circle" : "information-outline"}
-                    size={17}
-                    color={hasWarning ? "#DC2626" : "#bbb"}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-            {hasWarning && hasListings && (
-              <View className="flex-row items-center bg-red-50 border border-red-200 self-start px-2 py-0.5 rounded-full mb-1">
-                <MaterialCommunityIcons name="alert" size={10} color="#DC2626" />
-                <Text className="text-red-600 text-[10px] font-bold ml-1">
-                  Contains {matchedAllergens.slice(0, 2).join(", ")}
-                  {matchedAllergens.length > 2 ? ` +${matchedAllergens.length - 2}` : ""}
-                </Text>
-              </View>
-            )}
-            {hasListings ? (
-              <View className="flex-row items-center border border-green-100 bg-green-50 self-start px-2 py-0.5 rounded-full">
-                <MaterialCommunityIcons name="clock-outline" size={12} color="#18C96D" />
-                <Text className="text-[#18C96D] text-[10px] font-bold ml-1">
-                  Now{" "}
-                  <Text className="font-medium text-gray-500">, {timeRange}</Text>
-                </Text>
-              </View>
-            ) : (
-              <View className="flex-row items-center border border-gray-200 bg-gray-100 self-start px-2 py-0.5 rounded-full">
-                <MaterialCommunityIcons name="clock-remove-outline" size={12} color="#999" />
-                <Text className="text-gray-400 text-[10px] font-bold ml-1">
-                  Not available today
-                </Text>
-              </View>
-            )}
-          </View>
-          <View className="items-end shrink-0">
-            {hasListings && (
-              <Text className="text-gray-500 text-[11px] font-bold mb-0.5">
-                Starts at
-              </Text>
-            )}
-            <Text
-              className="font-black text-[15px]"
-              style={{ color: hasListings ? "#FF2C55" : "#aaa" }}
-              adjustsFontSizeToFit
-            >
-              {hasListings ? price : "—"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Footer */}
-        <View className="flex-row items-center mt-3 pt-3 border-t border-gray-100">
-          <View className="flex-row items-center mr-4">
-            <Feather name="map-pin" size={12} color="#888" />
-            <Text className="text-gray-500 text-[12px] font-semibold ml-1">
-              {distance}
-            </Text>
-          </View>
-          {reviewCount > 0 && rating != null && (
-            <View className="flex-row items-center">
-              <MaterialCommunityIcons name="star" size={13} color="#F5B224" />
-              <Text className="text-gray-500 text-[12px] font-semibold ml-1">
-                {rating.toFixed(1)}{" "}
-                <Text className="text-gray-400">({reviewCount})</Text>
-              </Text>
+          {hasListings && (
+            <View className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#FFF2C2]">
+              <Text className="text-[11px] font-black text-[#D7402B]">{leftCount}</Text>
             </View>
           )}
+
+          <TouchableOpacity
+            onPress={(e) => { e.stopPropagation(); toggleFavorite(storeId); }}
+            className="absolute top-4 right-4 bg-white/90 p-2 rounded-full border border-gray-100"
+          >
+            <Ionicons
+              name={favorited ? "heart" : "heart-outline"}
+              size={18}
+              color={favorited ? "#FF7F50" : "#555"}
+            />
+          </TouchableOpacity>
+
+          <View className="absolute -bottom-5 left-4 w-12 h-12 bg-white rounded-xl items-center justify-center border border-gray-200 overflow-hidden">
+            <Image
+              source={typeof logoUrl === "string" ? { uri: logoUrl } : logoUrl}
+              className="w-[85%] h-[85%] rounded-lg"
+              resizeMode="contain"
+            />
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
+
+        {/* Info */}
+        <View className="pt-8 px-4 pb-4 rounded-b-2xl border border-t-0 border-gray-100">
+          <View className="flex-row justify-between items-start mb-2">
+            <View className="flex-1 pr-2">
+
+              {/* Title + ⓘ */}
+              <View className="flex-row items-center mb-1">
+                <Text
+                  className="text-[#111] font-black text-[14px] flex-1"
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {title}{" "}
+                  <Text className="font-semibold text-gray-500 text-[13px]">({branch})</Text>
+                </Text>
+                {hasAllergenInfo && (
+                  <View ref={allergenBtnRef} collapsable={false}>
+                    <TouchableOpacity
+                      onPress={(e) => { e.stopPropagation(); openAllergenPopover(); }}
+                      activeOpacity={0.6}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                      style={{ flexDirection: "row", alignItems: "center", marginLeft: 6 }}
+                    >
+                      <MaterialCommunityIcons
+                        name={hasWarning ? "alert-circle-outline" : "information-outline"}
+                        size={13}
+                        color={hasWarning ? "#C0392B" : "#AAAAAA"}
+                      />
+                      <Text style={{
+                        fontSize: 11,
+                        fontWeight: hasWarning ? "600" : "400",
+                        color: hasWarning ? "#C0392B" : "#AAAAAA",
+                        marginLeft: 3,
+                      }}>
+                        Alerts
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
+
+              {/* Availability */}
+              {hasListings ? (
+                <View className="flex-row items-center border border-green-100 bg-green-50 self-start px-2 py-0.5 rounded-full">
+                  <MaterialCommunityIcons name="clock-outline" size={12} color="#18C96D" />
+                  <Text className="text-[#18C96D] text-[10px] font-bold ml-1">
+                    Now <Text className="font-medium text-gray-500">, {timeRange}</Text>
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex-row items-center border border-gray-200 bg-gray-100 self-start px-2 py-0.5 rounded-full">
+                  <MaterialCommunityIcons name="clock-remove-outline" size={12} color="#999" />
+                  <Text className="text-gray-400 text-[10px] font-bold ml-1">Not available today</Text>
+                </View>
+              )}
+            </View>
+
+            <View className="items-end shrink-0">
+              {hasListings && (
+                <Text className="text-gray-500 text-[11px] font-bold mb-0.5">Starts at</Text>
+              )}
+              <Text
+                className="font-black text-[15px]"
+                style={{ color: hasListings ? "#FF2C55" : "#aaa" }}
+                adjustsFontSizeToFit
+              >
+                {hasListings ? price : "—"}
+              </Text>
+            </View>
+          </View>
+
+          {/* Footer */}
+          <View className="flex-row items-center mt-3 pt-3 border-t border-gray-100">
+            <View className="flex-row items-center mr-4">
+              <Feather name="map-pin" size={12} color="#888" />
+              <Text className="text-gray-500 text-[12px] font-semibold ml-1">{distance}</Text>
+            </View>
+            {reviewCount > 0 && rating != null && (
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons name="star" size={13} color="#F5B224" />
+                <Text className="text-gray-500 text-[12px] font-semibold ml-1">
+                  {rating.toFixed(1)}{" "}
+                  <Text className="text-gray-400">({reviewCount})</Text>
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      <AllergenPopover
+        visible={popoverVisible}
+        onClose={() => setPopoverVisible(false)}
+        anchor={anchor}
+        allergens={allergens ?? []}
+        ingredients={ingredients}
+      />
+    </>
   );
 };

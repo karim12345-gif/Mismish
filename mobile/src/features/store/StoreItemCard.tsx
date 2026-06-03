@@ -2,8 +2,8 @@ import React, { useRef, useState } from "react";
 import { View, Text, Image, TouchableOpacity, Animated } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useUserAllergies } from "../../context/AllergyContext";
-import { ALL_ALLERGENS } from "../../constants/allergens";
-import { AllergenInfoSheet } from "../../components/AllergenInfoSheet/AllergenInfoSheet";
+import { hasAllergenWarning } from "../../utils/allergenUtils";
+import { AllergenPopover, AllergenAnchor } from "../../components/AllergenPopover/AllergenPopover";
 
 interface StoreItemCardProps {
   title: string;
@@ -35,13 +35,21 @@ export const StoreItemCard = ({
   onItemPress,
 }: StoreItemCardProps) => {
   const scale = useRef(new Animated.Value(1)).current;
+  const alertsBtnRef = useRef<View>(null);
   const isSoldOut = quantity >= maxQuantity;
   const { userAllergies } = useUserAllergies();
-  const [sheetVisible, setSheetVisible] = useState(false);
 
-  const matchedAllergens = allergens.filter((a) => userAllergies.includes(a));
-  const hasWarning = matchedAllergens.length > 0;
-  const hasAllergenInfo = allergens.length > 0 || ingredients.length > 0;
+  const [popoverVisible, setPopoverVisible] = useState(false);
+  const [anchor, setAnchor] = useState<AllergenAnchor | null>(null);
+
+  const hasWarning = hasAllergenWarning(allergens, userAllergies);
+
+  const openPopover = () => {
+    alertsBtnRef.current?.measureInWindow((x, y, w, h) => {
+      setAnchor({ x, y, width: w, height: h });
+      setPopoverVisible(true);
+    });
+  };
 
   const handleAdd = () => {
     if (isSoldOut) return;
@@ -61,21 +69,9 @@ export const StoreItemCard = ({
       >
         {/* Left Details */}
         <View className="flex-1 pr-4">
-          {/* Title */}
           <Text className="text-[#111] font-black text-[16px] mb-1.5" numberOfLines={1}>
             {title}
           </Text>
-
-          {/* Allergen warning badge */}
-          {hasWarning && (
-            <View className="flex-row items-center bg-red-50 border border-red-200 self-start px-2 py-0.5 rounded-full mb-2">
-              <MaterialCommunityIcons name="alert" size={10} color="#DC2626" />
-              <Text className="text-red-600 text-[10px] font-bold ml-1">
-                Contains {matchedAllergens.slice(0, 2).join(", ")}
-                {matchedAllergens.length > 2 ? ` +${matchedAllergens.length - 2}` : ""}
-              </Text>
-            </View>
-          )}
 
           <Text
             className="text-gray-500 font-medium text-[12px] leading-5 mb-3"
@@ -84,55 +80,41 @@ export const StoreItemCard = ({
             {description}
           </Text>
 
-          {/* Price row */}
-          <View className="flex-row items-end mb-2.5">
+          {/* Price row + Alerts trigger */}
+          <View className="flex-row items-center">
             <Text className="text-[#FF7F50] font-black text-[14px] mr-2">
               SR {price}
             </Text>
-            <Text className="text-[#AAA] font-bold text-[11px] line-through decoration-[#AAA] mb-0.5">
+            <Text className="text-[#AAA] font-bold text-[11px] line-through mr-3">
               SR {originalPrice}
             </Text>
-          </View>
 
-          {/* Allergen info row — tappable */}
-          {hasAllergenInfo && (
-            <TouchableOpacity
-              onPress={(e) => { e.stopPropagation(); setSheetVisible(true); }}
-              activeOpacity={0.7}
-              className="flex-row items-center self-start"
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            >
-              <MaterialCommunityIcons
-                name={hasWarning ? "alert-circle" : "information-outline"}
-                size={14}
-                color={hasWarning ? "#DC2626" : "#BBBBBB"}
-              />
-              <View className="flex-row items-center ml-1.5 flex-wrap" style={{ gap: 4 }}>
-                {allergens.slice(0, 4).map((id) => {
-                  const found = ALL_ALLERGENS.find((a) => a.id === id);
-                  const isMatch = userAllergies.includes(id);
-                  return (
-                    <Text
-                      key={id}
-                      style={{ fontSize: 11, fontWeight: "600", color: isMatch ? "#DC2626" : "#999" }}
-                    >
-                      {found?.emoji} {found?.label ?? id}
-                    </Text>
-                  );
-                })}
-                {allergens.length > 4 && (
-                  <Text style={{ fontSize: 11, color: "#BBB", fontWeight: "600" }}>
-                    +{allergens.length - 4}
+            {/* ⓘ Alerts / ⚠️ Alerts trigger — only if bag has allergens */}
+            {allergens.length > 0 && (
+              <View ref={alertsBtnRef} collapsable={false}>
+                <TouchableOpacity
+                  onPress={(e) => { e.stopPropagation(); openPopover(); }}
+                  activeOpacity={0.6}
+                  style={{ flexDirection: "row", alignItems: "center" }}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                >
+                  <MaterialCommunityIcons
+                    name={hasWarning ? "alert-circle-outline" : "information-outline"}
+                    size={13}
+                    color={hasWarning ? "#C0392B" : "#AAAAAA"}
+                  />
+                  <Text style={{
+                    fontSize: 12,
+                    fontWeight: hasWarning ? "600" : "400",
+                    color: hasWarning ? "#C0392B" : "#AAAAAA",
+                    marginLeft: 3,
+                  }}>
+                    Alerts
                   </Text>
-                )}
-                {allergens.length === 0 && ingredients.length > 0 && (
-                  <Text style={{ fontSize: 11, color: "#BBB", fontWeight: "600" }}>
-                    See ingredients
-                  </Text>
-                )}
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-          )}
+            )}
+          </View>
         </View>
 
         {/* Right Image & Action */}
@@ -183,9 +165,10 @@ export const StoreItemCard = ({
         </View>
       </TouchableOpacity>
 
-      <AllergenInfoSheet
-        visible={sheetVisible}
-        onClose={() => setSheetVisible(false)}
+      <AllergenPopover
+        visible={popoverVisible}
+        onClose={() => setPopoverVisible(false)}
+        anchor={anchor}
         allergens={allergens}
         ingredients={ingredients}
       />

@@ -191,6 +191,7 @@ export default function HomeScreen() {
                     logoUrl={store.imageUrl ?? bag.imageUrl ?? FALLBACK_IMAGE}
                     leftCount={`${bag.quantity} left`}
                     allergens={bag.allergens}
+                    ingredients={bag.ingredients}
                   />
                 </View>
               ))}
@@ -275,6 +276,7 @@ export default function HomeScreen() {
                     rating={store.rating}
                     reviewCount={store.reviewCount}
                     allergens={firstBag?.allergens}
+                    ingredients={firstBag?.ingredients}
                   />
                 );
               })}

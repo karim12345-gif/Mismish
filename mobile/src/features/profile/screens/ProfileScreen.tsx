@@ -199,6 +199,7 @@ export default function ProfileScreen() {
             ) : (
               <SettingRow icon="log-in" label="Sign In" onPress={() => setSignInVisible(true)} />
             )}
+            <SettingRow icon="alert-circle" label="Food Allergies" onPress={() => navigation.navigate("Settings")} />
             <SettingRow icon="help-circle" label="FAQs" />
             <SettingRow icon="settings" label="Settings" onPress={() => navigation.navigate("Settings")} />
             <SettingRow icon="file-text" label="Terms and Conditions" isLast />

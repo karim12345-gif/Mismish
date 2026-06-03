@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,9 +8,9 @@ import {
   ScrollView,
 } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { ALL_ALLERGENS } from "../../constants/allergens";
 import { useUserAllergies } from "../../context/AllergyContext";
-
+import { hasAllergenWarning } from "../../utils/allergenUtils";
+import { AllergenPopover, AllergenAnchor } from "../../components/AllergenPopover/AllergenPopover";
 import { useCart } from "../../context/CartContext";
 
 const FALLBACK_IMAGE =
@@ -53,13 +53,21 @@ export const SurpriseBagBottomSheet = ({
   storeId,
   selectedDate = "today",
 }: SurpriseBagBottomSheetProps) => {
-  const [showAllergies, setShowAllergies] = React.useState(false);
   const { addToCart, cartItems, incrementItem, decrementItem } = useCart();
   const { userAllergies } = useUserAllergies();
+  const alertsBtnRef = useRef<View>(null);
+  const [popoverVisible, setPopoverVisible] = useState(false);
+  const [anchor, setAnchor] = useState<AllergenAnchor | null>(null);
 
   const allergens: string[] = item?.allergens ?? [];
-  const ingredients: string[] = item?.ingredients ?? [];
-  const hasAllergenSection = allergens.length > 0 || ingredients.length > 0;
+  const hasAllergenSection = allergens.length > 0;
+
+  const openPopover = () => {
+    alertsBtnRef.current?.measureInWindow((x, y, w, h) => {
+      setAnchor({ x, y, width: w, height: h });
+      setPopoverVisible(true);
+    });
+  };
 
   const bagImg = item?.imageUrl ?? FALLBACK_IMAGE;
   const bagPrice = (item?.price ?? 0).toFixed(2);
@@ -151,98 +159,40 @@ export const SurpriseBagBottomSheet = ({
                   "A delightful assortment of freshly baked pastries or desserts."}
               </Text>
 
-              {/* Price */}
-              <View className="flex-row items-end mb-6">
+              {/* Price row + ⓘ Alerts trigger — identical to listing card */}
+              <View className="flex-row items-center mb-6">
                 <Text className="text-[#FF7F50] font-black text-[18px] mr-2">
                   SR {bagPrice}
                 </Text>
-                <Text className="text-[#AAA] font-bold text-[12px] line-through decoration-[#AAA] mb-1">
+                <Text className="text-[#AAA] font-bold text-[12px] line-through mr-3">
                   SR {bagOriginal}
                 </Text>
-              </View>
 
-              {/* Divider */}
-              <View className="h-[1px] w-full bg-gray-100 mb-5" />
-
-              {/* Ingredients & Allergies Accordion */}
-              {hasAllergenSection && (
-                <>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setShowAllergies(!showAllergies)}
-                    className={`flex-row items-center justify-between ${showAllergies ? "mb-4" : "mb-4"}`}
-                  >
-                    <View className="flex-row items-center">
-                      <Text className="text-[#111] font-bold text-[15px]">
-                        Ingredients & Allergens
+                {hasAllergenSection && (
+                  <View ref={alertsBtnRef} collapsable={false}>
+                    <TouchableOpacity
+                      activeOpacity={0.6}
+                      onPress={openPopover}
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                      hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                    >
+                      <MaterialCommunityIcons
+                        name={hasAllergenWarning(allergens, userAllergies) ? "alert-circle-outline" : "information-outline"}
+                        size={14}
+                        color={hasAllergenWarning(allergens, userAllergies) ? "#C0392B" : "#AAAAAA"}
+                      />
+                      <Text style={{
+                        fontSize: 13,
+                        fontWeight: hasAllergenWarning(allergens, userAllergies) ? "600" : "400",
+                        color: hasAllergenWarning(allergens, userAllergies) ? "#C0392B" : "#AAAAAA",
+                        marginLeft: 4,
+                      }}>
+                        Alerts
                       </Text>
-                      {allergens.some((a) => userAllergies.includes(a)) && (
-                        <View className="ml-2 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-                          <Text className="text-red-600 text-[10px] font-bold">Warning</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Feather
-                      name={showAllergies ? "chevron-up" : "chevron-down"}
-                      size={20}
-                      color="#111"
-                    />
-                  </TouchableOpacity>
-
-                  {showAllergies && (
-                    <View className="mb-6">
-                      {/* Ingredients chips */}
-                      {ingredients.length > 0 && (
-                        <>
-                          <Text style={{ fontSize: 11, fontWeight: "700", color: "#BBB", letterSpacing: 0.8, marginBottom: 10 }}>
-                            INGREDIENTS
-                          </Text>
-                          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-                            {ingredients.map((ing) => (
-                              <View key={ing} style={{ backgroundColor: "#F5F5F5", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 }}>
-                                <Text style={{ fontSize: 12, color: "#555", fontWeight: "500" }}>{ing}</Text>
-                              </View>
-                            ))}
-                          </View>
-                        </>
-                      )}
-
-                      {/* Allergen list */}
-                      {allergens.length > 0 && (
-                        <>
-                          <Text style={{ fontSize: 11, fontWeight: "700", color: "#BBB", letterSpacing: 0.8, marginBottom: 4 }}>
-                            ALLERGENS
-                          </Text>
-                          {allergens.map((id, index) => {
-                            const found = ALL_ALLERGENS.find((a) => a.id === id);
-                            const isMatch = userAllergies.includes(id);
-                            return (
-                              <View
-                                key={id}
-                                style={{
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                  paddingVertical: 12,
-                                  borderBottomWidth: index < allergens.length - 1 ? 1 : 0,
-                                  borderBottomColor: "#F0F0F0",
-                                }}
-                              >
-                                <Text style={{ fontSize: 20, marginRight: 12, width: 28 }}>{found?.emoji ?? "⚠️"}</Text>
-                                <Text style={{ fontSize: 14, fontWeight: "600", color: "#111", flex: 1 }}>
-                                  {found?.label ?? id}
-                                </Text>
-                                {isMatch && (
-                                  <MaterialCommunityIcons name="alert-circle" size={18} color="#DC2626" />
-                                )}
-                              </View>
-                            );
-                          })}
-                        </>
-                      )}
-                    </View>
-                  )}
-                </>
-              )}
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
             </View>
           </ScrollView>
 
@@ -284,6 +234,14 @@ export const SurpriseBagBottomSheet = ({
           </View>
         </View>
       </View>
+      <AllergenPopover
+        visible={popoverVisible}
+        onClose={() => setPopoverVisible(false)}
+        anchor={anchor}
+        allergens={allergens}
+        ingredients={item?.ingredients ?? []}
+      />
     </Modal>
   );
 };
+

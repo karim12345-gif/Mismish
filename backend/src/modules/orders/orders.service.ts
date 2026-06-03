@@ -14,7 +14,10 @@ export const createOrder = async (userId: number, data: CreateOrderBody) => {
         where: { id: data.surpriseBoxId },
       });
       if (!box) throw new AppError(400, "Surprise Box not found");
-      if (new Date(box.pickupEnd) < new Date())
+      const offset = Math.min(Math.max(data.pickupOffset ?? 0, 0), 1); // clamp 0–1
+      const effectiveEnd = new Date(box.pickupEnd);
+      effectiveEnd.setDate(effectiveEnd.getDate() + offset);
+      if (effectiveEnd < new Date())
         throw new AppError(400, "Pickup time has ended");
 
       // Atomic decrement — only succeeds if quantity > 0 right now

@@ -53,7 +53,8 @@ export default function CheckoutScreen() {
       return;
     }
 
-    if (activeBag?.pickupEnd && isPickupExpired(activeBag.pickupEnd)) {
+    const pickupOffset = cartItems[0]?.pickupOffset ?? 0;
+    if (activeBag?.pickupEnd && isPickupExpired(activeBag.pickupEnd, pickupOffset)) {
       setConfirmSheetVisible(false);
       setErrorModalVisible(true);
       return;
@@ -63,6 +64,7 @@ export default function CheckoutScreen() {
       {
         surpriseBoxId,
         deliveryMethod: "PICKUP",
+        pickupOffset: cartItems[0]?.pickupOffset ?? 0,
       },
       {
         onSuccess: (response) => {

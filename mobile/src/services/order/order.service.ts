@@ -16,6 +16,7 @@ export interface CreateOrderRequest {
   surpriseBoxId: number;
   deliveryMethod: DeliveryMethod;
   deliveryAddress?: string;
+  pickupOffset?: number; // 0 = today, 1 = tomorrow
 }
 
 export interface Order {

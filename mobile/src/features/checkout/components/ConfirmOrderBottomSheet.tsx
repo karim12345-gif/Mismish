@@ -29,8 +29,11 @@ const fmtTime = (iso: string) =>
   });
 
 
-export const isPickupExpired = (pickupEnd: string) =>
-  new Date(pickupEnd) <= new Date();
+export const isPickupExpired = (pickupEnd: string, pickupOffset = 0) => {
+  const end = new Date(pickupEnd);
+  end.setDate(end.getDate() + pickupOffset);
+  return end <= new Date();
+};
 
 export const ConfirmOrderBottomSheet = ({
   visible,
