@@ -4,8 +4,10 @@ import dotenv from "dotenv";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import path from "path";
 
 import { errorHandler } from "./shared/middleware/errorHandler";
+import { renderResetPasswordPage } from "./modules/auth/auth.controller";
 import authRoutes from "./modules/auth/auth.routes";
 import ordersRoutes from "./modules/orders/orders.routes";
 import listingsRoutes from "./modules/listings/listings.routes";
@@ -23,6 +25,7 @@ const PORT = process.env.PORT || 3000;
 
 // ─── Global Middleware ────────────────────────────────────────────────────────
 app.use(helmet());
+app.use(express.static(path.join(__dirname, "../public")));
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
 app.use(cors({ origin: "*" })); // TODO: restrict in production
@@ -32,6 +35,21 @@ app.use(
     windowMs: 15 * 60 * 1000, // 15 min
     max: 100,
   }),
+);
+
+// ─── Merchant web pages ───────────────────────────────────────────────────────
+// CSP override: allow inline scripts for the reset-password form
+app.get(
+  "/merchant/reset-password",
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:"],
+    },
+  }),
+  renderResetPasswordPage,
 );
 
 // ─── Routes — /api/{module}/v1 ────────────────────────────────────────────────
