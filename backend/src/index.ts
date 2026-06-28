@@ -16,7 +16,12 @@ import usersRoutes from "./modules/users/users.routes";
 import vendorsRoutes from "./modules/vendors/vendors.routes";
 import placesRoutes from "./modules/places/places.routes";
 import reviewsRoutes from "./modules/reviews/reviews.routes";
+import supportRoutes from "./modules/support/support.routes";
+import favoritesRoutes from "./modules/favorites/favorites.routes";
 import prisma from "./shared/lib/prisma";
+import { reSchedulePendingNotifications } from "./shared/lib/notificationScheduler";
+import { bootstrapAdmin } from "./shared/lib/bootstrapAdmin";
+import adminRoutes from "./modules/admin/admin.routes";
 
 dotenv.config();
 
@@ -61,6 +66,9 @@ app.use("/api/users/v1", usersRoutes);
 app.use("/api/vendors/v1", vendorsRoutes);
 app.use("/api/places/v1", placesRoutes);
 app.use("/api/reviews/v1", reviewsRoutes);
+app.use("/api/support/v1", supportRoutes);
+app.use("/api/favorites/v1", favoritesRoutes);
+app.use("/api/admin/v1", adminRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 app.use(errorHandler);
@@ -70,6 +78,13 @@ const start = async () => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     console.log("✅ Connected to PostgreSQL");
+    await bootstrapAdmin();
+
+    // Re-schedule any pending notification timers from before the last restart
+    reSchedulePendingNotifications().catch((err) =>
+      console.error("⚠️  Failed to re-schedule notifications:", err),
+    );
+
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   } catch (error) {
     console.error("❌ Failed to connect to database:", error);

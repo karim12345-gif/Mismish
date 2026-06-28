@@ -4,6 +4,7 @@ const ORDER_ENDPOINTS = {
   STATS: "/orders/v1/stats",
   BY_ID: (id: number) => `/orders/v1/${id}`,
   COLLECT: (id: number) => `/orders/v1/${id}/collect`,
+  CANCEL: (id: number) => `/orders/v1/${id}/cancel`,
   DEV_STATUS: (id: number) => `/orders/v1/${id}/dev-status`,
 };
 

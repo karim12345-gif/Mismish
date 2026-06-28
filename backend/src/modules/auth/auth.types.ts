@@ -79,3 +79,15 @@ export interface VendorResetPasswordBody {
   token: string;
   newPassword: string;
 }
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+
+export interface LoginAdminBody {
+  email: string;
+  password: string;
+}
+
+export interface AdminAuthResult {
+  token: string;
+  admin: { id: number; email: string; name: string; role: string };
+}

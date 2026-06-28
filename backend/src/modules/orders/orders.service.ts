@@ -2,12 +2,16 @@ import { OrderStatus, Prisma } from "@prisma/client";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
 import { sendPushNotification } from "../../shared/lib/notifications";
+import { schedulePickupReminder } from "../../shared/lib/notificationScheduler";
+import { emitOrderEvent } from "../../shared/lib/orderStream";
 import type { CreateOrderBody, ImpactStats } from "./orders.types";
 
 const generateOrderCode = (): string =>
   Array.from({ length: 4 }, () => Math.floor(Math.random() * 10)).join("");
 
 export const createOrder = async (userId: number, data: CreateOrderBody) => {
+  const qty = Math.max(1, Math.floor(data.quantity ?? 1));
+
   const order = await prisma.$transaction(
     async (tx: Prisma.TransactionClient) => {
       const box = await tx.surpriseBox.findUnique({
@@ -20,11 +24,11 @@ export const createOrder = async (userId: number, data: CreateOrderBody) => {
       if (effectiveEnd < new Date())
         throw new AppError(400, "Pickup time has ended");
 
-      // Atomic decrement — only succeeds if quantity > 0 right now
-      // Prevents race condition where 10 users order the last 1 bag simultaneously
+      // Atomic decrement by qty — only succeeds if enough bags remain
+      // Prevents race condition where multiple users order simultaneously
       const decremented = await tx.surpriseBox.updateMany({
-        where: { id: data.surpriseBoxId, quantity: { gt: 0 } },
-        data: { quantity: { decrement: 1 } },
+        where: { id: data.surpriseBoxId, quantity: { gte: qty } },
+        data: { quantity: { decrement: qty } },
       });
       if (decremented.count === 0)
         throw new AppError(400, "Sorry, this bag just sold out");
@@ -38,6 +42,7 @@ export const createOrder = async (userId: number, data: CreateOrderBody) => {
         data: {
           userId,
           surpriseBoxId: data.surpriseBoxId,
+          quantity: qty,
           deliveryMethod: data.deliveryMethod,
           deliveryAddress:
             data.deliveryMethod === "DELIVERY"
@@ -66,6 +71,20 @@ export const createOrder = async (userId: number, data: CreateOrderBody) => {
     });
   }
 
+  // Schedule a pickup reminder 30 min before the window closes
+  schedulePickupReminder({
+    id: order.id,
+    pickupReminderSentAt: null,
+    surpriseBox: {
+      pickupEnd: order.surpriseBox.pickupEnd,
+      vendor: { name: order.surpriseBox.vendor.name },
+    },
+    user: { pushToken: user?.pushToken ?? null },
+  });
+
+  // Notify vendor dashboard over SSE — no polling needed
+  emitOrderEvent(order.surpriseBox.vendorId, "new_order", { orderId: order.id });
+
   return order;
 };
 
@@ -77,6 +96,7 @@ export const getMyOrders = async (userId: number) =>
         include: {
           vendor: {
             select: {
+              id: true,
               name: true,
               address: true,
               latitude: true,
@@ -104,11 +124,43 @@ export const getOrderById = async (userId: number, orderId: number) => {
   return order;
 };
 
+export const cancelOrder = async (userId: number, orderId: number) => {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new AppError(404, "Order not found");
+  if (order.userId !== userId) throw new AppError(403, "Forbidden");
+  if (order.status !== "PENDING")
+    throw new AppError(400, "Only pending orders can be cancelled");
+
+  // Restore the bag quantity so others can buy it
+  await prisma.surpriseBox.update({
+    where: { id: order.surpriseBoxId },
+    data: { quantity: { increment: order.quantity } },
+  });
+
+  const cancelled = await prisma.order.update({
+    where: { id: orderId },
+    data: { status: "CANCELLED" },
+    include: {
+      surpriseBox: {
+        include: {
+          vendor: {
+            select: { id: true, name: true, address: true, latitude: true, longitude: true },
+          },
+        },
+      },
+    },
+  });
+
+  emitOrderEvent(cancelled.surpriseBox.vendor.id, "order_cancelled", { orderId });
+
+  return cancelled;
+};
+
 export const collectOrder = async (userId: number, orderId: number) => {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) throw new AppError(404, "Order not found");
   if (order.userId !== userId) throw new AppError(403, "Forbidden");
-  if (!["PENDING", "CONFIRMED"].includes(order.status)) {
+  if (!["PENDING", "CONFIRMED", "READY_FOR_PICKUP"].includes(order.status)) {
     throw new AppError(400, "Order cannot be marked as collected");
   }
 

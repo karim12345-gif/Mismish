@@ -50,10 +50,10 @@ export default function WalletScreen() {
           </Text>
           <View className="flex-row items-end mb-6">
             <Text className="text-white font-black text-[34px] tracking-tight leading-none">
-              $0.00
+              0.00
             </Text>
             <Text className="text-white/80 font-bold text-[14px] ml-1.5 mb-1.5">
-              USD
+              SAR
             </Text>
           </View>
 
@@ -131,7 +131,7 @@ export default function WalletScreen() {
 
       {/* Floating Action Button */}
       <TouchableOpacity className="absolute bottom-10 right-6 w-14 h-14 rounded-full bg-[#366150] items-center justify-center shadow-md shadow-black/20">
-        <MaterialCommunityIcons name="currency-usd" size={24} color="#FFF" />
+        <MaterialCommunityIcons name="currency-rial" size={24} color="#FFF" />
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -5,6 +5,7 @@ export interface CreateOrderBody {
   deliveryMethod: DeliveryMethod;
   deliveryAddress?: string;
   pickupOffset?: number; // 0 = today, 1 = tomorrow
+  quantity?: number;     // bags requested, defaults to 1
 }
 
 export interface ImpactStats {

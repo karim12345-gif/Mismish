@@ -44,32 +44,30 @@ export default function CheckoutScreen() {
   };
 
   const handleConfirm = () => {
-    const surpriseBoxId = cartItems.find(
-      (i: any) => i.surpriseBoxId,
-    )?.surpriseBoxId;
+    const cartItem = cartItems.find((i: any) => i.surpriseBoxId);
+    const surpriseBoxId = cartItem?.surpriseBoxId;
 
     if (!surpriseBoxId) {
       Alert.alert("Error", "No bag selected. Please go back and add a bag.");
       return;
     }
 
-    const pickupOffset = cartItems[0]?.pickupOffset ?? 0;
+    const quantity    = cartItem?.quantity ?? 1;
+    const pickupOffset = cartItem?.pickupOffset ?? 0;
+
     if (activeBag?.pickupEnd && isPickupExpired(activeBag.pickupEnd, pickupOffset)) {
       setConfirmSheetVisible(false);
       setErrorModalVisible(true);
       return;
     }
 
+    // Backend handles atomic decrement of qty bags in one transaction
     createOrder(
-      {
-        surpriseBoxId,
-        deliveryMethod: "PICKUP",
-        pickupOffset: cartItems[0]?.pickupOffset ?? 0,
-      },
+      { surpriseBoxId, deliveryMethod: "PICKUP", pickupOffset, quantity },
       {
         onSuccess: (response) => {
           setConfirmSheetVisible(false);
-          clearCart(); // ← fix: cart was never cleared after order
+          clearCart();
           (navigation.navigate as any)("BookingConfirmed", { order: response.data });
         },
         onError: (err: any) => {

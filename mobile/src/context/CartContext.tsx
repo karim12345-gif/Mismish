@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const CART_STORAGE_KEY = "@mismish_cart";
 
 export interface CartItemProduct {
   id: string;
@@ -36,6 +39,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [cartItems, setCartItems] = useState<CartItemProduct[]>([]);
+  const hydrated = useRef(false);
+
+  // Load persisted cart on mount
+  useEffect(() => {
+    AsyncStorage.getItem(CART_STORAGE_KEY).then((stored) => {
+      if (stored) {
+        try {
+          setCartItems(JSON.parse(stored));
+        } catch {}
+      }
+      hydrated.current = true;
+    });
+  }, []);
+
+  // Persist on every change (skip first render before hydration)
+  useEffect(() => {
+    if (!hydrated.current) return;
+    AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const addToCart = (
     item: Omit<CartItemProduct, "quantity">,

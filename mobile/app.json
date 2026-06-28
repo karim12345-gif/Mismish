@@ -16,7 +16,33 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.mismish.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Mismish needs your location to show nearby stores."
+        "NSLocationWhenInUseUsageDescription": "Mismish needs your location to show nearby stores.",
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ],
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.mismish.app"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "exp+mobile"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.505490363229-enso09ftem17pq92gc6e4i60tv0qsk0d"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "app-1-638047947946-ios-3d56638999b16b514494d3"
+            ]
+          }
+        ]
       }
     },
     "android": {

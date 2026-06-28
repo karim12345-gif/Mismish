@@ -9,7 +9,7 @@ import { Request, Response, NextFunction } from "express";
  * router.patch('/:id/confirm', authenticate, authorize('vendor'), confirmOrder);
  */
 export const authorize =
-  (...roles: Array<"user" | "vendor">) =>
+  (...roles: Array<"user" | "vendor" | "admin">) =>
   (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.type)) {
       res

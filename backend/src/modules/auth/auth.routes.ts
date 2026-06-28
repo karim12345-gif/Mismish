@@ -16,6 +16,7 @@ import {
   VendorLoginSchema,
   VendorForgotPasswordSchema,
   VendorResetPasswordSchema,
+  AdminLoginSchema,
 } from "./auth.schemas";
 import * as authController from "./auth.controller";
 
@@ -66,6 +67,13 @@ router.post(
   "/vendor/reset-password",
   validate(VendorResetPasswordSchema),
   authController.resetVendorPassword,
+);
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+router.post(
+  "/admin/login",
+  validate(AdminLoginSchema),
+  authController.loginAdmin,
 );
 
 export default router;

@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { getAuth, FirebaseAuthTypes } from "@react-native-firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthServices } from "../services/auth/auth.service";
 import { AllergiesService } from "../services/user/allergies.service";
@@ -44,7 +44,9 @@ export const GuestAuthModal = ({
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
-  const confirmationRef = useRef<FirebaseAuthTypes.ConfirmationResult | null>(null);
+  const confirmationRef = useRef<FirebaseAuthTypes.ConfirmationResult | null>(
+    null,
+  );
   const otpRefs = useRef<Array<TextInput | null>>(Array(OTP_LENGTH).fill(null));
 
   useEffect(() => {
@@ -91,11 +93,19 @@ export const GuestAuthModal = ({
     setErrorMsg("");
     setSending(true);
     try {
-      confirmationRef.current = await auth().signInWithPhoneNumber(fullPhone);
+      confirmationRef.current =
+        await getAuth().signInWithPhoneNumber(fullPhone);
       setStep("otp");
       setTimer(56);
     } catch (e: any) {
-      setErrorMsg(e?.message ?? "Failed to send code. Try again.");
+      console.log("OTP send failed", e?.response?.data ?? e?.message ?? e, {
+        error: e,
+      });
+      setErrorMsg(
+        e?.response?.data?.message ??
+          e?.message ??
+          "Failed to send code. Try again.",
+      );
     } finally {
       setSending(false);
     }
@@ -105,20 +115,35 @@ export const GuestAuthModal = ({
     setErrorMsg("");
     setVerifying(true);
     try {
-      const credential = await confirmationRef.current!.confirm(otp.join(""));
-      const idToken = await credential!.user.getIdToken();
+      const confirmation = confirmationRef.current;
+      if (!confirmation) {
+        throw new Error("Please request a new code and try again.");
+      }
 
+      const credential = await confirmation.confirm(otp.join(""));
+      const firebaseUser = credential?.user;
+      if (!firebaseUser) {
+        throw new Error("Could not verify this code. Please try again.");
+      }
+
+      const idToken = await firebaseUser.getIdToken();
       const response = await AuthServices.socialLogin({
         provider: "firebase_phone",
         idToken,
       });
-
       const { accessToken, refreshToken, user } = response.data;
+
       await login(accessToken, refreshToken, user);
       await syncAllergiesAfterLogin();
       onLoginSuccess();
     } catch (e: any) {
-      setErrorMsg(e?.message ?? "Invalid code. Try again.");
+      console.log(
+        "OTP verification failed",
+        e?.response?.data ?? e?.message ?? e,
+      );
+      setErrorMsg(
+        e?.response?.data?.message ?? e?.message ?? "Invalid code. Try again.",
+      );
       setOtp(Array(OTP_LENGTH).fill(""));
       otpRefs.current[0]?.focus();
     } finally {
@@ -130,20 +155,40 @@ export const GuestAuthModal = ({
     setErrorMsg("");
     setSending(true);
     try {
-      confirmationRef.current = await auth().signInWithPhoneNumber(fullPhone);
+      confirmationRef.current = await getAuth().signInWithPhoneNumber(
+        fullPhone,
+        true,
+      );
       setTimer(56);
     } catch (e: any) {
-      setErrorMsg(e?.message ?? "Could not resend.");
+      console.log("OTP resend failed", e?.response?.data ?? e?.message ?? e);
+      setErrorMsg(
+        e?.response?.data?.message ?? e?.message ?? "Could not resend.",
+      );
     } finally {
       setSending(false);
     }
   };
 
   const handleOtpChange = (val: string, index: number) => {
+    const digits = val.replace(/\D/g, "");
+    if (digits.length > 1) {
+      const nextOtp = Array(OTP_LENGTH).fill("");
+      digits
+        .slice(0, OTP_LENGTH)
+        .split("")
+        .forEach((digit, digitIndex) => {
+          nextOtp[digitIndex] = digit;
+        });
+      setOtp(nextOtp);
+      otpRefs.current[Math.min(digits.length, OTP_LENGTH) - 1]?.focus();
+      return;
+    }
+
     const newOtp = [...otp];
-    newOtp[index] = val;
+    newOtp[index] = digits;
     setOtp(newOtp);
-    if (val && index < OTP_LENGTH - 1) {
+    if (digits && index < OTP_LENGTH - 1) {
       otpRefs.current[index + 1]?.focus();
     }
   };
@@ -163,7 +208,11 @@ export const GuestAuthModal = ({
         className="flex-1 justify-end"
       >
         <View className="absolute inset-0 bg-black/40">
-          <TouchableOpacity className="flex-1" activeOpacity={1} onPress={onClose} />
+          <TouchableOpacity
+            className="flex-1"
+            activeOpacity={1}
+            onPress={onClose}
+          />
         </View>
 
         <View className="bg-white rounded-t-3xl min-h-[55%] pb-10 shadow-xl overflow-hidden relative">
@@ -176,7 +225,9 @@ export const GuestAuthModal = ({
                 className="w-8 h-8 mr-2"
                 resizeMode="contain"
               />
-              <Text className="text-[#3A141A] font-black text-xl tracking-tight">Mismish</Text>
+              <Text className="text-[#3A141A] font-black text-xl tracking-tight">
+                Mismish
+              </Text>
             </View>
             <View className="flex-1 items-end">
               <TouchableOpacity
@@ -190,7 +241,9 @@ export const GuestAuthModal = ({
 
           {step === "phone" ? (
             <View className="px-5 pt-6 flex-1">
-              <Text className="text-[#111] font-black text-2xl mb-1.5">Salam there 👋</Text>
+              <Text className="text-[#111] font-black text-2xl mb-1.5">
+                Salam there 👋
+              </Text>
               <Text className="text-gray-500 font-medium text-[14px] mb-8">
                 Create an account or login to an existing account
               </Text>
@@ -199,7 +252,9 @@ export const GuestAuthModal = ({
                 <View className="flex-row items-center border-r border-gray-200 pr-3 mr-3">
                   <Text className="text-[18px] mr-1">🇸🇦</Text>
                   <Feather name="chevron-down" size={14} color="#111" />
-                  <Text className="text-[#111] font-bold text-[15px] ml-2">{COUNTRY_CODE}</Text>
+                  <Text className="text-[#111] font-bold text-[15px] ml-2">
+                    {COUNTRY_CODE}
+                  </Text>
                 </View>
                 <TextInput
                   className="flex-1 font-medium text-[16px] text-[#111]"
@@ -214,7 +269,9 @@ export const GuestAuthModal = ({
               </View>
 
               {!!errorMsg && (
-                <Text className="text-red-500 text-[13px] font-medium mb-4">{errorMsg}</Text>
+                <Text className="text-red-500 text-[13px] font-medium mb-4">
+                  {errorMsg}
+                </Text>
               )}
 
               <View className="flex-1 justify-end">
@@ -222,7 +279,9 @@ export const GuestAuthModal = ({
                   onPress={handlePhoneSubmit}
                   disabled={phone.length < 8 || sending}
                   className={`h-[56px] rounded-xl items-center justify-center ${
-                    phone.length >= 8 && !sending ? "bg-[#FF7F50]" : "bg-gray-200"
+                    phone.length >= 8 && !sending
+                      ? "bg-[#FF7F50]"
+                      : "bg-gray-200"
                   }`}
                 >
                   {sending ? (
@@ -241,7 +300,9 @@ export const GuestAuthModal = ({
             </View>
           ) : (
             <View className="px-5 pt-6 flex-1">
-              <Text className="text-[#111] font-black text-2xl mb-1.5">Verify your number</Text>
+              <Text className="text-[#111] font-black text-2xl mb-1.5">
+                Verify your number
+              </Text>
               <View className="flex-row flex-wrap mb-8">
                 <Text className="text-gray-500 font-medium text-[15px] leading-6">
                   Enter the 6-digit code sent to{" "}
@@ -251,7 +312,9 @@ export const GuestAuthModal = ({
                 </Text>
                 <TouchableOpacity onPress={() => setStep("phone")}>
                   <View className="bg-[#FF7F50] px-2.5 py-0.5 rounded-full">
-                    <Text className="text-white font-bold text-[10px]">Edit</Text>
+                    <Text className="text-white font-bold text-[10px]">
+                      Edit
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -271,10 +334,17 @@ export const GuestAuthModal = ({
                       }`}
                     >
                       <TextInput
-                        ref={(ref) => { otpRefs.current[index] = ref; }}
+                        ref={(ref) => {
+                          otpRefs.current[index] = ref;
+                        }}
                         className="text-center font-black text-2xl text-[#FF7F50]"
-                        maxLength={1}
+                        maxLength={index === 0 ? OTP_LENGTH : 1}
                         keyboardType="number-pad"
+                        textContentType="oneTimeCode"
+                        autoComplete={
+                          Platform.OS === "ios" ? "one-time-code" : "sms-otp"
+                        }
+                        importantForAutofill="yes"
                         value={otp[index]}
                         autoFocus={index === 0}
                         onChangeText={(val) => handleOtpChange(val, index)}
@@ -285,17 +355,24 @@ export const GuestAuthModal = ({
               </View>
 
               {!!errorMsg && (
-                <Text className="text-red-500 text-[13px] font-medium mb-2">{errorMsg}</Text>
+                <Text className="text-red-500 text-[13px] font-medium mb-2">
+                  {errorMsg}
+                </Text>
               )}
 
               <View className="flex-row items-center justify-between mb-8">
                 <View className="flex-row items-center">
-                  <Text className="text-[#111] font-black text-[12px] mr-1">Time remaining:</Text>
+                  <Text className="text-[#111] font-black text-[12px] mr-1">
+                    Time remaining:
+                  </Text>
                   <Text className="text-[#00C853] font-black text-[12px]">
                     00:{timer.toString().padStart(2, "0")}
                   </Text>
                 </View>
-                <TouchableOpacity onPress={handleResend} disabled={timer > 0 || sending}>
+                <TouchableOpacity
+                  onPress={handleResend}
+                  disabled={timer > 0 || sending}
+                >
                   <Text
                     className={`font-black text-[12px] ${timer > 0 ? "text-gray-300" : "text-[#FF7F50]"}`}
                   >

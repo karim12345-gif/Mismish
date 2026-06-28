@@ -5,13 +5,37 @@ import HomeScreen from "../features/home/Home.screen";
 import ProfileScreen from "../features/profile/screens/ProfileScreen";
 import OrdersScreen from "../features/orders/Orders.screen";
 import MapScreen from "../features/map/MapScreen";
-import PlaceholderScreen from "../features/profile/screens/PlaceholderScreen";
-import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { Platform, View } from "react-native";
-import CartReservationBanner from "../features/cart/CartReservationBanner";
+import { Platform, Text, View } from "react-native";
+import { useCart } from "../context/CartContext";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+function HomeTabIcon({ focused, color }: { focused: boolean; color: string }) {
+  const { totalQuantity } = useCart();
+  return (
+    <View style={{ width: 52, height: 52, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: focused ? "#1B4332" : "transparent", alignItems: "center", justifyContent: "center" }}>
+        <MaterialCommunityIcons name="home" size={26} color={color} />
+      </View>
+      {totalQuantity > 0 && focused && (
+        <View style={{
+          position: "absolute", top: 2, right: 2,
+          minWidth: 18, height: 18, borderRadius: 9,
+          backgroundColor: "#FF7F50",
+          borderWidth: 2, borderColor: "#fff",
+          alignItems: "center", justifyContent: "center",
+          paddingHorizontal: 4,
+        }}>
+          <Text style={{ color: "#fff", fontSize: 10, fontWeight: "900", lineHeight: 13 }}>
+            {totalQuantity > 9 ? "9+" : totalQuantity}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
 
 const MainNavigator = () => {
   const { t } = useTranslation();
@@ -39,14 +63,13 @@ const MainNavigator = () => {
             shadowRadius: 15,
             elevation: 10,
           },
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconContent;
-
+          tabBarIcon: ({ focused, color }) => {
             if (route.name === "Home") {
-              iconContent = (
-                <MaterialCommunityIcons name="home" size={26} color={color} />
-              );
-            } else if (route.name === "Map") {
+              return <HomeTabIcon focused={focused} color={color} />;
+            }
+
+            let iconContent;
+            if (route.name === "Map") {
               iconContent = <Ionicons name="map" size={22} color={color} />;
             } else if (route.name === "Orders") {
               iconContent = <Ionicons name="receipt" size={22} color={color} />;
@@ -57,16 +80,7 @@ const MainNavigator = () => {
             }
 
             return (
-              <View
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 26,
-                  backgroundColor: focused ? "#1B4332" : "transparent",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+              <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: focused ? "#1B4332" : "transparent", alignItems: "center", justifyContent: "center" }}>
                 {iconContent}
               </View>
             );
@@ -94,7 +108,6 @@ const MainNavigator = () => {
           options={{ title: "Account" }}
         />
       </Tab.Navigator>
-      <CartReservationBanner />
     </View>
   );
 };

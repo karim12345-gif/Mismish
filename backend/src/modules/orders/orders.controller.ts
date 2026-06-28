@@ -54,6 +54,22 @@ export const getOrderById = async (
   }
 };
 
+export const cancelOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const order = await ordersService.cancelOrder(
+      req.user!.id,
+      parseInt(req.params.id as string),
+    );
+    res.status(200).json({ status: "success", data: order });
+  } catch (e) {
+    handle(e, res, next);
+  }
+};
+
 export const collectOrder = async (
   req: Request,
   res: Response,

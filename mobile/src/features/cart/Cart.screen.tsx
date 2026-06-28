@@ -49,7 +49,7 @@ const UPSELL_ITEMS = [
 
 export default function CartScreen() {
   const navigation = useNavigation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const {
     cartItems,
     totalQuantity,
@@ -261,7 +261,11 @@ export default function CartScreen() {
         onClose={() => setAuthModalVisible(false)}
         onLoginSuccess={() => {
           setAuthModalVisible(false);
-          navigation.navigate("CompleteProfile" as never);
+          if (user?.needsProfile) {
+            navigation.navigate("CompleteProfile" as never);
+          } else {
+            navigation.navigate("Checkout" as never);
+          }
         }}
       />
     </SafeAreaView>

@@ -7,7 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "ios-dev": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "postinstall": "echo 'postinstall ok'"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -57,6 +58,7 @@
     "@types/react": "~19.1.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "^54.0.10",
+    "patch-package": "^8.0.1",
     "reactotron-react-native": "^5.1.18",
     "typescript": "~5.9.2"
   },

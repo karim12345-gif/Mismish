@@ -25,6 +25,8 @@ import type {
   RegisterVendorBody,
   LoginVendorBody,
   VendorAuthResult,
+  LoginAdminBody,
+  AdminAuthResult,
 } from "./auth.types";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -74,6 +76,7 @@ export const loginUser = async (
     where: { phoneNumber: data.phoneNumber },
   });
   if (!user) throw new AppError(401, "Invalid credentials");
+  if (user.isBlocked) throw new AppError(403, "This account is blocked");
 
   const isMatch = await bcrypt.compare(data.password, user.password!);
   if (!isMatch) throw new AppError(401, "Invalid credentials");
@@ -102,6 +105,7 @@ export const verifyOTP = async (
     where: { phoneNumber: data.phoneNumber },
   });
   if (!user) throw new AppError(404, "User not found");
+  if (user.isBlocked) throw new AppError(403, "This account is blocked");
   if (!user.otp || !user.otpExpiresAt)
     throw new AppError(400, "No OTP requested. Please login first.");
   if (new Date() > user.otpExpiresAt)
@@ -219,6 +223,7 @@ export const socialLogin = async (
   });
 
   if (user) {
+    if (user.isBlocked) throw new AppError(403, "This account is blocked");
     if (data.provider === "google" && !user.googleId && googleId)
       user = await prisma.user.update({
         where: { id: user.id },
@@ -310,7 +315,11 @@ export const registerVendor = async (
   if (existing) throw new AppError(400, "Vendor already exists");
 
   const vendor = await prisma.vendor.create({
-    data: { ...data, password: await bcrypt.hash(data.password, 10) },
+    data: {
+      ...data,
+      password: await bcrypt.hash(data.password, 10),
+      status: "PENDING",
+    },
   });
 
   return {
@@ -326,6 +335,8 @@ export const loginVendor = async (
     where: { email: data.email },
   });
   if (!vendor) throw new AppError(401, "Invalid credentials");
+  if (vendor.status !== "APPROVED")
+    throw new AppError(403, `Vendor account is ${vendor.status.toLowerCase()}`);
 
   const isMatch = await bcrypt.compare(data.password, vendor.password);
   if (!isMatch) throw new AppError(401, "Invalid credentials");
@@ -377,6 +388,40 @@ export const resetVendorPassword = async (
       passwordResetExpiresAt: null,
     },
   });
+};
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+
+const signAdminToken = (adminId: number): string =>
+  jwt.sign({ id: adminId, type: "admin" }, process.env.JWT_SECRET as string, {
+    expiresIn: "12h",
+  });
+
+export const loginAdmin = async (
+  data: LoginAdminBody,
+): Promise<AdminAuthResult> => {
+  const admin = await prisma.admin.findUnique({
+    where: { email: data.email.toLowerCase() },
+  });
+  if (!admin || !admin.isActive) throw new AppError(401, "Invalid credentials");
+
+  const isMatch = await bcrypt.compare(data.password, admin.password);
+  if (!isMatch) throw new AppError(401, "Invalid credentials");
+
+  await prisma.admin.update({
+    where: { id: admin.id },
+    data: { lastLoginAt: new Date() },
+  });
+
+  return {
+    token: signAdminToken(admin.id),
+    admin: {
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      role: admin.role,
+    },
+  };
 };
 
 export { maskPhoneNumber };

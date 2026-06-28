@@ -1080,6 +1080,163 @@ async function main() {
 
     console.log(`✅ ${upserted.name} — ${listings.length} listing(s)`);
   }
+
+  // ─── Test users ───────────────────────────────────────────────────────────
+  const testEmails = ["karim@mismish.app", "sara@mismish.app"];
+  const testPhones = ["+966512345678", "+966587654321"];
+  await prisma.user.deleteMany({
+    where: { OR: [{ email: { in: testEmails } }, { phoneNumber: { in: testPhones } }] },
+  });
+
+  const [karim, sara] = await Promise.all([
+    prisma.user.create({
+      data: {
+        email: "karim@mismish.app",
+        phoneNumber: "+966512345678",
+        name: "Karim",
+        password,
+        isVerified: true,
+        latitude: 24.6897,
+        longitude: 46.68,
+        address: "Al Olaya, Riyadh",
+        allergies: [],
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: "sara@mismish.app",
+        phoneNumber: "+966587654321",
+        name: "Sara",
+        password,
+        isVerified: true,
+        latitude: 24.7021,
+        longitude: 46.6786,
+        allergies: ["Nuts", "Dairy"],
+      },
+    }),
+  ]);
+
+  // ─── Orders ───────────────────────────────────────────────────────────────
+  // Grab the first 8 listings (created above) to attach orders to.
+  const boxes = await prisma.surpriseBox.findMany({
+    orderBy: { id: "asc" },
+    take: 8,
+  });
+
+  const code = (n: number) => `SEED-${String(n).padStart(4, "0")}`;
+
+  // Karim — one of every status so all tabs/states are testable
+  const [o1, , , , , o6] = await Promise.all([
+    // COMPLETED + reviewed
+    prisma.order.create({
+      data: {
+        userId: karim.id,
+        surpriseBoxId: boxes[0].id,
+        status: "COMPLETED",
+        pickupStatus: "COLLECTED",
+        orderCode: code(1),
+        deliveryMethod: "PICKUP",
+      },
+    }),
+    // COMPLETED, no review yet (prompts "leave a review")
+    prisma.order.create({
+      data: {
+        userId: karim.id,
+        surpriseBoxId: boxes[1].id,
+        status: "COMPLETED",
+        pickupStatus: "COLLECTED",
+        orderCode: code(2),
+        deliveryMethod: "PICKUP",
+      },
+    }),
+    // CONFIRMED
+    prisma.order.create({
+      data: {
+        userId: karim.id,
+        surpriseBoxId: boxes[2].id,
+        status: "CONFIRMED",
+        pickupStatus: "PENDING",
+        orderCode: code(3),
+        deliveryMethod: "PICKUP",
+      },
+    }),
+    // READY_FOR_PICKUP
+    prisma.order.create({
+      data: {
+        userId: karim.id,
+        surpriseBoxId: boxes[3].id,
+        status: "READY_FOR_PICKUP",
+        pickupStatus: "PENDING",
+        orderCode: code(4),
+        deliveryMethod: "PICKUP",
+      },
+    }),
+    // CANCELLED
+    prisma.order.create({
+      data: {
+        userId: karim.id,
+        surpriseBoxId: boxes[4].id,
+        status: "CANCELLED",
+        pickupStatus: "PENDING",
+        orderCode: code(5),
+        deliveryMethod: "PICKUP",
+      },
+    }),
+    // Sara — completed + reviewed (different vendor)
+    prisma.order.create({
+      data: {
+        userId: sara.id,
+        surpriseBoxId: boxes[5].id,
+        status: "COMPLETED",
+        pickupStatus: "COLLECTED",
+        orderCode: code(6),
+        deliveryMethod: "PICKUP",
+      },
+    }),
+  ]);
+
+  // ─── Reviews ──────────────────────────────────────────────────────────────
+  await Promise.all([
+    prisma.review.create({
+      data: {
+        userId: karim.id,
+        vendorId: boxes[0].vendorId,
+        orderId: o1.id,
+        rating: 5,
+        comment:
+          "Amazing value! The pastry box had so much variety. Will definitely order again.",
+      },
+    }),
+    prisma.review.create({
+      data: {
+        userId: sara.id,
+        vendorId: boxes[5].vendorId,
+        orderId: o6.id,
+        rating: 4,
+        comment: "Good portions and fresh food. Pickup was smooth.",
+      },
+    }),
+  ]);
+
+  // Backfill vendor ratings from seeded reviews
+  const vendorIds = [...new Set([boxes[0].vendorId, boxes[5].vendorId])];
+  for (const vendorId of vendorIds) {
+    const agg = await prisma.review.aggregate({
+      where: { vendorId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+    await prisma.vendor.update({
+      where: { id: vendorId },
+      data: { rating: agg._avg.rating, reviewCount: agg._count.rating },
+    });
+  }
+
+  console.log(`\n✅ Test users (password: password123)`);
+  console.log(`   karim@mismish.app  — no allergies, location set`);
+  console.log(`   sara@mismish.app   — allergies: Nuts, Dairy`);
+  console.log(`✅ Orders: COMPLETED×2, CONFIRMED×1, READY_FOR_PICKUP×1, CANCELLED×1, Sara COMPLETED×1`);
+  console.log(`✅ Reviews: 2 seeded, vendor ratings backfilled`);
 }
 
 main()

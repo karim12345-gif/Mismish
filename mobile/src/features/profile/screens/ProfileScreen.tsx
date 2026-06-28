@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { AIAssistantBottomSheet } from "../../../components/AIAssistantBottomSheet";
 import {
   View,
   Text,
@@ -41,6 +42,7 @@ export default function ProfileScreen() {
   const [countrySheet, setCountrySheet] = useState(false);
   const [logoutSheet, setLogoutSheet] = useState(false);
   const [languageSheet, setLanguageSheet] = useState(false);
+  const [supportVisible, setSupportVisible] = useState(false);
   const [signInVisible, setSignInVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(400)).current;
   const logoutSlideAnim = useRef(new Animated.Value(400)).current;
@@ -212,6 +214,7 @@ export default function ProfileScreen() {
         <View className="mx-5 mb-5">
           <Text className="text-[#111] text-[11px] font-bold uppercase tracking-widest mb-3 opacity-40">Help</Text>
           <View className="bg-white rounded-2xl border border-gray-100 shadow-sm shadow-black/5 overflow-hidden">
+            <SettingRow icon="headphones" label="Contact Support" onPress={() => setSupportVisible(true)} />
             <SettingRow icon="help-circle" label="FAQs" onPress={() => navigation.navigate("FAQ")} />
             <SettingRow icon="settings" label="Settings" onPress={() => navigation.navigate("Settings")} />
             <SettingRow icon="file-text" label="Terms and Conditions" isLast />
@@ -248,6 +251,11 @@ export default function ProfileScreen() {
         visible={signInVisible}
         onClose={() => setSignInVisible(false)}
         onLoginSuccess={() => setSignInVisible(false)}
+      />
+
+      <AIAssistantBottomSheet
+        visible={supportVisible}
+        onClose={() => setSupportVisible(false)}
       />
 
       {/* Logout confirmation sheet */}

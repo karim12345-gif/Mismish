@@ -20,6 +20,7 @@ router.get("/", authorize("user"), ordersController.getMyOrders);
 router.get("/stats", authorize("user"), ordersController.getUserImpactStats);
 router.get("/:id", authorize("user"), ordersController.getOrderById);
 router.patch("/:id/collect", authorize("user"), ordersController.collectOrder);
+router.patch("/:id/cancel", authorize("user"), ordersController.cancelOrder);
 
 // DEV ONLY — remove before production
 router.patch("/:id/dev-status", ordersController.devSetOrderStatus);

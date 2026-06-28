@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
 import type { UpdateProfileBody, UserProfile } from "./users.types";
@@ -26,23 +27,30 @@ export const updateMyProfile = async (
   userId: number,
   data: UpdateProfileBody,
 ): Promise<UserProfile> => {
-  const user = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      ...(data.name !== undefined && { name: data.name.trim() }),
-      ...(data.email !== undefined && {
-        email: data.email.trim().toLowerCase(),
-      }),
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phoneNumber: true,
-      isVerified: true,
-    },
-  });
-  return toProfile(user);
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.name !== undefined && { name: data.name.trim() }),
+        ...(data.email !== undefined && {
+          email: data.email.trim().toLowerCase(),
+        }),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+        isVerified: true,
+      },
+    });
+    return toProfile(user);
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      throw new AppError(409, "This email is already linked to another account.");
+    }
+    throw e;
+  }
 };
 
 export const savePushToken = async (

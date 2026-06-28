@@ -3,6 +3,7 @@ import { useLocation } from "../../context/LocationContext";
 import { View, ScrollView, Text, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CartReservationBanner from "../cart/CartReservationBanner";
 import { HomeHeader } from "./components/HomeHeader";
 import { HomeSearchBar } from "./components/HomeSearchBar";
 import { HomeHeroBanner } from "./components/HomeHeroBanner";
@@ -261,16 +262,8 @@ export default function HomeScreen() {
                         ? formatDistance(location.coords.latitude, location.coords.longitude, store.latitude, store.longitude)
                         : "—"
                     }
-                    imageUrl={
-                      store.name.includes("Coffee Address")
-                        ? require("../../../assets/images/coffee_address_logo.png")
-                        : (store.imageUrl ?? FALLBACK_IMAGE)
-                    }
-                    logoUrl={
-                      store.name.includes("Coffee Address")
-                        ? require("../../../assets/images/coffee_address_logo.png")
-                        : (store.imageUrl ?? FALLBACK_IMAGE)
-                    }
+                    imageUrl={store.imageUrl ?? FALLBACK_IMAGE}
+                    logoUrl={store.imageUrl ?? FALLBACK_IMAGE}
                     leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
                     hasListings={totalLeft > 0}
                     rating={store.rating}
@@ -289,6 +282,7 @@ export default function HomeScreen() {
         visible={showAllergySheet}
         onDone={() => setShowAllergySheet(false)}
       />
+      <CartReservationBanner />
     </SafeAreaView>
   );
 }

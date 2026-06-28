@@ -15,6 +15,7 @@ model User {
   appleId           String?        @unique
   name              String?
   isVerified        Boolean        @default(false)
+  isBlocked         Boolean        @default(false)
   otp               String?
   otpExpiresAt      DateTime?
   otpResendCount    Int            @default(0)
@@ -27,9 +28,37 @@ model User {
   allergies         String[]
   orders            Order[]
   reviews           Review[]
+  favorites         Favorite[]
   refreshTokens     RefreshToken[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
+}
+
+enum AdminRole {
+  OWNER
+  SUPPORT
+  OPERATIONS
+  FINANCE
+}
+
+model Admin {
+  id             Int        @id @default(autoincrement())
+  email          String     @unique
+  password       String
+  name           String
+  role           AdminRole  @default(OWNER)
+  isActive       Boolean    @default(true)
+  lastLoginAt    DateTime?
+  auditLogs      AuditLog[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
 }
 
 model Vendor {
@@ -49,12 +78,28 @@ model Vendor {
   closingHours String?
   rating                  Float?
   reviewCount             Int           @default(0)
+  status                  VendorStatus  @default(APPROVED)
   passwordResetToken      String?
   passwordResetExpiresAt  DateTime?
   listings                SurpriseBox[]
   reviews                 Review[]
+  favorites               Favorite[]
   createdAt               DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  adminId     Int?
+  admin       Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  action      String
+  entityType  String
+  entityId    Int?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([entityType, entityId])
 }
 
 model SurpriseBox {
@@ -69,11 +114,12 @@ model SurpriseBox {
   ingredients   String[]
   pickupStart   DateTime
   pickupEnd     DateTime
-  vendorId      Int
-  vendor        Vendor   @relation(fields: [vendorId], references: [id])
-  orders        Order[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  vendorId              Int
+  vendor                Vendor   @relation(fields: [vendorId], references: [id])
+  orders                Order[]
+  notifiedFollowersAt   DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 enum DeliveryMethod {
@@ -106,11 +152,13 @@ model Order {
   status          OrderStatus    @default(PENDING)
   pickupStatus    PickupStatus   @default(PENDING)
   orderCode       String         @unique
+  quantity        Int            @default(1)
   deliveryMethod  DeliveryMethod
-  deliveryAddress String?
-  review          Review?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  deliveryAddress       String?
+  pickupReminderSentAt  DateTime?
+  review                Review?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 }
 
 model Review {
@@ -124,6 +172,19 @@ model Review {
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendorId  Int
+  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, vendorId])
+  @@index([userId])
+  @@index([vendorId])
 }
 
 model RefreshToken {

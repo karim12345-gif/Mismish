@@ -1,0 +1,79 @@
+diff --git a/node_modules/@react-native-firebase/auth/ios/RNFBAuth/RNFBAuthModule.h b/node_modules/@react-native-firebase/auth/ios/RNFBAuth/RNFBAuthModule.h
+index 1234567..abcdefg 100644
+--- a/node_modules/@react-native-firebase/auth/ios/RNFBAuth/RNFBAuthModule.h
++++ b/node_modules/@react-native-firebase/auth/ios/RNFBAuth/RNFBAuthModule.h
+@@ -18,6 +18,57 @@
+ #import <Firebase/Firebase.h>
+ #import <Foundation/Foundation.h>
+ #import <React/RCTBridgeModule.h>
+
++// Firebase iOS SDK 12 removed FIRAuthErrorCode from ObjC public headers (now Swift-only).
++// Re-declare the enum here so this file compiles against Firebase 12+.
++// Values match the stable Firebase Auth error code integers used since Firebase 6.
++#ifndef FIRAuthErrorCodeInternalError
++typedef NS_ENUM(NSInteger, FIRAuthErrorCode) {
++  FIRAuthErrorCodeInvalidCustomToken = 17000,
++  FIRAuthErrorCodeCustomTokenMismatch = 17002,
++  FIRAuthErrorCodeInvalidCredential = 17004,
++  FIRAuthErrorCodeUserDisabled = 17005,
++  FIRAuthErrorCodeOperationNotAllowed = 17006,
++  FIRAuthErrorCodeEmailAlreadyInUse = 17007,
++  FIRAuthErrorCodeInvalidEmail = 17008,
++  FIRAuthErrorCodeWrongPassword = 17009,
++  FIRAuthErrorCodeTooManyRequests = 17010,
++  FIRAuthErrorCodeUserNotFound = 17011,
++  FIRAuthErrorCodeAccountExistsWithDifferentCredential = 17012,
++  FIRAuthErrorCodeRequiresRecentLogin = 17014,
++  FIRAuthErrorCodeProviderAlreadyLinked = 17015,
++  FIRAuthErrorCodeNoSuchProvider = 17016,
++  FIRAuthErrorCodeInvalidUserToken = 17017,
++  FIRAuthErrorCodeNetworkError = 17020,
++  FIRAuthErrorCodeUserTokenExpired = 17021,
++  FIRAuthErrorCodeInvalidAPIKey = 17023,
++  FIRAuthErrorCodeUserMismatch = 17024,
++  FIRAuthErrorCodeCredentialAlreadyInUse = 17025,
++  FIRAuthErrorCodeWeakPassword = 17026,
++  FIRAuthErrorCodeAppNotAuthorized = 17028,
++  FIRAuthErrorCodeExpiredActionCode = 17029,
++  FIRAuthErrorCodeInvalidActionCode = 17030,
++  FIRAuthErrorCodeInvalidMessagePayload = 17031,
++  FIRAuthErrorCodeInvalidSender = 17032,
++  FIRAuthErrorCodeInvalidRecipientEmail = 17033,
++  FIRAuthErrorCodeMissingEmail = 17034,
++  FIRAuthErrorCodeMissingIosBundleID = 17035,
++  FIRAuthErrorCodeMissingAndroidPackageName = 17036,
++  FIRAuthErrorCodeUnauthorizedDomain = 17037,
++  FIRAuthErrorCodeInvalidContinueURI = 17038,
++  FIRAuthErrorCodeMissingContinueURI = 17039,
++  FIRAuthErrorCodeMissingPhoneNumber = 17040,
++  FIRAuthErrorCodeInvalidPhoneNumber = 17042,
++  FIRAuthErrorCodeMissingVerificationCode = 17044,
++  FIRAuthErrorCodeInvalidVerificationCode = 17042,
++  FIRAuthErrorCodeMissingVerificationID = 17045,
++  FIRAuthErrorCodeInvalidVerificationID = 17046,
++  FIRAuthErrorCodeMissingAppCredential = 17047,
++  FIRAuthErrorCodeInvalidAppCredential = 17048,
++  FIRAuthErrorCodeSessionExpired = 17051,
++  FIRAuthErrorCodeQuotaExceeded = 17052,
++  FIRAuthErrorCodeMissingAppToken = 17053,
++  FIRAuthErrorCodeNotificationNotForwarded = 17054,
++  FIRAuthErrorCodeAppNotVerified = 17055,
++  FIRAuthErrorCodeCaptchaCheckFailed = 17056,
++  FIRAuthErrorCodeWebContextAlreadyPresented = 17057,
++  FIRAuthErrorCodeWebContextCancelled = 17058,
++  FIRAuthErrorCodeAppVerificationUserInteractionFailure = 17059,
++  FIRAuthErrorCodeInvalidClientID = 17060,
++  FIRAuthErrorCodeWebNetworkRequestFailed = 17061,
++  FIRAuthErrorCodeWebInternalError = 17062,
++  FIRAuthErrorCodeWebSignInUserInteractionFailure = 17063,
++  FIRAuthErrorCodeLocalPlayerNotAuthenticated = 17066,
++  FIRAuthErrorCodeNullUser = 17067,
++  FIRAuthErrorCodeSecondFactorRequired = 17078,
++  FIRAuthErrorCodeKeychainError = 17995,
++  FIRAuthErrorCodeInternalError = 17999,
++  FIRAuthErrorCodeMalformedJWT = 18000,
++};
++#endif
++
+ @interface RNFBAuthModule : NSObject <RCTBridgeModule>
+ @end

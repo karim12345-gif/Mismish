@@ -8,6 +8,7 @@ const activeInventoryFilter = {
 
 export const getStores = async () =>
   prisma.vendor.findMany({
+    where: { status: "APPROVED" },
     include: {
       listings: {
         where: activeInventoryFilter,
@@ -33,8 +34,8 @@ export const getStores = async () =>
 export const getStoreById = async (id: number) => {
   if (isNaN(id)) throw new AppError(400, "Invalid store ID");
 
-  const store = await prisma.vendor.findUnique({
-    where: { id },
+  const store = await prisma.vendor.findFirst({
+    where: { id, status: "APPROVED" },
     include: {
       listings: {
         where: activeInventoryFilter,
@@ -63,7 +64,9 @@ export const getStoreById = async (id: number) => {
 export const getStoreInventory = async (storeId: number) => {
   if (isNaN(storeId)) throw new AppError(400, "Invalid store ID");
 
-  const store = await prisma.vendor.findUnique({ where: { id: storeId } });
+  const store = await prisma.vendor.findFirst({
+    where: { id: storeId, status: "APPROVED" },
+  });
   if (!store) throw new AppError(404, "Store not found");
 
   return prisma.surpriseBox.findMany({

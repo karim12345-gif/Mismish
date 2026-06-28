@@ -1,4 +1,11 @@
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+  ReactNode,
+} from "react";
 import * as Location from "expo-location";
 
 interface LocationContextType {
@@ -23,104 +30,113 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setLocationByCoords = async (latitude: number, longitude: number) => {
-    setIsRequestingLocation(true);
-    setError(null);
-    try {
-      const geocodedList = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
-      if (geocodedList && geocodedList.length > 0) {
-        setAddress(geocodedList[0]);
-        setLocation({
-          coords: {
-            latitude,
-            longitude,
-            altitude: null,
-            accuracy: null,
-            altitudeAccuracy: null,
-            heading: null,
-            speed: null,
-          },
-          timestamp: Date.now(),
-        } as Location.LocationObject);
+  const watchSubscriptionRef = useRef<Location.LocationSubscription | null>(
+    null,
+  );
+
+  // On mount: if permission is already granted, silently detect location
+  // without showing any dialog. The SelectLocationScreen handles first-time requests.
+  useEffect(() => {
+    const autoDetectIfPermitted = async () => {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === "granted") {
+        await startLocationTracking();
       }
-    } catch (e: any) {
-      setError(e.message || "Could not resolve location");
-    } finally {
-      setIsRequestingLocation(false);
+    };
+
+    autoDetectIfPermitted();
+
+    return () => {
+      watchSubscriptionRef.current?.remove();
+    };
+  }, []);
+
+  const geocodeCoords = async (
+    latitude: number,
+    longitude: number,
+  ): Promise<void> => {
+    const results = await Location.reverseGeocodeAsync({ latitude, longitude });
+    if (results.length > 0) {
+      setAddress(results[0]);
     }
   };
 
-  const [watchSubscription, setWatchSubscription] =
-    useState<Location.LocationSubscription | null>(null);
+  const startLocationTracking = async (): Promise<void> => {
+    const current = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    setLocation(current);
+    await geocodeCoords(current.coords.latitude, current.coords.longitude);
 
-  const requestLocation = async () => {
-    // Prevent overlapping requests
+    // Start watcher only if not already active
+    if (!watchSubscriptionRef.current) {
+      watchSubscriptionRef.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 10_000,
+          distanceInterval: 50,
+        },
+        async (updated) => {
+          setLocation(updated);
+          await geocodeCoords(
+            updated.coords.latitude,
+            updated.coords.longitude,
+          );
+        },
+      );
+    }
+  };
+
+  /**
+   * Request foreground location permission (shows the OS dialog on first call).
+   * On subsequent calls, permission is already granted so no dialog appears.
+   */
+  const requestLocation = async (): Promise<void> => {
     if (isRequestingLocation) return;
 
     setIsRequestingLocation(true);
     setError(null);
+
     try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setError("Permission to access location was denied");
-        setIsRequestingLocation(false);
         return;
       }
-
-      // 1. Initial fetch
-      let currentLoc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-        mayShowUserSettingsDialog: true,
-      });
-      setLocation(currentLoc);
-
-      let geocodedList = await Location.reverseGeocodeAsync({
-        latitude: currentLoc.coords.latitude,
-        longitude: currentLoc.coords.longitude,
-      });
-
-      if (geocodedList && geocodedList.length > 0) {
-        setAddress(geocodedList[0]);
-      }
-
-      // 2. Continuous watcher
-      if (!watchSubscription) {
-        const sub = await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.Balanced,
-            timeInterval: 2000,
-            distanceInterval: 10,
-          },
-          async (newLoc) => {
-            setLocation(newLoc);
-            const geo = await Location.reverseGeocodeAsync({
-              latitude: newLoc.coords.latitude,
-              longitude: newLoc.coords.longitude,
-            });
-            if (geo && geo.length > 0) {
-              setAddress(geo[0]);
-            }
-          },
-        );
-        setWatchSubscription(sub);
-      }
+      await startLocationTracking();
     } catch (e: any) {
-      setError(e.message || "An error occurred while fetching location");
+      setError(e?.message ?? "An error occurred while fetching location");
     } finally {
       setIsRequestingLocation(false);
     }
   };
 
-  React.useEffect(() => {
-    return () => {
-      if (watchSubscription) {
-        watchSubscription.remove();
-      }
-    };
-  }, [watchSubscription]);
+  const setLocationByCoords = async (
+    latitude: number,
+    longitude: number,
+  ): Promise<void> => {
+    setIsRequestingLocation(true);
+    setError(null);
+    try {
+      await geocodeCoords(latitude, longitude);
+      setLocation({
+        coords: {
+          latitude,
+          longitude,
+          altitude: null,
+          accuracy: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      } as Location.LocationObject);
+    } catch (e: any) {
+      setError(e?.message ?? "Could not resolve location");
+    } finally {
+      setIsRequestingLocation(false);
+    }
+  };
 
   return (
     <LocationContext.Provider

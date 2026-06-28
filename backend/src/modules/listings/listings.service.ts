@@ -32,6 +32,7 @@ export const getNearbyListings = async (
     WHERE
       sb.quantity > 0
       AND sb."pickupEnd" > NOW()
+      AND v.status = 'APPROVED'::"VendorStatus"
       AND (
         6371 * acos(
           cos(radians(${lat})) * cos(radians(v.latitude)) * cos(radians(v.longitude) - radians(${lng})) +
@@ -54,11 +55,13 @@ export const getListingById = async (id: number) => {
           latitude: true,
           longitude: true,
           address: true,
+          status: true,
         },
       },
     },
   });
 
-  if (!listing) throw new AppError(404, "Listing not found");
+  if (!listing || listing.vendor.status !== "APPROVED")
+    throw new AppError(404, "Listing not found");
   return listing;
 };

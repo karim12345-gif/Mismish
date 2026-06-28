@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 export interface JwtPayload {
   id: number;
-  type: "user" | "vendor";
+  type: "user" | "vendor" | "admin";
   iat?: number;
   exp?: number;
 }

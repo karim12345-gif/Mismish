@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useMyOrders } from "../../hooks/useMyOrders";
 import { useCollectOrder } from "../../hooks/useCollectOrder";
+import { useCancelOrder } from "../../hooks/useCancelOrder";
 import { Order } from "../../services/order/order.service";
 import { OrdersSkeleton } from "./components/OrdersSkeleton";
 import { RatingModal } from "./components/RatingModal";
@@ -53,11 +54,14 @@ function OrderCard({
 }) {
   const navigation = useNavigation<any>();
   const { mutate: collectOrder, isPending: isCollecting } = useCollectOrder();
+  const { mutate: cancelOrder, isPending: isCancelling } = useCancelOrder();
   const bag = order.surpriseBox;
   const vendor = bag?.vendor;
   const status = STATUS_CONFIG[order.status];
   const isActive = ACTIVE_STATUSES.includes(order.status);
-  const isConfirmed = order.status === "CONFIRMED";
+  const canCollect = order.status === "CONFIRMED" || order.status === "READY_FOR_PICKUP";
+  const canCancel = order.status === "PENDING";
+  const isPast = order.status === "COMPLETED" || order.status === "CANCELLED";
 
   return (
     <View className="bg-white rounded-2xl border border-gray-100 p-4 mb-3 shadow-sm shadow-black/5">
@@ -140,6 +144,46 @@ function OrderCard({
         </View>
       )}
 
+      {/* Reorder — past orders */}
+      {isPast && vendor?.id && (
+        <TouchableOpacity
+          onPress={() => navigation.navigate("SurpriseBag", { storeId: vendor.id })}
+          style={{
+            marginTop: 12,
+            alignSelf: "center",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            borderWidth: 1.5,
+            borderColor: "#FF7F50",
+            borderRadius: 16,
+            paddingHorizontal: 20,
+            height: 38,
+          }}
+        >
+          <MaterialCommunityIcons name="shopping-outline" size={14} color="#FF7F50" />
+          <Text style={{ color: "#FF7F50", fontWeight: "700", fontSize: 13 }}>
+            Order Again
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Cancel — PENDING only */}
+      {canCancel && (
+        <TouchableOpacity
+          onPress={() => cancelOrder(order.id)}
+          disabled={isCancelling}
+          className="mt-1 h-11 rounded-2xl border border-red-200 bg-red-50 flex-row items-center justify-center gap-2"
+          style={{ opacity: isCancelling ? 0.6 : 1 }}
+        >
+          <Ionicons name="close-circle-outline" size={15} color="#EF4444" />
+          <Text className="text-red-500 font-bold text-[13px]">
+            {isCancelling ? "Cancelling…" : "Cancel Order"}
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {/* Action row — only for active orders */}
       {isActive && (
         <View className="flex-col gap-2">
@@ -188,7 +232,7 @@ function OrderCard({
             </TouchableOpacity>
           </View>
 
-          {isConfirmed && (
+          {canCollect && (
             <TouchableOpacity
               onPress={() => collectOrder(order.id)}
               disabled={isCollecting}
@@ -218,6 +262,13 @@ export default function OrdersScreen() {
   const [ratingOrder, setRatingOrder] = useState<Order | null>(null);
   const { data: orders, isLoading, isError, refetch } = useMyOrders();
   const { mutate: submitReview, isPending: isSubmittingReview } = useSubmitReview();
+
+  // Refetch every time the user navigates to this tab so status is always fresh
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const activeOrders = (orders ?? []).filter((o) =>
     ACTIVE_STATUSES.includes(o.status),

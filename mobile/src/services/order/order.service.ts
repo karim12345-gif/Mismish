@@ -17,12 +17,14 @@ export interface CreateOrderRequest {
   deliveryMethod: DeliveryMethod;
   deliveryAddress?: string;
   pickupOffset?: number; // 0 = today, 1 = tomorrow
+  quantity?: number;
 }
 
 export interface Order {
   id: number;
   userId: number;
   surpriseBoxId: number;
+  quantity: number;
   status: OrderStatus;
   pickupStatus: PickupStatus;
   orderCode: string;
@@ -39,6 +41,7 @@ export interface Order {
     pickupStart: string;
     pickupEnd: string;
     vendor: {
+      id: number;
       name: string;
       address: string | null;
       latitude: number | null;
@@ -98,6 +101,11 @@ const collectOrder = async (id: number): Promise<OrderResponse> => {
   return response.data;
 };
 
+const cancelOrder = async (id: number): Promise<OrderResponse> => {
+  const response = await api.patch<OrderResponse>(ORDER_ENDPOINTS.CANCEL(id));
+  return response.data;
+};
+
 const devSetStatus = async (
   id: number,
   status: OrderStatus,
@@ -127,6 +135,7 @@ const OrderServices = {
   getUserImpactStats,
   getOrderById,
   collectOrder,
+  cancelOrder,
   devSetStatus,
   submitReview,
 };

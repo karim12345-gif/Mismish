@@ -15,6 +15,7 @@ import type {
   LoginVendorBody,
   VendorForgotPasswordBody,
   VendorResetPasswordBody,
+  LoginAdminBody,
 } from "./auth.types";
 
 const handle = (error: unknown, res: Response, next: NextFunction): void => {
@@ -254,6 +255,21 @@ export const resetVendorPassword = async (
       status: "success",
       message: "Password reset successfully. You can now log in.",
     });
+  } catch (e) {
+    handle(e, res, next);
+  }
+};
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+
+export const loginAdmin = async (
+  req: Request<{}, {}, LoginAdminBody>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const result = await authService.loginAdmin(req.body);
+    res.status(200).json({ status: "success", data: result });
   } catch (e) {
     handle(e, res, next);
   }

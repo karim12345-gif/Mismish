@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContextProps, AuthUser } from "./types";
 import { AuthServices } from "../services/auth/auth.service";
 import { setSessionExpiredHandler } from "../services/api";
+import { registerForPushNotifications } from "../services/notifications/notifications.service";
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: "accessToken",
@@ -48,13 +49,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const restoreSession = async () => {
     try {
-      const [accessToken, storedUser, locationSelected, introSeen] =
+      const [, accessToken, storedUser, locationSelected, introSeen] =
         await Promise.all([
+          // Keep splash visible for at least 2s so the animation always plays
+          new Promise<void>((resolve) => setTimeout(resolve, 2000)),
           AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
           AsyncStorage.getItem(STORAGE_KEYS.USER),
           AsyncStorage.getItem(STORAGE_KEYS.HAS_SELECTED_LOCATION),
           AsyncStorage.getItem(STORAGE_KEYS.HAS_SEEN_INTRO),
-          new Promise((resolve) => setTimeout(resolve, 2000)),
         ]);
 
       if (accessToken && storedUser) {
@@ -84,6 +86,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ]);
       setUser(userData);
       setIsAuthenticated(true);
+      // Register for push after login so the token is saved with a valid auth header
+      registerForPushNotifications();
     } catch (e) {
       console.error("Failed to save session:", e);
     }
