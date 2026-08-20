@@ -6,6 +6,9 @@ const getResend = (): Resend => {
   return new Resend(apiKey);
 };
 
+const getEmailFrom = (): string =>
+  process.env.EMAIL_FROM ?? "Mismish <onboarding@resend.dev>";
+
 const escapeHtml = (value: string): string =>
   value.replace(
     /[&<>'"]/g,
@@ -30,7 +33,7 @@ export const sendPasswordResetEmail = async (
   const logoUrl = `${dashboardUrl}/logo.png`;
 
   await resend.emails.send({
-    from: "Mismish <onboarding@resend.dev>",
+    from: getEmailFrom(),
     to,
     subject: "Reset your Mismish password",
     html: `<!DOCTYPE html>
@@ -103,7 +106,7 @@ export const sendVendorWelcomeEmail = async (
   const safeName = escapeHtml(vendorName);
 
   const { error } = await resend.emails.send({
-    from: "Mismish <onboarding@resend.dev>",
+    from: getEmailFrom(),
     to,
     subject: "Welcome to Mismish - your store application is received",
     html: `<!DOCTYPE html>
