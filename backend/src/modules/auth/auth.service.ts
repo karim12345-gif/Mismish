@@ -7,7 +7,10 @@ import { getFirebaseAdmin } from "../../shared/lib/firebase";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
 import { generateOTP, sendOTP, maskPhoneNumber } from "../../shared/lib/sms";
-import { sendPasswordResetEmail } from "../../shared/lib/email";
+import {
+  sendPasswordResetEmail,
+  sendVendorWelcomeEmail,
+} from "../../shared/lib/email";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -321,6 +324,13 @@ export const registerVendor = async (
       status: "PENDING",
     },
   });
+
+  // Email delivery should not make a successful registration fail.
+  try {
+    await sendVendorWelcomeEmail(vendor.email, vendor.name);
+  } catch (error) {
+    console.error("[email] vendor welcome email failed:", error);
+  }
 
   return {
     token: signVendorToken(vendor.id),
