@@ -1,7 +1,9 @@
 import { Resend } from "resend";
 
 const getResend = (): Resend => {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY
+    ?.trim()
+    .replace(/^(["'])(.*)\1$/, "$2");
   if (!apiKey) throw new Error("RESEND_API_KEY is not set");
   return new Resend(apiKey);
 };
