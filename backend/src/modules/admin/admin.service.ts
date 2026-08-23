@@ -126,7 +126,6 @@ export const updateVendorStatus = async (
     throw new AppError(
       400,
       `A reason is required when a vendor is ${status.toLowerCase()}`,
-      "vendor_status_reason_required",
     );
   }
 
