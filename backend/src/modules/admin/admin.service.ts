@@ -4,6 +4,7 @@ import { AppError } from "../../shared/lib/AppError";
 import {
   sendVendorApprovalEmail,
   sendVendorRejectionEmail,
+  sendVendorSuspensionEmail,
 } from "../../shared/lib/email";
 
 const DEFAULT_LIMIT = 50;
@@ -132,27 +133,26 @@ export const updateVendorStatus = async (
     status,
   });
 
-  if (status === "APPROVED" && currentVendor.status !== "APPROVED") {
-    try {
-      console.info(`[email] sending vendor approval email to ${vendor.email}`);
+  let emailStatus: "sent" | "failed" = "sent";
+
+  try {
+    console.info(`[email] status=${status} vendor=${vendorId} to=${vendor.email}`);
+
+    if (status === "APPROVED") {
       await sendVendorApprovalEmail(vendor.email, vendor.name);
-      console.info(`[email] vendor approval email sent to ${vendor.email}`);
-    } catch (error) {
-      console.error("[email] vendor approval email failed:", error);
-    }
-  }
-
-  if (status === "REJECTED" && currentVendor.status !== "REJECTED") {
-    try {
-      console.info(`[email] sending vendor rejection email to ${vendor.email}`);
+    } else if (status === "REJECTED") {
       await sendVendorRejectionEmail(vendor.email, vendor.name);
-      console.info(`[email] vendor rejection email sent to ${vendor.email}`);
-    } catch (error) {
-      console.error("[email] vendor rejection email failed:", error);
+    } else if (status === "SUSPENDED") {
+      await sendVendorSuspensionEmail(vendor.email, vendor.name);
     }
+
+    console.info(`[email] status=${status} vendor=${vendorId} sent`);
+  } catch (error) {
+    emailStatus = "failed";
+    console.error(`[email] status=${status} vendor=${vendorId} failed`, error);
   }
 
-  return vendor;
+  return { ...vendor, emailStatus };
 };
 
 export const getUsers = async (query: { q?: string; limit?: string }) => {
