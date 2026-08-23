@@ -7,7 +7,7 @@ const getResend = (): Resend => {
 };
 
 const getEmailFrom = (): string =>
-  process.env.EMAIL_FROM ?? "Mismish <onboarding@resend.dev>";
+  process.env.EMAIL_FROM ?? "Mismish <no-reply@mismish.net>";
 
 const escapeHtml = (value: string): string =>
   value.replace(
