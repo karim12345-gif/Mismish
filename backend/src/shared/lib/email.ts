@@ -97,6 +97,49 @@ export const sendPasswordResetEmail = async (
   });
 };
 
+export const sendPasswordChangedEmail = async (to: string): Promise<void> => {
+  const resend = getResend();
+  const dashboardUrl = process.env.DASHBOARD_URL ?? "https://mismish-app.vercel.app";
+  const loginUrl = `${dashboardUrl}/merchant/login`;
+
+  await resend.emails.send({
+    from: getEmailFrom(),
+    to,
+    subject: "Your Mismish password was changed",
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#FFF8F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#173B38;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8F5;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:20px;overflow:hidden;">
+        <tr><td style="background:#195B55;padding:34px 36px;text-align:center;">
+          <h1 style="margin:0;color:#ffffff;font-size:28px;">Password updated</h1>
+          <p style="margin:10px 0 0;color:#D9F0E9;font-size:15px;">Your Mismish account is secure.</p>
+        </td></tr>
+        <tr><td style="padding:38px 36px 28px;">
+          <h2 style="margin:0 0 14px;font-size:22px;">Congratulations!</h2>
+          <p style="margin:0 0 18px;color:#526663;font-size:15px;line-height:1.7;">
+            Your Mismish merchant account password was successfully changed.
+          </p>
+          <p style="margin:0 0 24px;color:#526663;font-size:15px;line-height:1.7;">
+            You can now sign in with your new password using the button below.
+          </p>
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 12px;"><tr><td style="border-radius:10px;background:#FF7F50;">
+            <a href="${loginUrl}" style="display:inline-block;padding:14px 30px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;">Sign in to Mismish</a>
+          </td></tr></table>
+        </td></tr>
+        <tr><td style="padding:20px 36px 30px;border-top:1px solid #f0f0f0;color:#8B9996;font-size:13px;text-align:center;">
+          If you did not make this change, contact the Mismish team immediately.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  });
+};
+
 export const sendVendorWelcomeEmail = async (
   to: string,
   vendorName: string,

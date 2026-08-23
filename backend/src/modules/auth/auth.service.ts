@@ -9,6 +9,7 @@ import { AppError } from "../../shared/lib/AppError";
 import { generateOTP, sendOTP, maskPhoneNumber } from "../../shared/lib/sms";
 import {
   sendPasswordResetEmail,
+  sendPasswordChangedEmail,
   sendVendorWelcomeEmail,
 } from "../../shared/lib/email";
 import {
@@ -398,6 +399,12 @@ export const resetVendorPassword = async (
       passwordResetExpiresAt: null,
     },
   });
+
+  try {
+    await sendPasswordChangedEmail(vendor.email);
+  } catch (error) {
+    console.error("[email] password changed email failed:", error);
+  }
 };
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
