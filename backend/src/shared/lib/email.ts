@@ -1,10 +1,10 @@
 import { Resend } from "resend";
 
 const getResend = (): Resend => {
-  const configuredKey = process.env["mismish-production-email"] ?? process.env.RESEND_API_KEY;
-  const keySource = process.env["mismish-production-email"]
-    ? "mismish-production-email"
-    : "RESEND_API_KEY";
+  const standardKey = process.env.RESEND_API_KEY?.trim();
+  const legacyKey = process.env["mismish-production-email"]?.trim();
+  const configuredKey = standardKey || legacyKey;
+  const keySource = standardKey ? "RESEND_API_KEY" : "mismish-production-email";
   const apiKey = configuredKey
     ?.trim()
     .replace(/^(["'])(.*)\1$/, "$2");
