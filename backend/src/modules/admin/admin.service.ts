@@ -134,6 +134,7 @@ export const updateVendorStatus = async (
   });
 
   let emailStatus: "sent" | "failed" = "sent";
+  let emailError: string | undefined;
 
   try {
     console.info(`[email] status=${status} vendor=${vendorId} to=${vendor.email}`);
@@ -149,10 +150,11 @@ export const updateVendorStatus = async (
     console.info(`[email] status=${status} vendor=${vendorId} sent`);
   } catch (error) {
     emailStatus = "failed";
-    console.error(`[email] status=${status} vendor=${vendorId} failed`, error);
+    emailError = error instanceof Error ? error.message : String(error);
+    console.error(`[email] status=${status} vendor=${vendorId} failed: ${emailError}`);
   }
 
-  return { ...vendor, emailStatus };
+  return { ...vendor, emailStatus, ...(emailError ? { emailError } : {}) };
 };
 
 export const getUsers = async (query: { q?: string; limit?: string }) => {
