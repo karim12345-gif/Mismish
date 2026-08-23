@@ -101,6 +101,7 @@ export const sendPasswordChangedEmail = async (to: string): Promise<void> => {
   const resend = getResend();
   const dashboardUrl = process.env.DASHBOARD_URL ?? "https://mismish-app.vercel.app";
   const loginUrl = `${dashboardUrl}/merchant/login`;
+  const logoUrl = `${dashboardUrl}/logo.png`;
 
   await resend.emails.send({
     from: getEmailFrom(),
@@ -113,12 +114,16 @@ export const sendPasswordChangedEmail = async (to: string): Promise<void> => {
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8F5;padding:40px 16px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:20px;overflow:hidden;">
-        <tr><td style="background:#195B55;padding:34px 36px;text-align:center;">
-          <h1 style="margin:0;color:#ffffff;font-size:28px;">Password updated</h1>
+        <tr><td style="background:#195B55;padding:30px 36px;text-align:center;">
+          <div style="display:inline-block;padding:12px 18px;background:#ffffff;border-radius:14px;">
+            <img src="${logoUrl}" alt="Mismish" height="38" style="display:block;max-width:180px;" />
+          </div>
+          <p style="margin:22px 0 0;color:#FFD9C8;font-size:15px;font-weight:700;">&#10024; Congratulations! &#10024;</p>
+          <h1 style="margin:8px 0 0;color:#ffffff;font-size:28px;">Password updated</h1>
           <p style="margin:10px 0 0;color:#D9F0E9;font-size:15px;">Your Mismish account is secure.</p>
         </td></tr>
         <tr><td style="padding:38px 36px 28px;">
-          <h2 style="margin:0 0 14px;font-size:22px;">Congratulations!</h2>
+          <h2 style="margin:0 0 14px;font-size:22px;">Your new password is ready &#127881;</h2>
           <p style="margin:0 0 18px;color:#526663;font-size:15px;line-height:1.7;">
             Your Mismish merchant account password was successfully changed.
           </p>
