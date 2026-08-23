@@ -116,7 +116,20 @@ export const updateVendorStatus = async (
   adminId: number,
   vendorId: number,
   status: VendorStatus,
+  reason?: string,
 ) => {
+  const statusReason = reason?.trim();
+  if (
+    (status === "REJECTED" || status === "SUSPENDED") &&
+    !statusReason
+  ) {
+    throw new AppError(
+      400,
+      `A reason is required when a vendor is ${status.toLowerCase()}`,
+      "vendor_status_reason_required",
+    );
+  }
+
   const currentVendor = await prisma.vendor.findUnique({
     where: { id: vendorId },
     select: { status: true },
@@ -131,6 +144,7 @@ export const updateVendorStatus = async (
 
   await logAction(adminId, "vendor.status_updated", "Vendor", vendorId, {
     status,
+    ...(statusReason ? { reason: statusReason } : {}),
   });
 
   let emailStatus: "sent" | "failed" = "sent";
@@ -142,9 +156,9 @@ export const updateVendorStatus = async (
     if (status === "APPROVED") {
       await sendVendorApprovalEmail(vendor.email, vendor.name);
     } else if (status === "REJECTED") {
-      await sendVendorRejectionEmail(vendor.email, vendor.name);
+      await sendVendorRejectionEmail(vendor.email, vendor.name, statusReason!);
     } else if (status === "SUSPENDED") {
-      await sendVendorSuspensionEmail(vendor.email, vendor.name);
+      await sendVendorSuspensionEmail(vendor.email, vendor.name, statusReason!);
     }
 
     console.info(`[email] status=${status} vendor=${vendorId} sent`);

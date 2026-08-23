@@ -278,17 +278,19 @@ export const sendVendorApprovalEmail = async (
 export const sendVendorRejectionEmail = async (
   to: string,
   vendorName: string,
+  reason: string,
 ): Promise<void> => {
   const resend = getResend();
   const dashboardUrl = process.env.DASHBOARD_URL ?? "https://mismish-app.vercel.app";
-  const supportUrl = `${dashboardUrl}/merchant/login`;
+  const applicationUrl = `${dashboardUrl}/auth/registration`;
   const logoUrl = `${dashboardUrl}/logo.png`;
   const safeName = escapeHtml(vendorName);
+  const safeReason = escapeHtml(reason).replace(/\r?\n/g, "<br />");
 
   const { error } = await resend.emails.send({
     from: getEmailFrom(),
     to,
-    subject: "An update about your Mismish application",
+    subject: "Action needed: update your Mismish application",
     html: `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
@@ -298,20 +300,23 @@ export const sendVendorRejectionEmail = async (
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 8px 32px rgba(25,91,85,0.10);">
         <tr><td style="background:#195B55;padding:34px 36px;text-align:center;">
           <div style="display:inline-block;padding:12px 18px;background:#ffffff;border-radius:14px;"><img src="${logoUrl}" alt="Mismish" height="40" style="display:block;max-width:190px;" /></div>
-          <h1 style="margin:24px 0 0;color:#ffffff;font-size:28px;">An update on your application</h1>
+          <p style="margin:22px 0 0;color:#FFD9C8;font-size:15px;font-weight:700;">Application review</p>
+          <h1 style="margin:8px 0 0;color:#ffffff;font-size:28px;">Your application needs a quick update</h1>
         </td></tr>
         <tr><td style="padding:40px 44px 28px;">
           <h2 style="margin:0 0 14px;font-size:24px;">Hi ${safeName},</h2>
           <p style="margin:0 0 18px;color:#526663;font-size:16px;line-height:1.7;">
-            Thank you for your interest in joining Mismish. After reviewing your store application, we’re unable to approve it at this time.
+            Thank you for applying to join <strong>Mismish</strong>. We reviewed your store application, but we need a few changes before we can approve your merchant account.
           </p>
           <div style="margin:26px 0;padding:22px 24px;background:#FFF1E9;border-left:5px solid #FF7F50;border-radius:14px;">
-            <strong style="display:block;margin-bottom:7px;font-size:16px;">You can still reach out</strong>
-            <span style="color:#526663;font-size:14px;line-height:1.6;">If you believe this decision was made in error or would like more information, please contact the Mismish team.</span>
+            <strong style="display:block;margin-bottom:9px;font-size:16px;">What needs to be updated</strong>
+            <span style="color:#526663;font-size:15px;line-height:1.7;">${safeReason}</span>
           </div>
+          <p style="margin:0 0 24px;color:#526663;font-size:15px;line-height:1.7;">Don’t worry — you can update your information and submit your application again for review.</p>
           <table cellpadding="0" cellspacing="0" style="margin:0 auto 12px;"><tr><td style="border-radius:12px;background:#FF7F50;">
-            <a href="${supportUrl}" style="display:inline-block;padding:15px 34px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;">Visit Mismish</a>
+            <a href="${applicationUrl}" style="display:inline-block;padding:15px 34px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;">Update &amp; Resubmit Application</a>
           </td></tr></table>
+          <p style="margin:24px 0 0;color:#526663;font-size:14px;line-height:1.7;text-align:center;">Once you resubmit, our team will review your application again and email you when it’s ready. Need help? The Mismish team is here to support you.</p>
         </td></tr>
         <tr><td style="padding:22px 36px 30px;border-top:1px solid #f0f0f0;color:#8B9996;font-size:13px;text-align:center;">
           Good food. Great deals. Less waste.<br /><strong>The Mismish Team</strong>
@@ -329,17 +334,19 @@ export const sendVendorRejectionEmail = async (
 export const sendVendorSuspensionEmail = async (
   to: string,
   vendorName: string,
+  reason: string,
 ): Promise<void> => {
   const resend = getResend();
   const dashboardUrl = process.env.DASHBOARD_URL ?? "https://mismish-app.vercel.app";
   const loginUrl = `${dashboardUrl}/merchant/login`;
   const logoUrl = `${dashboardUrl}/logo.png`;
   const safeName = escapeHtml(vendorName);
+  const safeReason = escapeHtml(reason).replace(/\r?\n/g, "<br />");
 
   const { error } = await resend.emails.send({
     from: getEmailFrom(),
     to,
-    subject: "An update about your Mismish account",
+    subject: "Your Mismish merchant account has been temporarily suspended",
     html: `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
@@ -349,20 +356,23 @@ export const sendVendorSuspensionEmail = async (
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 8px 32px rgba(25,91,85,0.10);">
         <tr><td style="background:#195B55;padding:34px 36px;text-align:center;">
           <div style="display:inline-block;padding:12px 18px;background:#ffffff;border-radius:14px;"><img src="${logoUrl}" alt="Mismish" height="40" style="display:block;max-width:190px;" /></div>
-          <h1 style="margin:24px 0 0;color:#ffffff;font-size:28px;">An update about your account</h1>
+          <p style="margin:22px 0 0;color:#FFD9C8;font-size:15px;font-weight:700;">Account notice</p>
+          <h1 style="margin:8px 0 0;color:#ffffff;font-size:28px;">Your account is temporarily suspended</h1>
         </td></tr>
         <tr><td style="padding:40px 44px 28px;">
           <h2 style="margin:0 0 14px;font-size:24px;">Hi ${safeName},</h2>
           <p style="margin:0 0 18px;color:#526663;font-size:16px;line-height:1.7;">
-            Your Mismish merchant account has been temporarily <strong>suspended</strong> and your store is not currently available to customers.
+            Your <strong>Mismish merchant account has been temporarily suspended</strong> and your store is currently unavailable to customers.
           </p>
           <div style="margin:26px 0;padding:22px 24px;background:#FFF1E9;border-left:5px solid #FF7F50;border-radius:14px;">
-            <strong style="display:block;margin-bottom:7px;font-size:16px;">Need help?</strong>
-            <span style="color:#526663;font-size:14px;line-height:1.6;">Please contact the Mismish team if you have questions about this decision or need help restoring your account.</span>
+            <strong style="display:block;margin-bottom:9px;font-size:16px;">What happened</strong>
+            <span style="color:#526663;font-size:15px;line-height:1.7;">${safeReason}</span>
           </div>
+          <p style="margin:0 0 24px;color:#526663;font-size:15px;line-height:1.7;">To restore your account, please review the issue and provide the required information or make the necessary changes.</p>
           <table cellpadding="0" cellspacing="0" style="margin:0 auto 12px;"><tr><td style="border-radius:12px;background:#FF7F50;">
-            <a href="${loginUrl}" style="display:inline-block;padding:15px 34px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;">Visit Mismish</a>
+            <a href="${loginUrl}" style="display:inline-block;padding:15px 34px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;">Resolve Issue</a>
           </td></tr></table>
+          <p style="margin:24px 0 0;color:#526663;font-size:14px;line-height:1.7;text-align:center;">Once submitted, our team will review your account again and email you as soon as there’s an update. If you believe this was a mistake, please contact the Mismish team.</p>
         </td></tr>
         <tr><td style="padding:22px 36px 30px;border-top:1px solid #f0f0f0;color:#8B9996;font-size:13px;text-align:center;">
           Good food. Great deals. Less waste.<br /><strong>The Mismish Team</strong>

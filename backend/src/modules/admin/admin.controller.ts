@@ -55,7 +55,14 @@ export const getVendors = async (
 };
 
 export const updateVendorStatus = async (
-  req: Request<{ id: string }, {}, { status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED" }>,
+  req: Request<
+    { id: string },
+    {},
+    {
+      status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+      reason?: string;
+    }
+  >,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
@@ -66,6 +73,7 @@ export const updateVendorStatus = async (
         adminIdFrom(req),
         parseInt(req.params.id, 10),
         req.body.status,
+        req.body.reason,
       ),
     });
   } catch (e) {
