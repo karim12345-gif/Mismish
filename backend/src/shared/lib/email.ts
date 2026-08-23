@@ -1,10 +1,15 @@
 import { Resend } from "resend";
 
 const getResend = (): Resend => {
-  const apiKey = process.env.RESEND_API_KEY
+  const configuredKey = process.env["mismish-production-email"] ?? process.env.RESEND_API_KEY;
+  const keySource = process.env["mismish-production-email"]
+    ? "mismish-production-email"
+    : "RESEND_API_KEY";
+  const apiKey = configuredKey
     ?.trim()
     .replace(/^(["'])(.*)\1$/, "$2");
   if (!apiKey) throw new Error("RESEND_API_KEY is not set");
+  console.info(`[email] Resend key loaded from ${keySource}`);
   return new Resend(apiKey);
 };
 
