@@ -1,6 +1,7 @@
 import { OrderStatus, Prisma, VendorStatus } from "@prisma/client";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
+import { sendVendorApprovalEmail } from "../../shared/lib/email";
 
 const DEFAULT_LIMIT = 50;
 
@@ -112,6 +113,12 @@ export const updateVendorStatus = async (
   vendorId: number,
   status: VendorStatus,
 ) => {
+  const currentVendor = await prisma.vendor.findUnique({
+    where: { id: vendorId },
+    select: { status: true },
+  });
+  if (!currentVendor) throw new AppError(404, "Vendor not found");
+
   const vendor = await prisma.vendor.update({
     where: { id: vendorId },
     data: { status },
@@ -121,6 +128,14 @@ export const updateVendorStatus = async (
   await logAction(adminId, "vendor.status_updated", "Vendor", vendorId, {
     status,
   });
+
+  if (status === "APPROVED" && currentVendor.status !== "APPROVED") {
+    try {
+      await sendVendorApprovalEmail(vendor.email, vendor.name);
+    } catch (error) {
+      console.error("[email] vendor approval email failed:", error);
+    }
+  }
 
   return vendor;
 };
