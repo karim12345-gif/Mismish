@@ -267,3 +267,54 @@ export const sendVendorApprovalEmail = async (
 
   if (error) throw new Error(error.message);
 };
+
+export const sendVendorRejectionEmail = async (
+  to: string,
+  vendorName: string,
+): Promise<void> => {
+  const resend = getResend();
+  const dashboardUrl = process.env.DASHBOARD_URL ?? "https://mismish-app.vercel.app";
+  const supportUrl = `${dashboardUrl}/merchant/login`;
+  const logoUrl = `${dashboardUrl}/logo.png`;
+  const safeName = escapeHtml(vendorName);
+
+  const { error } = await resend.emails.send({
+    from: getEmailFrom(),
+    to,
+    subject: "An update about your Mismish application",
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#FFF8F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#173B38;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8F5;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 8px 32px rgba(25,91,85,0.10);">
+        <tr><td style="background:#195B55;padding:34px 36px;text-align:center;">
+          <div style="display:inline-block;padding:12px 18px;background:#ffffff;border-radius:14px;"><img src="${logoUrl}" alt="Mismish" height="40" style="display:block;max-width:190px;" /></div>
+          <h1 style="margin:24px 0 0;color:#ffffff;font-size:28px;">An update on your application</h1>
+        </td></tr>
+        <tr><td style="padding:40px 44px 28px;">
+          <h2 style="margin:0 0 14px;font-size:24px;">Hi ${safeName},</h2>
+          <p style="margin:0 0 18px;color:#526663;font-size:16px;line-height:1.7;">
+            Thank you for your interest in joining Mismish. After reviewing your store application, we’re unable to approve it at this time.
+          </p>
+          <div style="margin:26px 0;padding:22px 24px;background:#FFF1E9;border-left:5px solid #FF7F50;border-radius:14px;">
+            <strong style="display:block;margin-bottom:7px;font-size:16px;">You can still reach out</strong>
+            <span style="color:#526663;font-size:14px;line-height:1.6;">If you believe this decision was made in error or would like more information, please contact the Mismish team.</span>
+          </div>
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 12px;"><tr><td style="border-radius:12px;background:#FF7F50;">
+            <a href="${supportUrl}" style="display:inline-block;padding:15px 34px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;">Visit Mismish</a>
+          </td></tr></table>
+        </td></tr>
+        <tr><td style="padding:22px 36px 30px;border-top:1px solid #f0f0f0;color:#8B9996;font-size:13px;text-align:center;">
+          Good food. Great deals. Less waste.<br /><strong>The Mismish Team</strong>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  });
+
+  if (error) throw new Error(error.message);
+};

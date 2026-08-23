@@ -1,7 +1,10 @@
 import { OrderStatus, Prisma, VendorStatus } from "@prisma/client";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
-import { sendVendorApprovalEmail } from "../../shared/lib/email";
+import {
+  sendVendorApprovalEmail,
+  sendVendorRejectionEmail,
+} from "../../shared/lib/email";
 
 const DEFAULT_LIMIT = 50;
 
@@ -131,9 +134,21 @@ export const updateVendorStatus = async (
 
   if (status === "APPROVED" && currentVendor.status !== "APPROVED") {
     try {
+      console.info(`[email] sending vendor approval email to ${vendor.email}`);
       await sendVendorApprovalEmail(vendor.email, vendor.name);
+      console.info(`[email] vendor approval email sent to ${vendor.email}`);
     } catch (error) {
       console.error("[email] vendor approval email failed:", error);
+    }
+  }
+
+  if (status === "REJECTED" && currentVendor.status !== "REJECTED") {
+    try {
+      console.info(`[email] sending vendor rejection email to ${vendor.email}`);
+      await sendVendorRejectionEmail(vendor.email, vendor.name);
+      console.info(`[email] vendor rejection email sent to ${vendor.email}`);
+    } catch (error) {
+      console.error("[email] vendor rejection email failed:", error);
     }
   }
 
