@@ -16,12 +16,21 @@ The app guards registration with `Device.isDevice` to avoid errors on simulator.
 
 To test push notifications:
 1. Use a physical iPhone
-2. Make sure `EXPO_PUBLIC_API_URL` in `mobile/.env` points to the Railway backend (not localhost)
-3. The vendor dashboard sends pushes on order status change (CONFIRMED, READY_FOR_PICKUP, etc.)
+2. Make sure `EXPO_PUBLIC_API_URL` points to the backend being tested
+3. Sign in so the device FCM token is registered against the test user
+4. Favorite a merchant, then publish a new offer from that merchant account
+5. Place an order and update its status from the merchant dashboard
 
 Notification-driven cache invalidation is wired in `usePushNotifications.ts`:
 - Foreground: `addNotificationReceivedListener` → invalidates `["orders"]` query key
 - Background tap: `addNotificationResponseReceivedListener` → same invalidation
+- Favorite-offer tap: opens the merchant and matching offer
+- Pickup/completion tap: fetches and opens the matching order details
+
+The backend schedules pickup reminders at 1 hour and 15 minutes before
+`pickupStart`. For local manual testing only, start the backend with
+`PICKUP_REMINDER_TEST_MODE=true`; the reminders then run 2 minutes and 1 minute
+before pickup. The override is ignored when `NODE_ENV=production`.
 
 ## Cart Persistence
 

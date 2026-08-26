@@ -6,6 +6,10 @@ import { useAuth } from "../context/AuthContext";
 import "../i18n";
 import WelcomeScreen from "../features/auth/screens/WelcomeScreen";
 import SelectLocationScreen from "../features/location/SelectLocationScreen";
+import {
+  flushPendingNotification,
+  navigationRef,
+} from "./navigationRef";
 
 const RootNavigator = () => {
   const { isLoading, hasSeenIntro, hasSelectedLocation } = useAuth();
@@ -16,7 +20,11 @@ const RootNavigator = () => {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      ref={navigationRef}
+      onReady={flushPendingNotification}
+      onStateChange={flushPendingNotification}
+    >
       {!hasSeenIntro ? (
         // Step 1 — onboarding slides
         <AuthNavigator />

@@ -18,18 +18,22 @@ import BookingConfirmedScreen from "../features/checkout/BookingConfirmed.screen
 import DeliveryTrackingScreen from "../features/checkout/DeliveryTracking.screen";
 import SearchScreen from "../features/search/Search.screen";
 import ElevenUnderScreen from "../features/home/ElevenUnder.screen";
+import OrderDetailsScreen from "../features/orders/OrderDetails.screen";
 import { Order } from "../services/order/order.service";
 
 export type AuthenticatedStackParamList = {
   MainTabs: undefined;
   Wallet: undefined;
-  SurpriseBag: { storeId: number; autoOpenSheet?: boolean } | undefined;
+  SurpriseBag:
+    | { storeId: number; autoOpenSheet?: boolean; listingId?: number }
+    | undefined;
   CompleteProfile: undefined;
   Checkout: undefined;
   Cart: undefined;
   AddNewCard: undefined;
   Favorites: undefined;
   BookingConfirmed: { order: Order };
+  OrderDetails: { orderId: number };
   DeliveryTracking: { order: Order };
   Search: undefined;
   ElevenUnder: undefined;
@@ -58,6 +62,7 @@ export default function AuthenticatedNavigator() {
       <Stack.Screen name="AddNewCard" component={AddNewCardScreen} />
       <Stack.Screen name="Favorites" component={FavoritesScreen} />
       <Stack.Screen name="BookingConfirmed" component={BookingConfirmedScreen} />
+      <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
       <Stack.Screen name="DeliveryTracking" component={DeliveryTrackingScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="ElevenUnder" component={ElevenUnderScreen} />

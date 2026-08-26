@@ -22,6 +22,7 @@ import prisma from "./shared/lib/prisma";
 import { reSchedulePendingNotifications } from "./shared/lib/notificationScheduler";
 import { bootstrapAdmin } from "./shared/lib/bootstrapAdmin";
 import adminRoutes from "./modules/admin/admin.routes";
+import rewardsRoutes from "./modules/rewards/rewards.routes";
 
 dotenv.config();
 
@@ -69,8 +70,18 @@ app.use("/api/reviews/v1", reviewsRoutes);
 app.use("/api/support/v1", supportRoutes);
 app.use("/api/favorites/v1", favoritesRoutes);
 app.use("/api/admin/v1", adminRoutes);
+app.use("/api/rewards/v1", rewardsRoutes);
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
+app.use((_req, res) => {
+  res.status(404).json({
+    status: "error",
+    error: {
+      code: "route_not_found",
+      message: "The requested route was not found.",
+    },
+  });
+});
 app.use(errorHandler);
 
 // ─── Start ────────────────────────────────────────────────────────────────────

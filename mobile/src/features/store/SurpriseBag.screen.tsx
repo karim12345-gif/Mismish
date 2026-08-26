@@ -24,11 +24,9 @@ import { useStores } from "../../hooks/useStores";
 import { useFavorites } from "../../hooks/useFavorites";
 import { AuthenticatedStackParamList } from "../../navigation/AuthenticatedNavigator";
 import { SurpriseBagSkeleton } from "./SurpriseBagSkeleton";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 const { width } = Dimensions.get("window");
-
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-US", {
@@ -130,7 +128,7 @@ export default function SurpriseBagScreen() {
           title: bag.name,
           price: bag.price,
           originalPrice: bag.originalPrice ?? undefined,
-          imageUrl: bag.imageUrl ?? undefined,
+          imageUrl: bag.imageUrl ?? DEFAULT_LISTING_IMAGE,
           pickupOffset: selectedDate === "tomorrow" ? 1 : 0,
         });
         setSheetVisible(true);
@@ -138,6 +136,17 @@ export default function SurpriseBagScreen() {
       return () => clearTimeout(timer);
     }
   }, [route.params?.autoOpenSheet, inventory]);
+
+  useEffect(() => {
+    const listingId = route.params?.listingId;
+    if (!listingId || !inventory) return;
+
+    const linkedBag = inventory.find((bag: any) => bag.id === listingId);
+    if (linkedBag) {
+      setSelectedBag(linkedBag);
+      setSheetVisible(true);
+    }
+  }, [route.params?.listingId, inventory]);
 
   const proceedFromCheckoutPress = () => {
     navigation.navigate("Cart" as never);
@@ -166,10 +175,15 @@ export default function SurpriseBagScreen() {
 
   const storeName = store?.name ?? "Store";
   const storeCategory = store?.category ?? "";
-  const storeBannerImage = store?.name?.includes("Coffee Address")
-    ? require("../../../assets/images/coffee_address_logo.png")
-    : (store?.imageUrl ?? FALLBACK_IMAGE);
   const firstBag = inventory?.[0];
+  const storeProfileImage = store?.name?.includes("Coffee Address")
+    ? require("../../../assets/images/coffee_address_logo.png")
+    : (store?.imageUrl ?? firstBag?.imageUrl ?? DEFAULT_LISTING_IMAGE);
+  const listingHeroImage =
+    selectedBag?.imageUrl ??
+    firstBag?.imageUrl ??
+    store?.imageUrl ??
+    DEFAULT_LISTING_IMAGE;
 
   if (inventoryLoading || !store) return <SurpriseBagSkeleton />;
 
@@ -185,9 +199,9 @@ export default function SurpriseBagScreen() {
         <View className="relative w-full" style={{ height: width }}>
           <Image
             source={
-              typeof storeBannerImage === "string"
-                ? { uri: storeBannerImage }
-                : storeBannerImage
+              typeof listingHeroImage === "string"
+                ? { uri: listingHeroImage }
+                : listingHeroImage
             }
             className="w-full h-full"
             resizeMode="cover"
@@ -261,9 +275,9 @@ export default function SurpriseBagScreen() {
                 <View className="w-14 h-14 bg-[#FAFAEE] rounded-xl items-center justify-center border border-[#EEEECC] mr-3 overflow-hidden">
                   <Image
                     source={
-                      typeof storeBannerImage === "string"
-                        ? { uri: storeBannerImage }
-                        : storeBannerImage
+                      typeof storeProfileImage === "string"
+                        ? { uri: storeProfileImage }
+                        : storeProfileImage
                     }
                     className="w-full h-full"
                     resizeMode="cover"
@@ -383,7 +397,7 @@ export default function SurpriseBagScreen() {
                     description={bag.description ?? ""}
                     price={String(bag.price)}
                     originalPrice={String(bag.originalPrice ?? bag.price * 2)}
-                    imageUrl={bag.imageUrl ?? FALLBACK_IMAGE}
+                    imageUrl={bag.imageUrl ?? DEFAULT_LISTING_IMAGE}
                     leftCount={`${bag.quantity} left`}
                     quantity={cartQty}
                     maxQuantity={bag.quantity}
@@ -397,7 +411,7 @@ export default function SurpriseBagScreen() {
                         title: bag.name,
                         price: bag.price,
                         originalPrice: bag.originalPrice ?? undefined,
-                        imageUrl: bag.imageUrl ?? undefined,
+                        imageUrl: bag.imageUrl ?? DEFAULT_LISTING_IMAGE,
                         pickupOffset: selectedDate === "tomorrow" ? 1 : 0,
                       })
                     }
@@ -477,6 +491,7 @@ export default function SurpriseBagScreen() {
         item={selectedBag ?? firstBag}
         storeId={storeId}
         selectedDate={selectedDate}
+        onAddToCart={handleAddToCart}
       />
       <AvailabilityTimeBottomSheet
         visible={availabilitySheetVisible}

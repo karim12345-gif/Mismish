@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 import { ALL_ALLERGENS } from "../../constants/allergens";
 import { useAllergies, useUpdateAllergies } from "../../hooks/useAllergies";
-import { useAuth } from "../../context/AuthContext";
+import { ALLERGY_ONBOARDED_KEY } from "../../constants/storage";
 
 export default function AllergyOnboardingScreen() {
+  const navigation = useNavigation();
   const { data: existingAllergies } = useAllergies();
   const [selected, setSelected] = useState<string[]>([]);
   const { mutate: saveAllergies, isPending } = useUpdateAllergies();
-  const { completeAllergyOnboarding } = useAuth();
+  const completeAllergyOnboarding = async () => {
+    await AsyncStorage.setItem(ALLERGY_ONBOARDED_KEY, "true");
+    navigation.goBack();
+  };
 
   // Pre-fill with any allergies already saved on the account
   useEffect(() => {

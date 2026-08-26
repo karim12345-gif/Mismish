@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AllergiesService } from "../services/user/allergies.service";
-import { ALLERGY_PENDING_KEY } from "../components/AllergyOnboarding/AllergyOnboardingSheet";
+import { ALLERGY_PENDING_KEY } from "../constants/storage";
 import { useAuth } from "../context/AuthContext";
 
 export const ALLERGIES_QUERY_KEY = ["user", "allergies"];

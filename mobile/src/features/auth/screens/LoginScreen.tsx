@@ -1,12 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { styled } from "nativewind";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { Input } from "@components/Input";
 import { Button, IconButton } from "@components/index";
 
 import { useTranslation } from "react-i18next";
+import { GuestAuthModal } from "../../../components/GuestAuthModal";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -16,12 +16,7 @@ const LoginScreen = () => {
 
   const { t } = useTranslation();
 
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const handleLogin = async () => {
-    setIsLoading(true);
-    setIsLoading(false);
-  };
+  const [authVisible, setAuthVisible] = useState(false);
 
   return (
     <StyledView className="flex-1 bg-white">
@@ -45,43 +40,21 @@ const LoginScreen = () => {
           <StyledText className="text-gray-500">Sign in to continue</StyledText>
         </StyledView>
 
-        {/* Form */}
-        <Input
-          label="Email"
-          placeholder="Enter your email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Input
-          label="Password"
-          placeholder="Enter your password"
-          secureTextEntry
-        />
-
-        <StyledText className="self-end mb-6 text-[#F59E0B] font-medium">
-          Forgot Password?
+        <StyledText className="text-gray-500 mb-8">
+          Enter your Saudi phone number and verify the Firebase OTP code.
         </StyledText>
 
         <Button
-          label={isLoading ? "Signing in..." : t("auth.login")}
+          label="Continue with phone"
           className="bg-[#F59E0B]"
-          onPress={handleLogin}
-          isLoading={isLoading}
+          onPress={() => setAuthVisible(true)}
         />
 
-        {/* Footer */}
-        <StyledView className="flex-row justify-center mt-6">
-          <StyledText className="text-gray-500">
-            Don't have an account?{" "}
-          </StyledText>
-          <StyledText
-            onPress={() => navigation.navigate("Signup" as never)}
-            className="text-[#F59E0B] font-bold"
-          >
-            Sign up
-          </StyledText>
-        </StyledView>
+        <GuestAuthModal
+          visible={authVisible}
+          onClose={() => setAuthVisible(false)}
+          onLoginSuccess={() => setAuthVisible(false)}
+        />
       </ScrollView>
     </StyledView>
   );

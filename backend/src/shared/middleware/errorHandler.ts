@@ -8,19 +8,21 @@ export const errorHandler = (
   _next: NextFunction,
 ): void => {
   if (err instanceof AppError) {
-    res.status(err.statusCode).json({ status: "error", message: err.message });
+    res.status(err.statusCode).json({
+      status: "error",
+      error: { code: err.code, message: err.message },
+    });
     return;
   }
 
   const error = err as any;
-  console.error(error.stack);
+  console.error(error?.stack ?? error);
 
-  res.status(error.status || 500).json({
+  res.status(error?.status || 500).json({
     status: "error",
-    message:
-      process.env.NODE_ENV === "production"
-        ? "Internal server error"
-        : error.message || "Something went wrong",
-    ...(process.env.NODE_ENV !== "production" && { stack: error.stack }),
+    error: {
+      code: "internal_server_error",
+      message: "Something went wrong while processing the request.",
+    },
   });
 };

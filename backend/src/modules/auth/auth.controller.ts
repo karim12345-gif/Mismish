@@ -34,7 +34,10 @@ export const sendOtp = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const result = await authService.sendOtp(req.body.phoneNumber);
+    const result = await authService.sendOtp(
+      req.body.phoneNumber,
+      req.body.language,
+    );
     res.status(200).json({
       status: "success",
       message: `OTP sent to ${authService.maskPhoneNumber(req.body.phoneNumber)}. Valid for 5 minutes.`,
@@ -104,12 +107,14 @@ export const resendOTP = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { attemptsRemaining } = await authService.resendOTP(
+    const result = await authService.resendOTP(
       req.body.phoneNumber,
+      req.body.language,
     );
     res.status(200).json({
       status: "success",
-      message: `OTP resent to ${authService.maskPhoneNumber(req.body.phoneNumber)}. ${attemptsRemaining} attempts remaining.`,
+      message: `OTP resent to ${authService.maskPhoneNumber(req.body.phoneNumber)}. ${result.attemptsRemaining} attempts remaining.`,
+      ...(result.devOtp ? { devOtp: result.devOtp } : {}),
     });
   } catch (e) {
     handle(e, res, next);

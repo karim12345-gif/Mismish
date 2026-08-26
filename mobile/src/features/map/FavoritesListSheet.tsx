@@ -10,10 +10,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Store } from "../../services/store/store.service";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 const CORAL = "#FF7F50";
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400";
 
 interface Props {
   stores: Store[];
@@ -77,7 +76,12 @@ export function FavoritesListSheet({
               >
                 {/* Store image */}
                 <Image
-                  source={{ uri: item.imageUrl ?? FALLBACK_IMAGE }}
+                  source={{
+                    uri:
+                      item.listings[0]?.imageUrl ??
+                      item.imageUrl ??
+                      DEFAULT_LISTING_IMAGE,
+                  }}
                   style={styles.cardImage}
                   resizeMode="cover"
                 />

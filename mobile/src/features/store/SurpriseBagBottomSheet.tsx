@@ -10,11 +10,12 @@ import {
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useUserAllergies } from "../../context/AllergyContext";
 import { hasAllergenWarning } from "../../utils/allergenUtils";
-import { AllergenPopover, AllergenAnchor } from "../../components/AllergenPopover/AllergenPopover";
+import {
+  AllergenPopover,
+  AllergenAnchor,
+} from "../../components/AllergenPopover/AllergenPopover";
 import { useCart } from "../../context/CartContext";
-
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 const fmtTime = (iso: string, offset = 0) => {
   const d = new Date(iso);
@@ -44,6 +45,12 @@ interface SurpriseBagBottomSheetProps {
   item?: any;
   storeId?: number;
   selectedDate?: "today" | "tomorrow";
+  onAddToCart?: (
+    item: Omit<
+      import("../../context/CartContext").CartItemProduct,
+      "quantity"
+    >,
+  ) => void;
 }
 
 export const SurpriseBagBottomSheet = ({
@@ -52,6 +59,7 @@ export const SurpriseBagBottomSheet = ({
   item,
   storeId,
   selectedDate = "today",
+  onAddToCart,
 }: SurpriseBagBottomSheetProps) => {
   const { addToCart, cartItems, incrementItem, decrementItem } = useCart();
   const { userAllergies } = useUserAllergies();
@@ -69,7 +77,7 @@ export const SurpriseBagBottomSheet = ({
     });
   };
 
-  const bagImg = item?.imageUrl ?? FALLBACK_IMAGE;
+  const bagImg = item?.imageUrl ?? DEFAULT_LISTING_IMAGE;
   const bagPrice = (item?.price ?? 0).toFixed(2);
   const bagOriginal = (item?.originalPrice ?? (item?.price ?? 0) * 2).toFixed(
     2,
@@ -89,18 +97,24 @@ export const SurpriseBagBottomSheet = ({
       );
       const dayStr = selectedDate === "tomorrow" ? "Tomorrow" : "Today";
 
-      addToCart({
+      const cartItem = {
         id: String(item.id),
         surpriseBoxId: item.id,
         storeId: storeId,
         title: item.name,
         price: item.price,
         originalPrice: item.originalPrice ?? undefined,
-        imageUrl: item.imageUrl ?? undefined,
+        imageUrl: item.imageUrl ?? DEFAULT_LISTING_IMAGE,
         maxQuantity: item.quantity,
         pickupOffset: offset,
         pickupEnd: item.pickupEnd ?? undefined,
-      });
+      };
+
+      if (onAddToCart) {
+        onAddToCart(cartItem);
+      } else {
+        addToCart(cartItem);
+      }
     }
   };
 
@@ -177,16 +191,33 @@ export const SurpriseBagBottomSheet = ({
                       hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                     >
                       <MaterialCommunityIcons
-                        name={hasAllergenWarning(allergens, userAllergies) ? "alert-circle-outline" : "information-outline"}
+                        name={
+                          hasAllergenWarning(allergens, userAllergies)
+                            ? "alert-circle-outline"
+                            : "information-outline"
+                        }
                         size={14}
-                        color={hasAllergenWarning(allergens, userAllergies) ? "#C0392B" : "#AAAAAA"}
+                        color={
+                          hasAllergenWarning(allergens, userAllergies)
+                            ? "#C0392B"
+                            : "#AAAAAA"
+                        }
                       />
-                      <Text style={{
-                        fontSize: 13,
-                        fontWeight: hasAllergenWarning(allergens, userAllergies) ? "600" : "400",
-                        color: hasAllergenWarning(allergens, userAllergies) ? "#C0392B" : "#AAAAAA",
-                        marginLeft: 4,
-                      }}>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: hasAllergenWarning(
+                            allergens,
+                            userAllergies,
+                          )
+                            ? "600"
+                            : "400",
+                          color: hasAllergenWarning(allergens, userAllergies)
+                            ? "#C0392B"
+                            : "#AAAAAA",
+                          marginLeft: 4,
+                        }}
+                      >
                         Alerts
                       </Text>
                     </TouchableOpacity>
@@ -200,7 +231,9 @@ export const SurpriseBagBottomSheet = ({
           <View className="absolute bottom-0 w-full bg-white border-t border-gray-100 shadow-md shadow-black/10 px-5 pt-4 pb-8 flex-row items-center justify-between z-10">
             {cartQty > 0 ? (
               <View className="flex-row items-center bg-[#F9F9F9] rounded-xl py-3 px-3 border border-gray-200 mr-4 flex-1 justify-between">
-                <TouchableOpacity onPress={() => decrementItem(String(item.id))}>
+                <TouchableOpacity
+                  onPress={() => decrementItem(String(item.id))}
+                >
                   <Feather name="minus" size={18} color="#FF7F50" />
                 </TouchableOpacity>
                 <Text className="text-center font-black text-[15px] text-[#111]">
@@ -244,4 +277,3 @@ export const SurpriseBagBottomSheet = ({
     </Modal>
   );
 };
-

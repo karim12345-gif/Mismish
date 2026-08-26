@@ -12,9 +12,10 @@ import { ALL_ALLERGENS } from "../../constants/allergens";
 import { useUpdateAllergies } from "../../hooks/useAllergies";
 import { useAuth } from "../../context/AuthContext";
 import { useUserAllergies } from "../../context/AllergyContext";
-
-export const ALLERGY_ONBOARDED_KEY = "@mismish_allergy_onboarded";
-export const ALLERGY_PENDING_KEY = "@mismish_pending_allergies";
+import {
+  ALLERGY_ONBOARDED_KEY,
+  ALLERGY_PENDING_KEY,
+} from "../../constants/storage";
 
 interface Props {
   visible: boolean;

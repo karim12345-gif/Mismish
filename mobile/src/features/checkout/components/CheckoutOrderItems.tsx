@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useCart } from "../../../context/CartContext";
+import { DEFAULT_LISTING_IMAGE } from "../../../constants/images";
 
 export const CheckoutOrderItems = () => {
   const [expanded, setExpanded] = useState(true);
@@ -38,8 +39,16 @@ export const CheckoutOrderItems = () => {
               key={item.id}
               className="bg-gray-50 rounded-xl px-4 py-3.5 flex-row items-center"
             >
+              <Image
+                source={{ uri: item.imageUrl || DEFAULT_LISTING_IMAGE }}
+                className="w-12 h-12 rounded-xl mr-3"
+                resizeMode="cover"
+              />
               <View className="flex-1 mr-3">
-                <Text className="text-[#111] font-bold text-[14px]" numberOfLines={1}>
+                <Text
+                  className="text-[#111] font-bold text-[14px]"
+                  numberOfLines={1}
+                >
                   {item.title}
                 </Text>
                 <Text className="text-gray-500 font-medium text-[13px] mt-0.5">
@@ -73,7 +82,11 @@ export const CheckoutOrderItems = () => {
                         shadowOpacity: atMax ? 0 : 0.3,
                       }}
                     >
-                      <Feather name="plus" size={14} color={atMax ? "#AAA" : "#fff"} />
+                      <Feather
+                        name="plus"
+                        size={14}
+                        color={atMax ? "#AAA" : "#fff"}
+                      />
                     </TouchableOpacity>
                   </View>
                 );

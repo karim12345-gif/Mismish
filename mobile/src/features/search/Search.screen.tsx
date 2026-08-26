@@ -1,4 +1,10 @@
-import React, { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   View,
   Text,
@@ -15,10 +21,10 @@ import { useStores } from "../../hooks/useStores";
 import { StoreCard } from "../home/components/StoreCard";
 import { SearchSkeleton } from "./components/SearchSkeleton";
 import { Store } from "../../services/store/store.service";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 const HISTORY_KEY = "@mismish_search_history";
 const MAX_HISTORY = 10;
-const FALLBACK = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-US", {
@@ -49,7 +55,9 @@ function NoResults({ query }: { query: string }) {
       <View className="w-20 h-20 rounded-full bg-gray-100 items-center justify-center mb-5">
         <Feather name="search" size={36} color="#ccc" />
       </View>
-      <Text className="text-[#111] font-black text-[18px] mb-2">No results found</Text>
+      <Text className="text-[#111] font-black text-[18px] mb-2">
+        No results found
+      </Text>
       <Text className="text-gray-400 font-medium text-[14px] text-center px-10">
         No stores match "{query}"
       </Text>
@@ -69,7 +77,7 @@ export default function SearchScreen() {
 
   // Load history on mount
   useEffect(() => {
-    AsyncStorage.getItem(HISTORY_KEY).then(raw => {
+    AsyncStorage.getItem(HISTORY_KEY).then((raw) => {
       if (raw) setHistory(JSON.parse(raw));
     });
   }, []);
@@ -77,16 +85,19 @@ export default function SearchScreen() {
   const saveToHistory = useCallback(async (term: string) => {
     const trimmed = term.trim();
     if (trimmed.length < 2) return;
-    setHistory(prev => {
-      const updated = [trimmed, ...prev.filter(h => h !== trimmed)].slice(0, MAX_HISTORY);
+    setHistory((prev) => {
+      const updated = [trimmed, ...prev.filter((h) => h !== trimmed)].slice(
+        0,
+        MAX_HISTORY,
+      );
       AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
 
   const removeFromHistory = useCallback(async (term: string) => {
-    setHistory(prev => {
-      const updated = prev.filter(h => h !== term);
+    setHistory((prev) => {
+      const updated = prev.filter((h) => h !== term);
       AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
       return updated;
     });
@@ -144,11 +155,17 @@ export default function SearchScreen() {
         branch={store.category ?? store.address?.split(",")[0] ?? ""}
         price={firstBag ? `${firstBag.price} SAR` : "—"}
         timeRange={
-          firstBag ? `${fmtTime(firstBag.pickupStart)} - ${fmtTime(firstBag.pickupEnd)}` : "—"
+          firstBag
+            ? `${fmtTime(firstBag.pickupStart)} - ${fmtTime(firstBag.pickupEnd)}`
+            : "—"
         }
         distance="—"
-        imageUrl={store.imageUrl ?? FALLBACK}
-        logoUrl={store.imageUrl ?? FALLBACK}
+        imageUrl={
+          store.listings[0]?.imageUrl ?? store.imageUrl ?? DEFAULT_LISTING_IMAGE
+        }
+        logoUrl={
+          store.imageUrl ?? store.listings[0]?.imageUrl ?? DEFAULT_LISTING_IMAGE
+        }
         leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
         hasListings={totalLeft > 0}
         rating={store.rating}
@@ -160,7 +177,8 @@ export default function SearchScreen() {
   const showSkeleton = isLoading || isSearching;
   const showHistory = !showSkeleton && !query.trim() && history.length > 0;
   const showEmpty = !showSkeleton && !query.trim() && history.length === 0;
-  const showNoResults = !showSkeleton && debouncedQuery.trim().length > 0 && results.length === 0;
+  const showNoResults =
+    !showSkeleton && debouncedQuery.trim().length > 0 && results.length === 0;
   const showResults = !showSkeleton && results.length > 0;
 
   return (
@@ -211,20 +229,31 @@ export default function SearchScreen() {
       ) : showHistory ? (
         <View className="flex-1 px-5 pt-5">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-[#111] font-black text-[16px]">Recent Search</Text>
+            <Text className="text-[#111] font-black text-[16px]">
+              Recent Search
+            </Text>
             <TouchableOpacity onPress={clearHistory}>
-              <Text className="text-gray-400 text-[13px] font-semibold">Clear All</Text>
+              <Text className="text-gray-400 text-[13px] font-semibold">
+                Clear All
+              </Text>
             </TouchableOpacity>
           </View>
           <View className="flex-row flex-wrap gap-2">
-            {history.map(term => (
+            {history.map((term) => (
               <View
                 key={term}
                 className="flex-row items-center border border-gray-200 rounded-full px-3 py-1.5 bg-white"
               >
-                <Feather name="clock" size={13} color="#aaa" style={{ marginRight: 6 }} />
+                <Feather
+                  name="clock"
+                  size={13}
+                  color="#aaa"
+                  style={{ marginRight: 6 }}
+                />
                 <TouchableOpacity onPress={() => applyHistory(term)}>
-                  <Text className="text-[#333] text-[13px] font-semibold">{term}</Text>
+                  <Text className="text-[#333] text-[13px] font-semibold">
+                    {term}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => removeFromHistory(term)}

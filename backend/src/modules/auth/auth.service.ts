@@ -6,7 +6,7 @@ import appleSignin from "apple-signin-auth";
 import { getFirebaseAdmin } from "../../shared/lib/firebase";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
-import { generateOTP, sendOTP, maskPhoneNumber } from "../../shared/lib/sms";
+import { sendOTP, verifyOTPCode, maskPhoneNumber } from "../../shared/lib/sms";
 import {
   sendPasswordResetEmail,
   sendPasswordChangedEmail,
@@ -39,6 +39,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const sendOtp = async (
   phoneNumber: string,
+  language: "en" | "ar" = "en",
 ): Promise<{ devOtp?: string }> => {
   let user = await prisma.user.findUnique({ where: { phoneNumber } });
   if (!user)
@@ -46,19 +47,18 @@ export const sendOtp = async (
       data: { phoneNumber, isVerified: false },
     });
 
-  const otp = generateOTP();
+  const delivery = await sendOTP(phoneNumber, language);
   await prisma.user.update({
     where: { phoneNumber },
     data: {
-      otp,
+      otp: delivery.devOtp ?? null,
       otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
       otpResendCount: 0,
       lastOtpSentAt: new Date(),
     },
   });
 
-  await sendOTP(phoneNumber, otp);
-  return process.env.SMS_DEV_MODE === "true" ? { devOtp: otp } : {};
+  return delivery;
 };
 
 export const registerUser = async (data: RegisterUserBody): Promise<void> => {
@@ -85,18 +85,17 @@ export const loginUser = async (
   const isMatch = await bcrypt.compare(data.password, user.password!);
   if (!isMatch) throw new AppError(401, "Invalid credentials");
 
-  const otp = generateOTP();
+  const delivery = await sendOTP(data.phoneNumber, data.language);
   await prisma.user.update({
     where: { phoneNumber: data.phoneNumber },
     data: {
-      otp,
+      otp: delivery.devOtp ?? null,
       otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
       otpResendCount: 0,
       lastOtpSentAt: new Date(),
     },
   });
 
-  await sendOTP(data.phoneNumber, otp);
   return { maskedPhone: maskPhoneNumber(data.phoneNumber) };
 };
 
@@ -110,11 +109,11 @@ export const verifyOTP = async (
   });
   if (!user) throw new AppError(404, "User not found");
   if (user.isBlocked) throw new AppError(403, "This account is blocked");
-  if (!user.otp || !user.otpExpiresAt)
+  if (!user.otpExpiresAt)
     throw new AppError(400, "No OTP requested. Please login first.");
   if (new Date() > user.otpExpiresAt)
     throw new AppError(400, "OTP expired. Please request a new one.");
-  if (user.otp !== data.otp) throw new AppError(400, "Invalid OTP");
+  await verifyOTPCode(data.phoneNumber, data.otp, user.otp);
 
   await prisma.user.update({
     where: { phoneNumber: data.phoneNumber },
@@ -146,7 +145,8 @@ export const verifyOTP = async (
 
 export const resendOTP = async (
   phoneNumber: string,
-): Promise<{ attemptsRemaining: number }> => {
+  language: "en" | "ar" = "en",
+): Promise<{ attemptsRemaining: number; devOtp?: string }> => {
   const user = await prisma.user.findUnique({ where: { phoneNumber } });
   if (!user) throw new AppError(404, "User not found");
   if (user.otpResendCount >= 2)
@@ -155,19 +155,22 @@ export const resendOTP = async (
       "Maximum OTP resend attempts reached. Please login again.",
     );
 
-  const otp = generateOTP();
+  const delivery = await sendOTP(phoneNumber, language);
+  const nextResendCount = user.otpResendCount + 1;
   await prisma.user.update({
     where: { phoneNumber },
     data: {
-      otp,
+      otp: delivery.devOtp ?? null,
       otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      otpResendCount: user.otpResendCount + 1,
+      otpResendCount: nextResendCount,
       lastOtpSentAt: new Date(),
     },
   });
 
-  await sendOTP(phoneNumber, otp);
-  return { attemptsRemaining: 2 - user.otpResendCount };
+  return {
+    attemptsRemaining: 2 - nextResendCount,
+    ...(delivery.devOtp ? { devOtp: delivery.devOtp } : {}),
+  };
 };
 
 export const socialLogin = async (

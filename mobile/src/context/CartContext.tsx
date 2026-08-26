@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DEFAULT_LISTING_IMAGE } from "../constants/images";
 
 const CART_STORAGE_KEY = "@mismish_cart";
 
@@ -46,7 +53,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     AsyncStorage.getItem(CART_STORAGE_KEY).then((stored) => {
       if (stored) {
         try {
-          setCartItems(JSON.parse(stored));
+          const parsed = JSON.parse(stored) as CartItemProduct[];
+          const persistedStoreId = parsed[0]?.storeId;
+          setCartItems(
+            parsed
+              .filter(
+                (item) =>
+                  persistedStoreId === undefined ||
+                  item.storeId === persistedStoreId,
+              )
+              .map((item) => ({
+                ...item,
+                imageUrl: item.imageUrl || DEFAULT_LISTING_IMAGE,
+              })),
+          );
         } catch {}
       }
       hydrated.current = true;
@@ -64,19 +84,40 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     quantity: number = 1,
   ) => {
     setCartItems((prev) => {
+      const existingStoreId = prev[0]?.storeId;
+      if (
+        existingStoreId !== undefined &&
+        item.storeId !== undefined &&
+        existingStoreId !== item.storeId
+      ) {
+        return prev;
+      }
+
       const existing = prev.find((p) => p.id === item.id);
       if (existing) {
         return prev.map((p) =>
           p.id === item.id
             ? {
                 ...p,
-                quantity: p.quantity + quantity,
+                ...item,
+                imageUrl: item.imageUrl || p.imageUrl || DEFAULT_LISTING_IMAGE,
+                quantity: Math.min(
+                  p.quantity + quantity,
+                  item.maxQuantity ?? p.maxQuantity ?? Number.POSITIVE_INFINITY,
+                ),
                 pickupOffset: item.pickupOffset ?? p.pickupOffset,
               }
             : p,
         );
       }
-      return [...prev, { ...item, quantity }];
+      return [
+        ...prev,
+        {
+          ...item,
+          imageUrl: item.imageUrl || DEFAULT_LISTING_IMAGE,
+          quantity: Math.min(quantity, item.maxQuantity ?? quantity),
+        },
+      ];
     });
   };
 
@@ -88,7 +129,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     setCartItems((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;
-        if (p.maxQuantity !== undefined && p.quantity >= p.maxQuantity) return p;
+        if (p.maxQuantity !== undefined && p.quantity >= p.maxQuantity)
+          return p;
         return { ...p, quantity: p.quantity + 1 };
       }),
     );

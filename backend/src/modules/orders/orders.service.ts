@@ -1,9 +1,13 @@
 import { OrderStatus, Prisma } from "@prisma/client";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
-import { sendPushNotification } from "../../shared/lib/notifications";
-import { schedulePickupReminder } from "../../shared/lib/notificationScheduler";
+import {
+  cancelPickupReminders,
+  schedulePickupReminders,
+} from "../../shared/lib/notificationScheduler";
+import { notificationService } from "../../shared/lib/notificationService";
 import { emitOrderEvent } from "../../shared/lib/orderStream";
+import { awardOrderPoints } from "../rewards/rewards.service";
 import type { CreateOrderBody, ImpactStats } from "./orders.types";
 
 const generateOrderCode = (): string =>
@@ -57,29 +61,28 @@ export const createOrder = async (userId: number, data: CreateOrderBody) => {
     },
   );
 
-  // Fire-and-forget push notification
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { pushToken: true },
-  });
-  if (user?.pushToken) {
-    sendPushNotification({
-      to: user.pushToken,
+  void notificationService
+    .sendToUser(userId, {
       title: "Order Received",
       body: "We received your order, waiting for store confirmation.",
-      data: { orderId: order.id },
+      eventType: "order_received",
+      entityType: "ORDER",
+      entityId: order.id,
+      data: {
+        orderId: order.id,
+        deepLink: `mismish://orders/${order.id}`,
+      },
+    })
+    .catch((error) => {
+      console.error(`[push] Order #${order.id} received notification failed:`, error);
     });
-  }
 
-  // Schedule a pickup reminder 30 min before the window closes
-  schedulePickupReminder({
+  schedulePickupReminders({
     id: order.id,
-    pickupReminderSentAt: null,
-    surpriseBox: {
-      pickupEnd: order.surpriseBox.pickupEnd,
-      vendor: { name: order.surpriseBox.vendor.name },
-    },
-    user: { pushToken: user?.pushToken ?? null },
+    deliveryMethod: order.deliveryMethod,
+    pickupOneHourReminderSentAt: null,
+    pickupFifteenMinuteReminderSentAt: null,
+    surpriseBox: { pickupStart: order.surpriseBox.pickupStart },
   });
 
   // Notify vendor dashboard over SSE — no polling needed
@@ -152,6 +155,7 @@ export const cancelOrder = async (userId: number, orderId: number) => {
   });
 
   emitOrderEvent(cancelled.surpriseBox.vendor.id, "order_cancelled", { orderId });
+  cancelPickupReminders(orderId);
 
   return cancelled;
 };
@@ -183,18 +187,10 @@ export const collectOrder = async (userId: number, orderId: number) => {
     },
   });
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { pushToken: true },
-  });
-  if (user?.pushToken) {
-    sendPushNotification({
-      to: user.pushToken,
-      title: "Enjoy your bag! 🎉",
-      body: "Your order has been collected. Hope you love it!",
-      data: { orderId: order.id },
-    });
-  }
+  cancelPickupReminders(orderId);
+  await notificationService.sendOrderCompleted(orderId);
+
+  await awardOrderPoints(updated.id);
 
   return updated;
 };
@@ -223,9 +219,27 @@ export const getUserImpactStats = async (
 };
 
 // DEV ONLY
-export const devSetOrderStatus = async (orderId: number, status: OrderStatus) =>
-  prisma.order.update({
+export const devSetOrderStatus = async (
+  orderId: number,
+  status: OrderStatus,
+) => {
+  const order = await prisma.order.update({
     where: { id: orderId },
-    data: { status },
+    data: {
+      status,
+      ...(status === "COMPLETED" ? { pickupStatus: "COLLECTED" } : {}),
+    },
     include: { surpriseBox: { include: { vendor: true } } },
   });
+
+  if (["COMPLETED", "CANCELLED", "DELIVERED"].includes(status)) {
+    cancelPickupReminders(orderId);
+  }
+
+  if (status === "COMPLETED") {
+    await notificationService.sendOrderCompleted(orderId);
+    await awardOrderPoints(order.id);
+  }
+
+  return order;
+};

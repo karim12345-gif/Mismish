@@ -26,7 +26,13 @@ export const authenticate = (
   if (!authHeader?.startsWith("Bearer ")) {
     res
       .status(401)
-      .json({ status: "error", message: "Unauthorized: No token provided" });
+      .json({
+        status: "error",
+        error: {
+          code: "auth_token_missing",
+          message: "Authentication token is required.",
+        },
+      });
     return;
   }
 
@@ -39,6 +45,12 @@ export const authenticate = (
   } catch {
     res
       .status(401)
-      .json({ status: "error", message: "Unauthorized: Invalid token" });
+      .json({
+        status: "error",
+        error: {
+          code: "auth_token_invalid",
+          message: "Authentication token is invalid.",
+        },
+      });
   }
 };

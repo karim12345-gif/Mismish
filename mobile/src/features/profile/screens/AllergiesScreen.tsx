@@ -9,7 +9,7 @@ import { ALL_ALLERGENS } from "../../../constants/allergens";
 import { useUserAllergies } from "../../../context/AllergyContext";
 import { useUpdateAllergies } from "../../../hooks/useAllergies";
 import { useAuth } from "../../../context/AuthContext";
-import { ALLERGY_PENDING_KEY } from "../../../components/AllergyOnboarding/AllergyOnboardingSheet";
+import { ALLERGY_PENDING_KEY } from "../../../constants/storage";
 
 export default function AllergiesScreen() {
   const navigation = useNavigation<any>();

@@ -1,8 +1,16 @@
+import crypto from "crypto";
+import { AppError } from "./AppError";
+import {
+  sendAuthenticaOtp,
+  verifyAuthenticaOtp,
+  type OtpLanguage,
+} from "./authentica";
+
 // Supported: Egypt (+20), Saudi Arabia (+966), UAE (+971)
 export const phoneRegex = /^\+(?:20|966|971)\d{9,10}$/;
 
 export const generateOTP = (): string =>
-  Math.floor(100000 + Math.random() * 900000).toString();
+  crypto.randomInt(1000, 10_000).toString();
 
 export const validatePhoneNumber = (phone: string): boolean =>
   phoneRegex.test(phone);
@@ -14,26 +22,40 @@ export const maskPhoneNumber = (phone: string): string => {
 
 export const sendOTP = async (
   phoneNumber: string,
-  otp: string,
-): Promise<void> => {
+  language: OtpLanguage = "en",
+): Promise<{ devOtp?: string }> => {
   if (process.env.SMS_DEV_MODE === "true") {
+    const otp = generateOTP();
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("📱 SMS OTP (DEV MODE)");
     console.log(`To:   ${phoneNumber}`);
     console.log(`Code: ${otp}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    return { devOtp: otp };
+  }
+
+  await sendAuthenticaOtp(phoneNumber, language);
+  return {};
+};
+
+export const verifyOTPCode = async (
+  phoneNumber: string,
+  submittedOtp: string,
+  devOtp: string | null,
+): Promise<void> => {
+  if (process.env.SMS_DEV_MODE !== "true") {
+    await verifyAuthenticaOtp(phoneNumber, submittedOtp);
     return;
   }
 
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
+  if (!devOtp) throw new AppError(400, "No OTP requested.", "otp_not_requested");
 
-  if (!accountSid || !authToken || !twilioNumber) {
-    throw new Error("Twilio credentials not configured");
+  const expected = Buffer.from(devOtp);
+  const submitted = Buffer.from(submittedOtp);
+  if (
+    expected.length !== submitted.length ||
+    !crypto.timingSafeEqual(expected, submitted)
+  ) {
+    throw new AppError(400, "Invalid OTP.", "invalid_otp");
   }
-
-  // TODO: Twilio integration
-  // const client = require('twilio')(accountSid, authToken);
-  // await client.messages.create({ body: `Your Mismish code: ${otp}`, from: twilioNumber, to: phoneNumber });
 };

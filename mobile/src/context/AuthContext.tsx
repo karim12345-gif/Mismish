@@ -47,6 +47,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    registerForPushNotifications().catch((error) => {
+      console.log("[push] authenticated registration failed:", error);
+    });
+  }, [isAuthenticated]);
+
   const restoreSession = async () => {
     try {
       const [, accessToken, storedUser, locationSelected, introSeen] =
@@ -86,8 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ]);
       setUser(userData);
       setIsAuthenticated(true);
-      // Register for push after login so the token is saved with a valid auth header
-      registerForPushNotifications();
     } catch (e) {
       console.error("Failed to save session:", e);
     }

@@ -15,10 +15,9 @@ import { useNavigation } from "@react-navigation/native";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useStores } from "../../hooks/useStores";
 import { Store } from "../../services/store/store.service";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 const CORAL = "#FF7F50";
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400";
 
 export default function FavoritesScreen() {
   const navigation = useNavigation<any>();
@@ -37,13 +36,17 @@ export default function FavoritesScreen() {
 
     return (
       <TouchableOpacity
-        onPress={() => hasListings && navigation.push("SurpriseBag", { storeId: item.id })}
+        onPress={() =>
+          hasListings && navigation.push("SurpriseBag", { storeId: item.id })
+        }
         disabled={!hasListings}
         activeOpacity={hasListings ? 0.85 : 1}
         style={[styles.row, !hasListings && { opacity: 0.45 }]}
       >
         <Image
-          source={{ uri: item.imageUrl ?? FALLBACK_IMAGE }}
+          source={{
+            uri: bag?.imageUrl ?? item.imageUrl ?? DEFAULT_LISTING_IMAGE,
+          }}
           style={styles.rowImage}
           resizeMode="cover"
         />
@@ -61,7 +64,9 @@ export default function FavoritesScreen() {
             <View style={styles.priceRow}>
               <Text style={styles.price}>SAR {bag.price}</Text>
               {bag.originalPrice && (
-                <Text style={styles.originalPrice}>SAR {bag.originalPrice}</Text>
+                <Text style={styles.originalPrice}>
+                  SAR {bag.originalPrice}
+                </Text>
               )}
               {savings && (
                 <View style={styles.savingsBadge}>

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Mismish",
+    "name": "MishMish",
     "slug": "Mismish",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,8 +15,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mismish.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Mismish needs your location to show nearby stores.",
+        "NSLocalNetworkUsageDescription": "Mismish needs local network access to connect to the development server.",
+        "NSBonjourServices": [
+          "_expo._tcp",
+          "_react-native-metro._tcp"
+        ],
         "UIBackgroundModes": [
           "fetch",
           "remote-notification"
@@ -36,14 +42,10 @@
             "CFBundleURLSchemes": [
               "com.googleusercontent.apps.505490363229-enso09ftem17pq92gc6e4i60tv0qsk0d"
             ]
-          },
-          {
-            "CFBundleURLSchemes": [
-              "app-1-638047947946-ios-3d56638999b16b514494d3"
-            ]
           }
         ]
-      }
+      },
+      "appleTeamId": "LJ5NJ37RFB"
     },
     "android": {
       "adaptiveIcon": {
@@ -52,10 +54,16 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.mismish.app"
+      "package": "com.mismish.app",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "plugins": [
       "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-firebase/messaging",
       [
         "expo-location",
         {

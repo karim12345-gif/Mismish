@@ -142,6 +142,31 @@ export const getListings = async (
   }
 };
 
+export const sendNotification = async (
+  req: Request<
+    {},
+    {},
+    {
+      type: "marketing" | "order" | "announcement";
+      audience: "all-users" | "active-users" | "past-orders";
+      title: string;
+      message: string;
+      imageUrl?: string;
+    }
+  >,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    res.status(200).json({
+      status: "success",
+      data: await adminService.sendNotification(adminIdFrom(req), req.body),
+    });
+  } catch (e) {
+    handle(e, res, next);
+  }
+};
+
 export const getAuditLogs = async (
   req: Request<{}, {}, {}, { limit?: string }>,
   res: Response,

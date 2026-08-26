@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthServices, VerifyOtpRequest, AuthResponse } from "../services/auth/auth.service";
 import { AllergiesService } from "../services/user/allergies.service";
-import { ALLERGY_PENDING_KEY } from "../components/AllergyOnboarding/AllergyOnboardingSheet";
+import { ALLERGY_PENDING_KEY } from "../constants/storage";
 import { useAuth } from "../context/AuthContext";
 import { useUserAllergies } from "../context/AllergyContext";
 

@@ -5,6 +5,7 @@ import { validate } from "../../shared/middleware/validate";
 import {
   AuditQuerySchema,
   ListQuerySchema,
+  SendNotificationSchema,
   UserBlockSchema,
   VendorStatusSchema,
 } from "./admin.schemas";
@@ -30,6 +31,11 @@ router.patch(
 );
 router.get("/orders", validate(ListQuerySchema), adminController.getOrders);
 router.get("/listings", validate(ListQuerySchema), adminController.getListings);
+router.post(
+  "/notifications/send",
+  validate(SendNotificationSchema),
+  adminController.sendNotification,
+);
 router.get("/audit-logs", validate(AuditQuerySchema), adminController.getAuditLogs);
 
 export default router;

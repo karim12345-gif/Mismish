@@ -15,37 +15,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { CartMilestoneTracker } from "./components/CartMilestoneTracker";
 import { useStoreInventory } from "../../hooks/useStoreInventory";
-
-const UPSELL_ITEMS = [
-  {
-    id: "coffee-orig",
-    title: "Dunkin Original Coffee",
-    price: 10.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1559525839-b184a4d698c7?q=80&w=200",
-  },
-  {
-    id: "cappuccino",
-    title: "Cappuccino - Medium",
-    price: 14.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1572442388796-11668a67e53d?q=80&w=200",
-  },
-  {
-    id: "latte",
-    title: "Latte - Medium",
-    price: 12.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1541167760496-1628856ab772?q=80&w=200",
-  },
-  {
-    id: "hot-choc",
-    title: "Hot Chocolate",
-    price: 14.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=200",
-  },
-];
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 export default function CartScreen() {
   const navigation = useNavigation();
@@ -64,22 +34,21 @@ export default function CartScreen() {
   const { data: storeInventory } = useStoreInventory(activeStoreId ?? 0);
 
   const dynamicUpsells = storeInventory
-    ? storeInventory.map((bag: any) => ({
-        id: String(bag.id),
-        surpriseBoxId: bag.id,
-        storeId: activeStoreId,
-        title: bag.name,
-        price: bag.price,
-        originalPrice: bag.originalPrice,
-        quantity: bag.quantity,
-        imageUrl:
-          bag.imageUrl ??
-          "https://images.unsplash.com/photo-1559525839-b184a4d698c7?q=80&w=200",
-      }))
+    ? storeInventory
+        .filter(
+          (bag) => !cartItems.some((item) => item.surpriseBoxId === bag.id),
+        )
+        .map((bag: any) => ({
+          id: String(bag.id),
+          surpriseBoxId: bag.id,
+          storeId: activeStoreId,
+          title: bag.name,
+          price: bag.price,
+          originalPrice: bag.originalPrice,
+          quantity: bag.quantity,
+          imageUrl: bag.imageUrl ?? DEFAULT_LISTING_IMAGE,
+        }))
     : [];
-
-  const displayUpsells =
-    dynamicUpsells.length > 0 ? dynamicUpsells : UPSELL_ITEMS;
 
   const handleCheckoutPress = () => {
     if (!isAuthenticated) {
@@ -114,86 +83,100 @@ export default function CartScreen() {
         {cartItems.length > 0 ? (
           <>
             {/* Upsell Horizontal Banner */}
-            <View className="pt-6 pb-2 bg-white">
-              <View className="px-5 mb-4">
-                <Text className="text-[#111] font-black text-[18px] mb-1">
-                  Complement your bag
-                </Text>
-                <Text className="text-gray-500 font-medium text-[13px]">
-                  Enjoy any of these add-ons by adding them to your order
-                </Text>
-              </View>
+            {dynamicUpsells.length > 0 && (
+              <View className="pt-6 pb-2 bg-white">
+                <View className="px-5 mb-4">
+                  <Text className="text-[#111] font-black text-[18px] mb-1">
+                    Complement your bag
+                  </Text>
+                  <Text className="text-gray-500 font-medium text-[13px]">
+                    Enjoy any of these add-ons by adding them to your order
+                  </Text>
+                </View>
 
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 20 }}
-              >
-                {displayUpsells.map((upsell) => {
-                  const blockItem = cartItems.find((i) => i.id === upsell.id);
-                  const qty = blockItem?.quantity || 0;
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 20 }}
+                >
+                  {dynamicUpsells.map((upsell) => {
+                    const blockItem = cartItems.find((i) => i.id === upsell.id);
+                    const qty = blockItem?.quantity || 0;
 
-                  const maxQty = (upsell as any).quantity ?? undefined;
-                  const atMax = maxQty !== undefined && qty >= maxQty;
+                    const maxQty = (upsell as any).quantity ?? undefined;
+                    const atMax = maxQty !== undefined && qty >= maxQty;
 
-                  return (
-                    <View
-                      key={upsell.id}
-                      className="w-32 mr-3 bg-white border border-gray-100 rounded-2xl p-2 relative shadow-sm shadow-black/5"
-                    >
-                      <View className="w-full h-28 bg-[#F8F6F2] rounded-xl mb-3 overflow-hidden relative">
-                        <Image
-                          source={
-                            typeof upsell.imageUrl === "string"
-                              ? { uri: upsell.imageUrl }
-                              : upsell.imageUrl
-                          }
-                          className="w-full h-full"
-                          resizeMode="cover"
-                        />
-
-                        {qty > 0 ? (
-                          <View className="absolute bottom-2 left-2 bg-white rounded-full flex-row items-center px-2 py-1 shadow-sm shadow-black/10">
-                            <TouchableOpacity
-                              onPress={() => decrementItem(upsell.id)}
-                              className="px-1"
-                            >
-                              <Feather name="minus" size={14} color="#E7246A" />
-                            </TouchableOpacity>
-                            <Text className="text-[#E7246A] font-black text-[12px] mx-1.5">
-                              {qty}
-                            </Text>
-                            <TouchableOpacity
-                              onPress={() => !atMax && incrementItem(upsell.id)}
-                              disabled={atMax}
-                              className="px-1"
-                            >
-                              <Feather name="plus" size={14} color={atMax ? "#CCC" : "#E7246A"} />
-                            </TouchableOpacity>
-                          </View>
-                        ) : (
-                          <TouchableOpacity
-                            onPress={() => addToCart({ ...upsell, maxQuantity: maxQty })}
-                            className="absolute bottom-2 left-2 bg-white w-7 h-7 rounded-full items-center justify-center shadow-sm shadow-black/10"
-                          >
-                            <Feather name="plus" size={14} color="#E7246A" />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                      <Text
-                        className="text-[#111] font-bold text-[12px] mb-1 leading-tight"
-                        numberOfLines={2}
+                    return (
+                      <View
+                        key={upsell.id}
+                        className="w-32 mr-3 bg-white border border-gray-100 rounded-2xl p-2 relative shadow-sm shadow-black/5"
                       >
-                        {upsell.title}
-                      </Text>
-                      <Text className="text-[#E7246A] font-black text-[12px]">
-                        ﷼ {upsell.price.toFixed(2)}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </ScrollView>
-            </View>
+                        <View className="w-full h-28 bg-[#F8F6F2] rounded-xl mb-3 overflow-hidden relative">
+                          <Image
+                            source={
+                              typeof upsell.imageUrl === "string"
+                                ? { uri: upsell.imageUrl }
+                                : upsell.imageUrl
+                            }
+                            className="w-full h-full"
+                            resizeMode="cover"
+                          />
+
+                          {qty > 0 ? (
+                            <View className="absolute bottom-2 left-2 bg-white rounded-full flex-row items-center px-2 py-1 shadow-sm shadow-black/10">
+                              <TouchableOpacity
+                                onPress={() => decrementItem(upsell.id)}
+                                className="px-1"
+                              >
+                                <Feather
+                                  name="minus"
+                                  size={14}
+                                  color="#E7246A"
+                                />
+                              </TouchableOpacity>
+                              <Text className="text-[#E7246A] font-black text-[12px] mx-1.5">
+                                {qty}
+                              </Text>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  !atMax && incrementItem(upsell.id)
+                                }
+                                disabled={atMax}
+                                className="px-1"
+                              >
+                                <Feather
+                                  name="plus"
+                                  size={14}
+                                  color={atMax ? "#CCC" : "#E7246A"}
+                                />
+                              </TouchableOpacity>
+                            </View>
+                          ) : (
+                            <TouchableOpacity
+                              onPress={() =>
+                                addToCart({ ...upsell, maxQuantity: maxQty })
+                              }
+                              className="absolute bottom-2 left-2 bg-white w-7 h-7 rounded-full items-center justify-center shadow-sm shadow-black/10"
+                            >
+                              <Feather name="plus" size={14} color="#E7246A" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                        <Text
+                          className="text-[#111] font-bold text-[12px] mb-1 leading-tight"
+                          numberOfLines={2}
+                        >
+                          {upsell.title}
+                        </Text>
+                        <Text className="text-[#E7246A] font-black text-[12px]">
+                          ﷼ {upsell.price.toFixed(2)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
 
             {/* Divider */}
             <View className="w-full h-1 bg-gray-50 mt-4 mb-2" />
@@ -202,7 +185,14 @@ export default function CartScreen() {
             {cartItems.map((item) => (
               <CartItem
                 key={item.id}
-                item={item}
+                item={{
+                  ...item,
+                  imageUrl:
+                    storeInventory?.find((bag) => bag.id === item.surpriseBoxId)
+                      ?.imageUrl ??
+                    item.imageUrl ??
+                    DEFAULT_LISTING_IMAGE,
+                }}
                 onIncrement={() => incrementItem(item.id)}
                 onDecrement={() => decrementItem(item.id)}
               />

@@ -158,7 +158,7 @@ Content-Type: application/json
 
 {
   "phoneNumber": "+201234567890",
-  "otp": "123456"
+  "otp": "1234"
 }
 ```
 

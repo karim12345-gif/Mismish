@@ -1,8 +1,8 @@
 import { Platform, StyleSheet } from "react-native";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 export const CORAL = "#FF7F50";
-export const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400";
+export const FALLBACK_IMAGE = DEFAULT_LISTING_IMAGE;
 
 export const styles = StyleSheet.create({
   // ── Root ─────────────────────────────────────────────────────────────────

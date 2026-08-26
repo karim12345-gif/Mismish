@@ -12,6 +12,7 @@ export const SendOtpSchema = z.object({
         phoneRegex,
         "Invalid phone number. Must be +20, +966, or +971 followed by 9-10 digits",
       ),
+    language: z.enum(["en", "ar"]).optional(),
   }),
 });
 
@@ -33,6 +34,7 @@ export const LoginSchema = z.object({
   body: z.object({
     phoneNumber: z.string().regex(phoneRegex, "Invalid phone number"),
     password: z.string().min(1, "Password is required"),
+    language: z.enum(["en", "ar"]).optional(),
   }),
 });
 
@@ -41,14 +43,15 @@ export const VerifyOTPSchema = z.object({
     phoneNumber: z.string().regex(phoneRegex, "Invalid phone number"),
     otp: z
       .string()
-      .length(6, "OTP must be 6 digits")
-      .regex(/^\d{6}$/, "OTP must contain only digits"),
+      .length(4, "OTP must be 4 digits")
+      .regex(/^\d{4}$/, "OTP must contain only digits"),
   }),
 });
 
 export const ResendOTPSchema = z.object({
   body: z.object({
     phoneNumber: z.string().regex(phoneRegex, "Invalid phone number"),
+    language: z.enum(["en", "ar"]).optional(),
   }),
 });
 

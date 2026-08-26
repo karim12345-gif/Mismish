@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import { AppError } from "../../shared/lib/AppError";
 import * as listingsService from "./listings.service";
 import type { NearbyListingsQuery } from "./listings.types";
 
@@ -28,8 +27,6 @@ export const getListingById = async (
     );
     res.status(200).json({ status: "success", data: listing });
   } catch (e) {
-    e instanceof AppError
-      ? res.status(e.statusCode).json({ status: "error", message: e.message })
-      : next(e);
+    next(e);
   }
 };

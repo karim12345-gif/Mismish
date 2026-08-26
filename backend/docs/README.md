@@ -19,6 +19,9 @@ Detailed task breakdown for Phase 1 (Customer Backend). Includes testing checkli
 ### [JWT_TOKEN_MANAGEMENT.md](./JWT_TOKEN_MANAGEMENT.md)
 Complete guide to JWT token management implementation. Covers dual-token system (access + refresh tokens), database-backed session management, token invalidation on password change, and all authentication endpoints.
 
+### [AUTHENTICA_OTP.md](./AUTHENTICA_OTP.md)
+Customer SMS OTP delivery and verification through Authentica, including required backend environment variables.
+
 ---
 
 ## 🚀 Quick Start

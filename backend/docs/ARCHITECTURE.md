@@ -1,5 +1,22 @@
 # System Architecture
 
+## Transactional Push Notifications
+
+The existing Firebase/Expo provider remains behind `sendPushNotification`.
+Automatic triggers are currently limited to:
+
+- A newly published offer notifying users who favorited its merchant
+- Pickup reminders 1 hour and 15 minutes before `SurpriseBox.pickupStart`
+- A one-time completion notification when an order becomes `COMPLETED`
+
+Independent database timestamps prevent duplicate reminders and completion
+messages across restarts. Timers re-check current status and pickup time before
+delivery. Updating a listing pickup time reschedules active orders. Cancelled,
+delivered, completed, or collected orders have their timers removed.
+
+For local manual testing, run with `PICKUP_REMINDER_TEST_MODE=true` to use 2- and
+1-minute offsets. This flag is ignored in production.
+
 ## High-Level Overview
 
 ![System Architecture Diagram](./system_architecture.png)

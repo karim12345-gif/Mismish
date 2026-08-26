@@ -19,10 +19,10 @@ import { CuisineBottomSheet } from "./components/CuisineBottomSheet";
 import { PriceBottomSheet, PriceRange } from "./components/PriceBottomSheet";
 import { Store } from "../../services/store/store.service";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 const CORAL = "#FF7F50";
 const BANNER_BG = "#FDF8EC";
-const FALLBACK = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
 
 const FLOAT_ITEMS = [
   { emoji: "🍩", color: "#3D1C5A", pos: { top: 18, left: 28 } },
@@ -48,13 +48,7 @@ function FloatingBadge({
   pos: object;
 }) {
   return (
-    <View
-      style={[
-        styles.floatBadge,
-        { backgroundColor: color },
-        pos as any,
-      ]}
-    >
+    <View style={[styles.floatBadge, { backgroundColor: color }, pos as any]}>
       <Text style={styles.floatEmoji}>{emoji}</Text>
     </View>
   );
@@ -86,7 +80,8 @@ export default function ElevenUnderScreen() {
       s.listings.some((l) => l.price <= 11),
     );
 
-    if (activeCuisine) result = result.filter((s) => s.category === activeCuisine);
+    if (activeCuisine)
+      result = result.filter((s) => s.category === activeCuisine);
 
     if (activePriceRange) {
       result = result.filter((s) => {
@@ -132,11 +127,11 @@ export default function ElevenUnderScreen() {
             : "—"
         }
         distance={store.address?.split(",")[0] ?? "—"}
-        rating={((store.id % 5) * 0.1 + 4.5).toFixed(1)}
-        reviews={(120 + store.id * 14).toString()}
-        branches="1"
-        imageUrl={store.imageUrl ?? FALLBACK}
-        logoUrl={store.imageUrl ?? FALLBACK}
+        rating={Number(((store.id % 5) * 0.1 + 4.5).toFixed(1))}
+        reviewCount={120 + store.id * 14}
+        hasListings={Boolean(cheapBag)}
+        imageUrl={cheapBag?.imageUrl ?? store.imageUrl ?? DEFAULT_LISTING_IMAGE}
+        logoUrl={store.imageUrl ?? cheapBag?.imageUrl ?? DEFAULT_LISTING_IMAGE}
         leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
       />
     );
@@ -177,8 +172,15 @@ export default function ElevenUnderScreen() {
           style={styles.searchBar}
           activeOpacity={0.8}
         >
-          <Feather name="search" size={16} color="#999" style={{ marginRight: 8 }} />
-          <Text style={styles.searchPlaceholder}>Search for restaurants or meals</Text>
+          <Feather
+            name="search"
+            size={16}
+            color="#999"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.searchPlaceholder}>
+            Search for restaurants or meals
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -199,7 +201,9 @@ export default function ElevenUnderScreen() {
               color={sortActive ? CORAL : "#444"}
               style={{ marginRight: 5 }}
             />
-            <Text style={[styles.chipLabel, sortActive && styles.chipLabelActive]}>
+            <Text
+              style={[styles.chipLabel, sortActive && styles.chipLabelActive]}
+            >
               Sort By
             </Text>
             {sortActive ? (
@@ -221,11 +225,19 @@ export default function ElevenUnderScreen() {
               color={cuisineActive ? CORAL : "#555"}
               style={{ marginRight: 5 }}
             />
-            <Text style={[styles.chipLabel, cuisineActive && styles.chipLabelActive]}>
+            <Text
+              style={[
+                styles.chipLabel,
+                cuisineActive && styles.chipLabelActive,
+              ]}
+            >
               {cuisineActive ? activeCuisine : "Cuisine"}
             </Text>
             {cuisineActive ? (
-              <TouchableOpacity onPress={() => setActiveCuisine("")} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+              <TouchableOpacity
+                onPress={() => setActiveCuisine("")}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              >
                 <Feather name="x" size={12} color={CORAL} />
               </TouchableOpacity>
             ) : (
@@ -243,11 +255,16 @@ export default function ElevenUnderScreen() {
               color={priceActive ? CORAL : "#555"}
               style={{ marginRight: 2 }}
             />
-            <Text style={[styles.chipLabel, priceActive && styles.chipLabelActive]}>
+            <Text
+              style={[styles.chipLabel, priceActive && styles.chipLabelActive]}
+            >
               {priceActive ? activePriceRange : "Price"}
             </Text>
             {priceActive ? (
-              <TouchableOpacity onPress={() => setActivePriceRange("")} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+              <TouchableOpacity
+                onPress={() => setActivePriceRange("")}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              >
                 <Feather name="x" size={12} color={CORAL} />
               </TouchableOpacity>
             ) : (
@@ -264,7 +281,9 @@ export default function ElevenUnderScreen() {
         </ScrollView>
       ) : filteredStores.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>No stores with bags under ﷼11 right now.</Text>
+          <Text style={styles.emptyText}>
+            No stores with bags under ﷼11 right now.
+          </Text>
         </View>
       ) : (
         <FlatList
@@ -349,7 +368,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 6,
   },
-  badgeCurrency: { color: "#fff", fontSize: 16, fontWeight: "700", marginTop: 4 },
+  badgeCurrency: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 4,
+  },
   badgeNumber: { color: "#fff", fontSize: 32, fontWeight: "900" },
   floatBadge: {
     position: "absolute",

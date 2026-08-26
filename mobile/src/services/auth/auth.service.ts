@@ -6,6 +6,7 @@ import { AuthUser } from "../../context/types";
 
 export interface SendOtpRequest {
   phoneNumber: string;
+  language?: "en" | "ar";
 }
 
 export interface SendOtpResponse {
@@ -51,9 +52,13 @@ const verifyOtp = async (payload: VerifyOtpRequest): Promise<AuthResponse> => {
   return response.data;
 };
 
-const resendOtp = async (phoneNumber: string): Promise<SendOtpResponse> => {
+const resendOtp = async (
+  phoneNumber: string,
+  language?: "en" | "ar",
+): Promise<SendOtpResponse> => {
   const response = await api.post<SendOtpResponse>(AUTH_ENDPOINTS.RESEND_OTP, {
     phoneNumber,
+    language,
   });
   return response.data;
 };

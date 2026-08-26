@@ -17,7 +17,9 @@ import { useStores } from "../../hooks/useStores";
 import { Store, SurpriseBox } from "../../services/store/store.service";
 import { SortOption } from "./components/SortBottomSheet";
 import { PriceRange } from "./components/PriceBottomSheet";
-import { AllergyOnboardingSheet, ALLERGY_ONBOARDED_KEY } from "../../components/AllergyOnboarding/AllergyOnboardingSheet";
+import { AllergyOnboardingSheet } from "../../components/AllergyOnboarding/AllergyOnboardingSheet";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
+import { ALLERGY_ONBOARDED_KEY } from "../../constants/storage";
 
 const formatPickupTime = (start: string, end: string): string => {
   const fmt = (d: string) =>
@@ -29,7 +31,12 @@ const formatPickupTime = (start: string, end: string): string => {
   return `${fmt(start)} - ${fmt(end)}`;
 };
 
-const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+const haversineKm = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) => {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -42,16 +49,15 @@ const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => 
 };
 
 const formatDistance = (
-  userLat: number, userLng: number,
-  storeLat: number | null, storeLng: number | null,
+  userLat: number,
+  userLng: number,
+  storeLat: number | null,
+  storeLng: number | null,
 ): string => {
   if (storeLat == null || storeLng == null) return "—";
   const km = haversineKm(userLat, userLng, storeLat, storeLng);
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 };
-
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
 
 export default function HomeScreen() {
   const { location } = useLocation();
@@ -77,11 +83,11 @@ export default function HomeScreen() {
     let result = [...(stores ?? [])];
 
     if (activeCuisine) {
-      result = result.filter(s => s.category === activeCuisine);
+      result = result.filter((s) => s.category === activeCuisine);
     }
 
     if (activePriceRange) {
-      result = result.filter(s => {
+      result = result.filter((s) => {
         const price = s.listings[0]?.price ?? 0;
         if (activePriceRange === "1-15") return price <= 15;
         if (activePriceRange === "16-25") return price >= 16 && price <= 25;
@@ -132,10 +138,14 @@ export default function HomeScreen() {
     .sort((a, b) => {
       if (!location) return 0;
       const { latitude, longitude } = location.coords;
-      const distA = a.latitude != null && a.longitude != null
-        ? haversineKm(latitude, longitude, a.latitude, a.longitude) : Infinity;
-      const distB = b.latitude != null && b.longitude != null
-        ? haversineKm(latitude, longitude, b.latitude, b.longitude) : Infinity;
+      const distA =
+        a.latitude != null && a.longitude != null
+          ? haversineKm(latitude, longitude, a.latitude, a.longitude)
+          : Infinity;
+      const distB =
+        b.latitude != null && b.longitude != null
+          ? haversineKm(latitude, longitude, b.latitude, b.longitude)
+          : Infinity;
       return distA - distB;
     })
     .map((s) => ({ store: s, bag: s.listings[0] }))
@@ -185,11 +195,20 @@ export default function HomeScreen() {
                     timeRange={formatPickupTime(bag.pickupStart, bag.pickupEnd)}
                     distance={
                       location
-                        ? formatDistance(location.coords.latitude, location.coords.longitude, store.latitude, store.longitude)
+                        ? formatDistance(
+                            location.coords.latitude,
+                            location.coords.longitude,
+                            store.latitude,
+                            store.longitude,
+                          )
                         : "—"
                     }
-                    imageUrl={bag.imageUrl ?? store.imageUrl ?? FALLBACK_IMAGE}
-                    logoUrl={store.imageUrl ?? bag.imageUrl ?? FALLBACK_IMAGE}
+                    imageUrl={
+                      bag.imageUrl ?? store.imageUrl ?? DEFAULT_LISTING_IMAGE
+                    }
+                    logoUrl={
+                      store.imageUrl ?? bag.imageUrl ?? DEFAULT_LISTING_IMAGE
+                    }
                     leftCount={`${bag.quantity} left`}
                     allergens={bag.allergens}
                     ingredients={bag.ingredients}
@@ -259,11 +278,24 @@ export default function HomeScreen() {
                     }
                     distance={
                       location
-                        ? formatDistance(location.coords.latitude, location.coords.longitude, store.latitude, store.longitude)
+                        ? formatDistance(
+                            location.coords.latitude,
+                            location.coords.longitude,
+                            store.latitude,
+                            store.longitude,
+                          )
                         : "—"
                     }
-                    imageUrl={store.imageUrl ?? FALLBACK_IMAGE}
-                    logoUrl={store.imageUrl ?? FALLBACK_IMAGE}
+                    imageUrl={
+                      store.listings[0]?.imageUrl ??
+                      store.imageUrl ??
+                      DEFAULT_LISTING_IMAGE
+                    }
+                    logoUrl={
+                      store.imageUrl ??
+                      store.listings[0]?.imageUrl ??
+                      DEFAULT_LISTING_IMAGE
+                    }
                     leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
                     hasListings={totalLeft > 0}
                     rating={store.rating}

@@ -3,6 +3,7 @@ import { View, Text, Image } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Store, SurpriseBox } from "../../../services/store/store.service";
 import { CartItemProduct } from "../../../context/CartContext";
+import { DEFAULT_LISTING_IMAGE } from "../../../constants/images";
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-US", {
@@ -10,7 +11,6 @@ const fmtTime = (iso: string) =>
     minute: "2-digit",
     hour12: true,
   });
-
 
 interface CheckoutStoreDetailsProps {
   store: Store | undefined;
@@ -32,17 +32,17 @@ export const CheckoutStoreDetails = ({
         </Text>
         <View className="flex-row items-center">
           <View className="w-12 h-12 rounded-xl border border-gray-100 overflow-hidden mr-3 bg-white shadow-sm shadow-black/5">
-            {store?.imageUrl ? (
-              <Image
-                source={{ uri: store.imageUrl }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            ) : (
-              <View className="w-full h-full items-center justify-center">
-                <Text className="font-bold text-[18px]">🎁</Text>
-              </View>
-            )}
+            <Image
+              source={{
+                uri:
+                  bag?.imageUrl ??
+                  cartItem?.imageUrl ??
+                  store?.imageUrl ??
+                  DEFAULT_LISTING_IMAGE,
+              }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
           </View>
           <View className="flex-1">
             <Text

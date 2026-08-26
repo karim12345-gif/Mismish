@@ -13,10 +13,9 @@ import { Ionicons, Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useStores } from "../../hooks/useStores";
+import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
 
 const CORAL = "#FF7F50";
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400";
 
 interface Props {
   visible: boolean;
@@ -72,7 +71,10 @@ export function FavoritesModal({ visible, onClose }: Props) {
         {/* Header row */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>My Favorites</Text>
-          <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Feather name="x" size={20} color="#888" />
           </TouchableOpacity>
         </View>
@@ -104,7 +106,12 @@ export function FavoritesModal({ visible, onClose }: Props) {
                   style={styles.row}
                 >
                   <Image
-                    source={{ uri: item.imageUrl ?? FALLBACK_IMAGE }}
+                    source={{
+                      uri:
+                        item.listings[0]?.imageUrl ??
+                        item.imageUrl ??
+                        DEFAULT_LISTING_IMAGE,
+                    }}
                     style={styles.rowImage}
                     resizeMode="cover"
                   />
@@ -126,7 +133,9 @@ export function FavoritesModal({ visible, onClose }: Props) {
                         )}
                       </View>
                     ) : (
-                      <Text style={styles.rowUnavailable}>No bags right now</Text>
+                      <Text style={styles.rowUnavailable}>
+                        No bags right now
+                      </Text>
                     )}
                   </View>
 

@@ -7,31 +7,34 @@ datasource db {
 }
 
 model User {
-  id                Int            @id @default(autoincrement())
-  phoneNumber       String?        @unique
-  password          String?
-  email             String?        @unique
-  googleId          String?        @unique
-  appleId           String?        @unique
-  name              String?
-  isVerified        Boolean        @default(false)
-  isBlocked         Boolean        @default(false)
-  otp               String?
-  otpExpiresAt      DateTime?
-  otpResendCount    Int            @default(0)
-  lastOtpSentAt     DateTime?
-  latitude          Float?
-  longitude         Float?
-  address           String?
-  pushToken         String?
-  passwordChangedAt DateTime?
-  allergies         String[]
-  orders            Order[]
-  reviews           Review[]
-  favorites         Favorite[]
-  refreshTokens     RefreshToken[]
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                 Int                 @id @default(autoincrement())
+  phoneNumber        String?             @unique
+  password           String?
+  email              String?             @unique
+  googleId           String?             @unique
+  appleId            String?             @unique
+  name               String?
+  isVerified         Boolean             @default(false)
+  isBlocked          Boolean             @default(false)
+  otp                String?
+  otpExpiresAt       DateTime?
+  otpResendCount     Int                 @default(0)
+  lastOtpSentAt      DateTime?
+  latitude           Float?
+  longitude          Float?
+  address            String?
+  pushToken          String?
+  passwordChangedAt  DateTime?
+  allergies          String[]
+  orders             Order[]
+  reviews            Review[]
+  favorites          Favorite[]
+  rewardAccount      RewardAccount?
+  rewardTransactions RewardTransaction[]
+  rewardRedemptions  RewardRedemption[]
+  refreshTokens      RefreshToken[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 }
 
 enum AdminRole {
@@ -42,16 +45,16 @@ enum AdminRole {
 }
 
 model Admin {
-  id             Int        @id @default(autoincrement())
-  email          String     @unique
-  password       String
-  name           String
-  role           AdminRole  @default(OWNER)
-  isActive       Boolean    @default(true)
-  lastLoginAt    DateTime?
-  auditLogs      AuditLog[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id          Int        @id @default(autoincrement())
+  email       String     @unique
+  password    String
+  name        String
+  role        AdminRole  @default(OWNER)
+  isActive    Boolean    @default(true)
+  lastLoginAt DateTime?
+  auditLogs   AuditLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 enum VendorStatus {
@@ -61,65 +64,90 @@ enum VendorStatus {
   SUSPENDED
 }
 
+enum RewardTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum RewardTransactionType {
+  EARN_ORDER
+  REDEEM_REWARD
+  ADJUSTMENT
+  EXPIRE
+}
+
+enum RewardType {
+  DISCOUNT
+  FREE_DELIVERY
+}
+
+enum RewardRedemptionStatus {
+  ACTIVE
+  USED
+  EXPIRED
+}
+
 model Vendor {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  password     String
-  name         String
-  nameArabic   String?
-  description  String?
-  imageUrl     String?
-  category     String?
-  latitude     Float?
-  longitude    Float?
-  address      String?
-  phone        String?
-  openingHours String?
-  closingHours String?
-  rating                  Float?
-  reviewCount             Int           @default(0)
-  status                  VendorStatus  @default(APPROVED)
-  passwordResetToken      String?
-  passwordResetExpiresAt  DateTime?
-  listings                SurpriseBox[]
-  reviews                 Review[]
-  favorites               Favorite[]
-  createdAt               DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                     Int           @id @default(autoincrement())
+  email                  String        @unique
+  password               String
+  name                   String
+  nameArabic             String?
+  description            String?
+  imageUrl               String?
+  category               String?
+  latitude               Float?
+  longitude              Float?
+  address                String?
+  phone                  String?
+  openingHours           String?
+  closingHours           String?
+  rating                 Float?
+  reviewCount            Int           @default(0)
+  status                 VendorStatus  @default(APPROVED)
+  passwordResetToken     String?
+  passwordResetExpiresAt DateTime?
+  listings               SurpriseBox[]
+  reviews                Review[]
+  favorites              Favorite[]
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 }
 
 model AuditLog {
-  id          Int      @id @default(autoincrement())
-  adminId     Int?
-  admin       Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
-  action      String
-  entityType  String
-  entityId    Int?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  adminId    Int?
+  admin      Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   Int?
+  metadata   Json?
+  createdAt  DateTime @default(now())
 
   @@index([adminId])
   @@index([entityType, entityId])
 }
 
 model SurpriseBox {
-  id            Int      @id @default(autoincrement())
-  name          String
-  description   String?
-  imageUrl      String?
-  price         Float
-  originalPrice Float?
-  quantity      Int
-  allergens     String[]
-  ingredients   String[]
-  pickupStart   DateTime
-  pickupEnd     DateTime
-  vendorId              Int
-  vendor                Vendor   @relation(fields: [vendorId], references: [id])
-  orders                Order[]
-  notifiedFollowersAt   DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                  Int       @id @default(autoincrement())
+  name                String
+  description         String?
+  imageUrl            String?
+  price               Float
+  originalPrice       Float?
+  quantity            Int
+  allergens           String[]
+  ingredients         String[]
+  pickupStart         DateTime
+  pickupEnd           DateTime
+  vendorId            Int
+  vendor              Vendor    @relation(fields: [vendorId], references: [id])
+  orders              Order[]
+  notifiedFollowersAt DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
 
 enum DeliveryMethod {
@@ -144,21 +172,84 @@ enum PickupStatus {
 }
 
 model Order {
-  id              Int            @id @default(autoincrement())
-  userId          Int
-  user            User           @relation(fields: [userId], references: [id])
-  surpriseBoxId   Int
-  surpriseBox     SurpriseBox    @relation(fields: [surpriseBoxId], references: [id])
-  status          OrderStatus    @default(PENDING)
-  pickupStatus    PickupStatus   @default(PENDING)
-  orderCode       String         @unique
-  quantity        Int            @default(1)
-  deliveryMethod  DeliveryMethod
-  deliveryAddress       String?
-  pickupReminderSentAt  DateTime?
-  review                Review?
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  id                                Int                 @id @default(autoincrement())
+  userId                            Int
+  user                              User                @relation(fields: [userId], references: [id])
+  surpriseBoxId                     Int
+  surpriseBox                       SurpriseBox         @relation(fields: [surpriseBoxId], references: [id])
+  status                            OrderStatus         @default(PENDING)
+  pickupStatus                      PickupStatus        @default(PENDING)
+  orderCode                         String              @unique
+  quantity                          Int                 @default(1)
+  deliveryMethod                    DeliveryMethod
+  deliveryAddress                   String?
+  pickupReminderSentAt              DateTime?
+  pickupOneHourReminderSentAt       DateTime?
+  pickupFifteenMinuteReminderSentAt DateTime?
+  completedNotificationSentAt       DateTime?
+  review                            Review?
+  rewardTransactions                RewardTransaction[]
+  rewardRedemptions                 RewardRedemption[]
+  createdAt                         DateTime            @default(now())
+  updatedAt                         DateTime            @updatedAt
+}
+
+model RewardAccount {
+  id             Int        @id @default(autoincrement())
+  userId         Int        @unique
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pointsBalance  Int        @default(0)
+  lifetimePoints Int        @default(0)
+  tier           RewardTier @default(BRONZE)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Reward {
+  id          Int                @id @default(autoincrement())
+  title       String
+  description String?
+  pointsCost  Int
+  type        RewardType
+  value       Float
+  isActive    Boolean            @default(true)
+  redemptions RewardRedemption[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model RewardTransaction {
+  id          Int                   @id @default(autoincrement())
+  userId      Int
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId     Int?
+  order       Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  type        RewardTransactionType
+  points      Int
+  description String
+  createdAt   DateTime              @default(now())
+
+  @@unique([orderId, type])
+  @@index([userId])
+}
+
+model RewardRedemption {
+  id          Int                    @id @default(autoincrement())
+  userId      Int
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rewardId    Int
+  reward      Reward                 @relation(fields: [rewardId], references: [id])
+  orderId     Int?
+  order       Order?                 @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  pointsSpent Int
+  code        String                 @unique
+  status      RewardRedemptionStatus @default(ACTIVE)
+  expiresAt   DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@index([userId])
+  @@index([rewardId])
 }
 
 model Review {

@@ -51,3 +51,13 @@ export const UserBlockSchema = z.object({
     isBlocked: z.boolean(),
   }),
 });
+
+export const SendNotificationSchema = z.object({
+  body: z.object({
+    type: z.enum(["marketing", "order", "announcement"]),
+    audience: z.enum(["all-users", "active-users", "past-orders"]),
+    title: z.string().trim().min(1).max(60),
+    message: z.string().trim().min(1).max(180),
+    imageUrl: z.union([z.url(), z.literal("")]).optional(),
+  }),
+});

@@ -2,6 +2,7 @@
 
 export interface SendOtpBody {
   phoneNumber: string;
+  language?: "en" | "ar";
 }
 export interface RegisterUserBody {
   phoneNumber: string;
@@ -14,6 +15,7 @@ export interface RegisterUserBody {
 export interface LoginUserBody {
   phoneNumber: string;
   password: string;
+  language?: "en" | "ar";
 }
 export interface VerifyOTPBody {
   phoneNumber: string;
@@ -21,6 +23,7 @@ export interface VerifyOTPBody {
 }
 export interface ResendOTPBody {
   phoneNumber: string;
+  language?: "en" | "ar";
 }
 export interface SocialLoginBody {
   provider: "google" | "apple" | "firebase_phone";

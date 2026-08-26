@@ -16,7 +16,10 @@ export const authorize =
         .status(403)
         .json({
           status: "error",
-          message: "Forbidden: insufficient permissions",
+          error: {
+            code: "insufficient_permissions",
+            message: "You do not have permission to perform this action.",
+          },
         });
       return;
     }

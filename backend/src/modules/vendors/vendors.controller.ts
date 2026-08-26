@@ -5,7 +5,10 @@ import { OrderStatus } from "@prisma/client";
 
 const handle = (error: unknown, res: Response, next: NextFunction): void => {
   error instanceof AppError
-    ? res.status(error.statusCode).json({ status: "error", message: error.message })
+    ? res.status(error.statusCode).json({
+        status: "error",
+        error: { code: error.code, message: error.message },
+      })
     : next(error);
 };
 

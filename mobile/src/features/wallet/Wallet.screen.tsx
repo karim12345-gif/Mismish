@@ -1,138 +1,301 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
   Text,
   TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
+  View,
 } from "react-native";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useRedeemReward, useRewards } from "../../hooks/useRewards";
+import { Reward } from "../../services/rewards/rewards.service";
+
+const TIER_TARGETS = {
+  BRONZE: 500,
+  SILVER: 1500,
+  GOLD: 3000,
+  PLATINUM: 3000,
+};
+
+const nextTierLabel = {
+  BRONZE: "Silver",
+  SILVER: "Gold",
+  GOLD: "Platinum",
+  PLATINUM: "Top tier",
+};
+
+const formatDate = (value?: string | null) =>
+  value
+    ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
+        new Date(value),
+      )
+    : "No expiry";
 
 export default function WalletScreen() {
   const navigation = useNavigation();
+  const rewardsQuery = useRewards();
+  const redeemReward = useRedeemReward();
+
+  const account = rewardsQuery.data?.account;
+  const rewards = rewardsQuery.data?.rewards ?? [];
+  const transactions = rewardsQuery.data?.transactions ?? [];
+  const redemptions = rewardsQuery.data?.redemptions ?? [];
+
+  const tierProgress = useMemo(() => {
+    if (!account) return 0;
+    const target = TIER_TARGETS[account.tier];
+    if (account.tier === "PLATINUM") return 1;
+    return Math.min(account.lifetimePoints / target, 1);
+  }, [account]);
+
+  const handleRedeem = (reward: Reward) => {
+    if (!account || account.pointsBalance < reward.pointsCost) {
+      Alert.alert("Not enough points", "Keep rescuing bags to unlock this reward.");
+      return;
+    }
+
+    Alert.alert("Redeem reward?", `${reward.pointsCost} points for ${reward.title}`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Redeem",
+        onPress: () =>
+          redeemReward.mutate(reward.id, {
+            onSuccess: (redemption) => {
+              Alert.alert("Reward unlocked", `Your code is ${redemption.code}`);
+            },
+            onError: (error) => Alert.alert("Could not redeem", error.message),
+          }),
+      },
+    ]);
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView className="flex-1 bg-[#FFFDF8]">
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFDF8" />
 
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 pt-4 pb-4 border-b border-gray-100">
+      <View className="flex-row items-center justify-between px-6 pt-4 pb-4">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="p-2 -ml-2"
+          className="w-10 h-10 rounded-full bg-white items-center justify-center border border-[#E6DED4]"
         >
-          <Feather name="chevron-left" size={24} color="#111" />
+          <Feather name="chevron-left" size={22} color="#112D2B" />
         </TouchableOpacity>
-        <Text className="text-[17px] font-bold text-[#111]">My Wallet</Text>
-        <TouchableOpacity className="p-2 -mr-2">
-          <Feather name="more-vertical" size={24} color="#111" />
+        <Text className="text-[18px] font-black text-[#112D2B]">
+          MishMish Rewards
+        </Text>
+        <TouchableOpacity
+          onPress={() => rewardsQuery.refetch()}
+          className="w-10 h-10 rounded-full bg-white items-center justify-center border border-[#E6DED4]"
+        >
+          <Feather name="refresh-cw" size={18} color="#112D2B" />
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        className="flex-1 px-5 pt-5"
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={rewardsQuery.isRefetching}
+            onRefresh={rewardsQuery.refetch}
+            tintColor="#F26C4F"
+          />
+        }
       >
-        {/* Coral Balance Card */}
-        <View className="bg-[#F26C4F] rounded-[20px] p-6 shadow-sm shadow-[#F26C4F]/30 relative overflow-hidden">
-          {/* Logo Right */}
-          <View className="absolute top-5 right-5 flex-row items-center">
-            <Ionicons name="flash" size={16} color="#FFF" />
-            <Text className="text-white font-black text-sm ml-1 tracking-tight">
-              MishMish
+        {rewardsQuery.isLoading ? (
+          <View className="items-center justify-center py-20">
+            <ActivityIndicator color="#F26C4F" />
+            <Text className="mt-3 text-[#63716D] font-semibold">
+              Loading rewards...
             </Text>
           </View>
-
-          <Text className="text-white/90 font-medium text-[13px] mb-1">
-            Total Balance
-          </Text>
-          <View className="flex-row items-end mb-6">
-            <Text className="text-white font-black text-[34px] tracking-tight leading-none">
-              0.00
+        ) : rewardsQuery.isError ? (
+          <View className="bg-white rounded-[22px] border border-[#F3D3CB] p-5 mt-4">
+            <Text className="text-[#C2410C] font-black text-[16px] mb-2">
+              Rewards are not available
             </Text>
-            <Text className="text-white/80 font-bold text-[14px] ml-1.5 mb-1.5">
-              SAR
+            <Text className="text-[#63716D] font-medium text-[13px] leading-5">
+              {rewardsQuery.error.message}
             </Text>
           </View>
+        ) : (
+          <>
+            <View className="bg-[#F26C4F] rounded-[28px] p-6 shadow-sm shadow-[#F26C4F]/30 relative overflow-hidden mt-2">
+              <View className="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/10" />
+              <View className="absolute -left-10 bottom-4 w-24 h-24 rounded-full bg-white/10" />
 
-          <View className="items-end">
-            <TouchableOpacity className="flex-row items-center bg-white/20 rounded-full px-4 py-2">
-              <Feather name="plus" size={16} color="#FFF" />
-              <Text className="text-white font-bold text-[13px] ml-1.5">
-                Add Credit
+              <View className="flex-row items-center justify-between mb-8">
+                <View className="flex-row items-center">
+                  <Ionicons name="sparkles" size={18} color="#FFF" />
+                  <Text className="text-white font-black text-[15px] ml-2">
+                    Rewards balance
+                  </Text>
+                </View>
+                <View className="bg-white/20 rounded-full px-3 py-1">
+                  <Text className="text-white font-black text-[12px]">
+                    {account?.tier ?? "BRONZE"}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="flex-row items-end">
+                <Text className="text-white font-black text-[46px] tracking-tight leading-none">
+                  {account?.pointsBalance ?? 0}
+                </Text>
+                <Text className="text-white/85 font-extrabold text-[15px] ml-2 mb-2">
+                  pts
+                </Text>
+              </View>
+              <Text className="text-white/85 font-semibold text-[13px] mt-2">
+                {account?.lifetimePoints ?? 0} lifetime points earned
               </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
-        {/* Transactions Toggles */}
-        <Text className="font-extrabold text-[18px] text-[#111] mt-8 mb-4">
-          Wallet Transactions
-        </Text>
-        <View className="flex-row items-center space-x-3 mb-16">
-          <TouchableOpacity className="border border-[#F26C4F] bg-white rounded-full px-5 py-2 mr-3">
-            <Text className="text-[#F26C4F] font-semibold text-[13px]">
-              All Transactions
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="border border-[#111] bg-white rounded-full px-5 py-2 mr-3">
-            <Text className="text-[#111] font-semibold text-[13px]">
-              Credit
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="border border-[#111] bg-white rounded-full px-5 py-2">
-            <Text className="text-[#111] font-semibold text-[13px]">Debit</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Empty State */}
-        <View className="items-center justify-center mt-6 mb-16">
-          {/* Custom Illustration placeholder mapped from standard icons */}
-          <View className="relative w-32 h-24 items-center justify-center mb-8">
-            <View className="w-20 h-14 bg-gray-100 rounded-lg absolute -rotate-12 transform shadow-sm shadow-black/5" />
-            <View className="w-20 h-14 bg-white rounded-lg absolute border border-gray-100 shadow-sm shadow-black/5 flex-row items-center justify-center gap-1.5">
-              <View className="w-2 h-2 rounded-full bg-gray-300" />
-              <View className="w-2 h-2 rounded-full bg-gray-300" />
-              <View className="w-2 h-2 rounded-full bg-gray-300" />
+              <View className="mt-6">
+                <View className="h-2.5 bg-white/25 rounded-full overflow-hidden">
+                  <View
+                    className="h-full bg-white rounded-full"
+                    style={{ width: `${tierProgress * 100}%` }}
+                  />
+                </View>
+                <Text className="text-white/85 font-semibold text-[12px] mt-2">
+                  {account?.tier === "PLATINUM"
+                    ? "You are at the top tier"
+                    : `Progress to ${account ? nextTierLabel[account.tier] : "Silver"}`}
+                </Text>
+              </View>
             </View>
-            <View className="absolute top-1 right-2 w-6 h-6 bg-[#F26C4F] rounded-full items-center justify-center border-2 border-white">
-              <MaterialCommunityIcons name="history" size={14} color="#FFF" />
-            </View>
-          </View>
 
-          <Text className="text-[18px] font-black text-[#111] mb-3">
-            No Transactions Yet
-          </Text>
-          <Text className="text-[#666] font-medium text-[13px] text-center leading-5 px-6">
-            Start saving on delicious food to see your wallet activity here.
-          </Text>
-        </View>
+            {redemptions.length > 0 && (
+              <View className="mt-7">
+                <Text className="font-black text-[19px] text-[#112D2B] mb-3">
+                  Active rewards
+                </Text>
+                {redemptions.map((redemption) => (
+                  <View
+                    key={redemption.id}
+                    className="bg-[#E6F3EE] rounded-[20px] p-4 mb-3 border border-[#366150]/10"
+                  >
+                    <View className="flex-row justify-between items-start">
+                      <View className="flex-1 pr-4">
+                        <Text className="text-[#112D2B] font-black text-[15px]">
+                          {redemption.reward.title}
+                        </Text>
+                        <Text className="text-[#63716D] font-semibold text-[12px] mt-1">
+                          Expires {formatDate(redemption.expiresAt)}
+                        </Text>
+                      </View>
+                      <View className="bg-white rounded-full px-3 py-1.5">
+                        <Text className="text-[#366150] font-black text-[12px]">
+                          {redemption.code}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
 
-        {/* Info Banner */}
-        <View className="border-t border-gray-100 pt-6 pb-20">
-          <View className="bg-[#E6F3EE] rounded-[16px] flex-row p-4 pt-5 items-start">
-            <View className="w-8 h-8 rounded-full border border-[#366150]/30 items-center justify-center mr-3 mt-1">
-              <Feather name="info" size={16} color="#366150" />
-            </View>
-            <View className="flex-1 pr-6">
-              <Text className="text-[#366150] font-bold text-[13px] mb-1">
-                How credits work?
+            <View className="mt-7">
+              <Text className="font-black text-[19px] text-[#112D2B] mb-3">
+                Redeem points
               </Text>
-              <Text className="text-gray-600 font-medium text-[11px] leading-4 pb-2">
-                MishMish credits can be used to book surprises instantly.
-                Credits never expire and are non-refundable.
-              </Text>
+              {rewards.map((reward) => {
+                const canRedeem = (account?.pointsBalance ?? 0) >= reward.pointsCost;
+                return (
+                  <TouchableOpacity
+                    key={reward.id}
+                    onPress={() => handleRedeem(reward)}
+                    disabled={redeemReward.isPending}
+                    className="bg-white rounded-[22px] p-4 mb-3 border border-[#E6DED4] flex-row items-center"
+                  >
+                    <View
+                      className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${
+                        canRedeem ? "bg-[#F26C4F]" : "bg-gray-100"
+                      }`}
+                    >
+                      <MaterialCommunityIcons
+                        name={reward.type === "FREE_DELIVERY" ? "bike-fast" : "ticket-percent"}
+                        size={24}
+                        color={canRedeem ? "#FFF" : "#9CA3AF"}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[#112D2B] font-black text-[15px]">
+                        {reward.title}
+                      </Text>
+                      <Text className="text-[#63716D] font-medium text-[12px] mt-1 leading-4">
+                        {reward.description}
+                      </Text>
+                    </View>
+                    <View className="items-end ml-3">
+                      <Text className="text-[#112D2B] font-black text-[14px]">
+                        {reward.pointsCost}
+                      </Text>
+                      <Text className="text-[#63716D] font-semibold text-[11px]">
+                        points
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          </View>
-        </View>
+
+            <View className="mt-7">
+              <Text className="font-black text-[19px] text-[#112D2B] mb-3">
+                Points history
+              </Text>
+              {transactions.length === 0 ? (
+                <View className="items-center justify-center bg-white rounded-[22px] p-8 border border-[#E6DED4]">
+                  <MaterialCommunityIcons name="history" size={28} color="#A7B3AF" />
+                  <Text className="text-[#112D2B] font-black text-[16px] mt-3">
+                    No points yet
+                  </Text>
+                  <Text className="text-[#63716D] font-medium text-[12px] text-center mt-1">
+                    Complete an order to start earning MishMish Rewards.
+                  </Text>
+                </View>
+              ) : (
+                transactions.map((transaction) => (
+                  <View
+                    key={transaction.id}
+                    className="bg-white rounded-[18px] p-4 mb-3 border border-[#E6DED4] flex-row items-center"
+                  >
+                    <View className="w-10 h-10 rounded-full bg-[#FFF3EF] items-center justify-center mr-3">
+                      <Feather
+                        name={transaction.points > 0 ? "plus" : "minus"}
+                        size={18}
+                        color="#F26C4F"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[#112D2B] font-bold text-[13px]">
+                        {transaction.description}
+                      </Text>
+                      <Text className="text-[#63716D] font-medium text-[11px] mt-1">
+                        {formatDate(transaction.createdAt)}
+                      </Text>
+                    </View>
+                    <Text
+                      className={`font-black text-[14px] ${
+                        transaction.points > 0 ? "text-[#16A34A]" : "text-[#F26C4F]"
+                      }`}
+                    >
+                      {transaction.points > 0 ? "+" : ""}
+                      {transaction.points}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </View>
+          </>
+        )}
       </ScrollView>
-
-      {/* Floating Action Button */}
-      <TouchableOpacity className="absolute bottom-10 right-6 w-14 h-14 rounded-full bg-[#366150] items-center justify-center shadow-md shadow-black/20">
-        <MaterialCommunityIcons name="currency-rial" size={24} color="#FFF" />
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }

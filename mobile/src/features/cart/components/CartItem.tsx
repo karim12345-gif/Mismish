@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 import { CartItemProduct } from "../../../context/CartContext";
+import { DEFAULT_LISTING_IMAGE } from "../../../constants/images";
 
 interface CartItemProps {
   item: CartItemProduct;
@@ -11,7 +12,12 @@ interface CartItemProps {
   maxQuantity?: number;
 }
 
-export const CartItem = ({ item, onIncrement, onDecrement, maxQuantity }: CartItemProps) => {
+export const CartItem = ({
+  item,
+  onIncrement,
+  onDecrement,
+  maxQuantity,
+}: CartItemProps) => {
   const effectiveMax = maxQuantity ?? item.maxQuantity;
   const atMax = effectiveMax !== undefined && item.quantity >= effectiveMax;
   return (
@@ -19,16 +25,11 @@ export const CartItem = ({ item, onIncrement, onDecrement, maxQuantity }: CartIt
       {/* Item Info */}
       <View className="flex-row items-center flex-1 mr-4">
         <View className="w-14 h-14 bg-[#F8F6F2] rounded-xl mr-4 items-center justify-center border border-gray-100 overflow-hidden">
-          {item.imageUrl ? (
-            <React.Fragment>
-              <Image
-                source={{ uri: item.imageUrl }}
-                className="w-full h-full rounded-xl"
-              />
-            </React.Fragment>
-          ) : (
-            <Text className="text-[20px]">🍩</Text>
-          )}
+          <Image
+            source={{ uri: item.imageUrl || DEFAULT_LISTING_IMAGE }}
+            className="w-full h-full rounded-xl"
+            resizeMode="cover"
+          />
         </View>
         <View className="flex-1">
           <Text className="text-[#111] font-bold text-[15px] mb-1">

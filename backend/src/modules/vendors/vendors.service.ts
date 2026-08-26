@@ -1,8 +1,11 @@
 import { OrderStatus } from "@prisma/client";
 import prisma from "../../shared/lib/prisma";
 import { AppError } from "../../shared/lib/AppError";
-import { sendPushNotification } from "../../shared/lib/notifications";
-import { scheduleListingNotification } from "../../shared/lib/notificationScheduler";
+import {
+  cancelPickupReminders,
+  reschedulePickupRemindersForListing,
+} from "../../shared/lib/notificationScheduler";
+import { notificationService } from "../../shared/lib/notificationService";
 
 // ─── Push copy per order status ──────────────────────────────────────────────
 
@@ -80,15 +83,31 @@ export const createListing = async (
     prisma.vendor.findUnique({ where: { id: vendorId }, select: { name: true } }),
   ]);
 
-  // Immediate push: tell followers a new bag was posted right now
-  notifyFavorites(vendorId, {
-    title: `🆕 New bag from ${vendor?.name ?? "a store you follow"}`,
-    body: `${vendor?.name} just posted a surprise bag for SAR ${data.price.toFixed(2)} — grab it before it's gone!`,
-    data: { vendorId },
+  const vendorName = vendor?.name ?? "A favorite store";
+
+  const notificationResult = await notifyFavorites(vendorId, {
+    title: "🥐 New food from one of your favorites!",
+    body: `${vendorName} just added ${listing.name} for ${listing.price.toFixed(2)} SAR.`,
+    data: {
+      eventType: "favorite_offer",
+      vendorId,
+      listingId: listing.id,
+      deepLink: `mismish://stores/${vendorId}/offers/${listing.id}`,
+    },
   });
 
-  // Scheduled push: notify followers again when the pickup window actually opens
-  scheduleListingNotification(listing);
+  console.info("[push] favorite offer delivery", {
+    vendorId,
+    listingId: listing.id,
+    ...notificationResult,
+  });
+
+  if (notificationResult.accepted > 0) {
+    await prisma.surpriseBox.update({
+      where: { id: listing.id },
+      data: { notifiedFollowersAt: new Date() },
+    });
+  }
 
   return listing;
 };
@@ -114,13 +133,22 @@ export const updateListing = async (
 
   const updated = await prisma.surpriseBox.update({ where: { id: listingId }, data: updateData });
 
+  if (pickupStart) {
+    await reschedulePickupRemindersForListing(listingId);
+  }
+
   // Notify followers only if price dropped
   if (data.price !== undefined && data.price < listing.price) {
     const vendor = await prisma.vendor.findUnique({ where: { id: vendorId }, select: { name: true } });
-    notifyFavorites(vendorId, {
+    await notifyFavorites(vendorId, {
       title: `🔥 Price drop at ${vendor?.name ?? "a store you follow"}`,
       body: `${vendor?.name} just dropped their bag to SAR ${data.price.toFixed(2)}. Limited stock!`,
-      data: { vendorId },
+      data: {
+        eventType: "favorite_price_drop",
+        vendorId,
+        listingId,
+        deepLink: `mismish://stores/${vendorId}/offers/${listingId}`,
+      },
     });
   }
 
@@ -164,22 +192,39 @@ export const updateOrderStatus = async (
 
   const updated = await prisma.order.update({
     where: { id: orderId },
-    data: { status },
+    data: {
+      status,
+      ...(status === "COMPLETED" ? { pickupStatus: "COLLECTED" } : {}),
+    },
     include: {
       surpriseBox: { select: { id: true, name: true, price: true } },
       user:        { select: { id: true, name: true, phoneNumber: true } },
     },
   });
 
-  // Push notification to customer
-  const pushCopy = ORDER_STATUS_PUSH[status];
-  if (pushCopy && order.user.pushToken) {
-    sendPushNotification({
-      to: order.user.pushToken,
-      title: pushCopy.title,
-      body: pushCopy.body(order.surpriseBox.vendor.name),
-      data: { orderId: order.id },
-    });
+  if (["COMPLETED", "CANCELLED", "DELIVERED"].includes(status)) {
+    cancelPickupReminders(orderId);
+  }
+
+  if (status === "COMPLETED") {
+    await notificationService.sendOrderCompleted(orderId);
+  } else {
+    const pushCopy = order.status !== status ? ORDER_STATUS_PUSH[status] : undefined;
+    if (pushCopy && order.user.pushToken) {
+      await notificationService.sendToToken(order.user.pushToken, {
+        title: pushCopy.title,
+        body: pushCopy.body(order.surpriseBox.vendor.name),
+        eventType: "order_status",
+        recipientType: "USER",
+        recipientId: order.user.id,
+        entityType: "ORDER",
+        entityId: order.id,
+        data: {
+          orderId: order.id,
+          deepLink: `mismish://orders/${order.id}`,
+        },
+      });
+    }
   }
 
   return updated;
@@ -190,27 +235,57 @@ export const updateOrderStatus = async (
 async function notifyFavorites(
   vendorId: number,
   message: { title: string; body: string; data?: Record<string, unknown> },
-): Promise<void> {
+): Promise<{ favorites: number; tokens: number; accepted: number; failed: number }> {
   try {
     const favorites = await prisma.favorite.findMany({
-      where: { vendorId },
+      where: {
+        vendorId,
+        user: {
+          isBlocked: false,
+          pushToken: { not: null },
+        },
+      },
       include: { user: { select: { pushToken: true } } },
     });
 
-    const tokens = favorites
-      .map((f) => f.user.pushToken)
-      .filter((t): t is string => !!t && t.startsWith("ExponentPushToken"));
+    const tokens = [
+      ...new Set(
+        favorites
+          .map((favorite) => favorite.user.pushToken)
+          .filter((token): token is string => Boolean(token)),
+      ),
+    ];
 
-    // Send in batches of 100 (Expo limit)
-    for (let i = 0; i < tokens.length; i += 100) {
-      const batch = tokens.slice(i, i + 100);
-      await Promise.all(
-        batch.map((to) =>
-          sendPushNotification({ to, ...message }),
-        ),
-      );
-    }
-  } catch {
-    // Non-fatal — don't block the response
+    const eventType =
+      typeof message.data?.eventType === "string"
+        ? message.data.eventType
+        : "favorite_update";
+    const delivery = await notificationService.sendToTokens(
+      tokens,
+      {
+        title: message.title,
+        body: message.body,
+        eventType,
+        recipientType: "USER",
+        entityType: "OFFER",
+        entityId:
+          typeof message.data?.listingId === "number"
+            ? message.data.listingId
+            : undefined,
+        data: message.data,
+      },
+      100,
+    );
+
+    return {
+      favorites: favorites.length,
+      tokens: delivery.devices,
+      accepted: delivery.sent,
+      failed: delivery.failed,
+    };
+  } catch (error) {
+    // Push delivery is best effort and must not block listing mutations.
+    console.error("Favorite notification failed:", error);
+    return { favorites: 0, tokens: 0, accepted: 0, failed: 0 };
   }
 }

@@ -6,26 +6,46 @@ const activeInventoryFilter = {
   pickupEnd: { gt: new Date() },
 } as const;
 
+const publicListingSelect = {
+  id: true,
+  name: true,
+  description: true,
+  imageUrl: true,
+  price: true,
+  originalPrice: true,
+  quantity: true,
+  allergens: true,
+  ingredients: true,
+  pickupStart: true,
+  pickupEnd: true,
+  vendorId: true,
+} as const;
+
+const publicStoreSelect = {
+  id: true,
+  name: true,
+  nameArabic: true,
+  description: true,
+  imageUrl: true,
+  category: true,
+  latitude: true,
+  longitude: true,
+  address: true,
+  openingHours: true,
+  closingHours: true,
+  rating: true,
+  reviewCount: true,
+} as const;
+
 export const getStores = async () =>
   prisma.vendor.findMany({
     where: { status: "APPROVED" },
-    include: {
+    select: {
+      ...publicStoreSelect,
       listings: {
         where: activeInventoryFilter,
         orderBy: { pickupEnd: "asc" },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          imageUrl: true,
-          price: true,
-          originalPrice: true,
-          quantity: true,
-          allergens: true,
-          ingredients: true,
-          pickupStart: true,
-          pickupEnd: true,
-        },
+        select: publicListingSelect,
       },
     },
     orderBy: { name: "asc" },
@@ -36,23 +56,12 @@ export const getStoreById = async (id: number) => {
 
   const store = await prisma.vendor.findFirst({
     where: { id, status: "APPROVED" },
-    include: {
+    select: {
+      ...publicStoreSelect,
       listings: {
         where: activeInventoryFilter,
         orderBy: { pickupEnd: "asc" },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          imageUrl: true,
-          price: true,
-          originalPrice: true,
-          quantity: true,
-          allergens: true,
-          ingredients: true,
-          pickupStart: true,
-          pickupEnd: true,
-        },
+        select: publicListingSelect,
       },
     },
   });
@@ -64,26 +73,13 @@ export const getStoreById = async (id: number) => {
 export const getStoreInventory = async (storeId: number) => {
   if (isNaN(storeId)) throw new AppError(400, "Invalid store ID");
 
-  const store = await prisma.vendor.findFirst({
-    where: { id: storeId, status: "APPROVED" },
-  });
-  if (!store) throw new AppError(404, "Store not found");
-
   return prisma.surpriseBox.findMany({
-    where: { vendorId: storeId, ...activeInventoryFilter },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      imageUrl: true,
-      price: true,
-      originalPrice: true,
-      quantity: true,
-      allergens: true,
-      ingredients: true,
-      pickupStart: true,
-      pickupEnd: true,
+    where: {
+      vendorId: storeId,
+      vendor: { status: "APPROVED" },
+      ...activeInventoryFilter,
     },
+    select: publicListingSelect,
     orderBy: { pickupEnd: "asc" },
   });
 };

@@ -26,6 +26,8 @@ export const CreateListingSchema = z.object({
     quantity:      z.number().int().positive(),
     pickupStart:   z.string().datetime(),
     pickupEnd:     z.string().datetime(),
+    allergens:     z.array(z.string()).optional(),
+    ingredients:   z.array(z.string()).optional(),
   }),
 });
 
@@ -39,6 +41,8 @@ export const UpdateListingSchema = z.object({
     quantity:      z.number().int().min(0).optional(),
     pickupStart:   z.string().datetime().optional(),
     pickupEnd:     z.string().datetime().optional(),
+    allergens:     z.array(z.string()).optional(),
+    ingredients:   z.array(z.string()).optional(),
   }),
 });
 
