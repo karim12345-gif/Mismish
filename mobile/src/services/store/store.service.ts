@@ -19,6 +19,7 @@ export interface SurpriseBox {
 export interface Store {
   id: number;
   name: string;
+  nameArabic: string | null;
   description: string | null;
   imageUrl: string | null;
   category: string | null;

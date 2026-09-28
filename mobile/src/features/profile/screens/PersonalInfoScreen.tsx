@@ -17,6 +17,7 @@ import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../../context/AuthContext";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
+import { useTranslation } from "react-i18next";
 
 export type Country = { flag: string; name: string; code: string };
 
@@ -25,6 +26,7 @@ const COUNTRIES: Country[] = [
 ];
 
 export default function PersonalInfoScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
@@ -77,7 +79,7 @@ export default function PersonalInfoScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <Feather name="chevron-left" size={26} color="#111" />
         </TouchableOpacity>
-        <Text className="text-[#111] text-[17px] font-semibold">Update profile</Text>
+        <Text className="text-[#111] text-[17px] font-semibold">{t("profile.update_profile")}</Text>
       </View>
 
       <KeyboardAvoidingView
@@ -92,26 +94,26 @@ export default function PersonalInfoScreen() {
           {/* First + Last Name */}
           <View className="flex-row gap-3">
             <View className="flex-1">
-              <Text className="text-[#111] text-[13px] font-semibold mb-2">First Name</Text>
+              <Text className="text-[#111] text-[13px] font-semibold mb-2">{t("profile.first_name")}</Text>
               <TextInput
                 value={firstName}
                 onChangeText={setFirstName}
-                placeholder="karim"
+                placeholder={t("profile.first_name_placeholder")}
                 placeholderTextColor="#bbb"
                 autoCapitalize="words"
                 className="border rounded-2xl px-4 py-4 text-[15px] text-[#111]"
                 style={{ borderColor: firstErr ? "#EF4444" : "#E5E7EB" }}
               />
               {firstErr && (
-                <Text className="text-red-500 text-[11px] mt-1">Required</Text>
+                <Text className="text-red-500 text-[11px] mt-1">{t("common.required")}</Text>
               )}
             </View>
             <View className="flex-1">
-              <Text className="text-[#111] text-[13px] font-semibold mb-2">Last Name</Text>
+              <Text className="text-[#111] text-[13px] font-semibold mb-2">{t("profile.last_name")}</Text>
               <TextInput
                 value={lastName}
                 onChangeText={setLastName}
-                placeholder="salim"
+                placeholder={t("profile.last_name_placeholder")}
                 placeholderTextColor="#bbb"
                 autoCapitalize="words"
                 className="border border-gray-200 rounded-2xl px-4 py-4 text-[15px] text-[#111]"
@@ -121,7 +123,7 @@ export default function PersonalInfoScreen() {
 
           {/* Phone Number */}
           <View>
-            <Text className="text-[#111] text-[13px] font-semibold mb-2">Phone Number</Text>
+            <Text className="text-[#111] text-[13px] font-semibold mb-2">{t("profile.phone_number")}</Text>
             <View className="flex-row border border-gray-200 rounded-2xl overflow-hidden">
               <TouchableOpacity
                 onPress={openSheet}
@@ -140,7 +142,7 @@ export default function PersonalInfoScreen() {
 
           {/* Email */}
           <View>
-            <Text className="text-[#111] text-[13px] font-semibold mb-2">Email</Text>
+            <Text className="text-[#111] text-[13px] font-semibold mb-2">{t("profile.email")}</Text>
             <TextInput
               value={email}
               onChangeText={setEmail}
@@ -165,7 +167,7 @@ export default function PersonalInfoScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text className="font-bold text-[15px]" style={{ color: canSave ? "#fff" : "#9CA3AF" }}>
-                Save
+                {t("common.save")}
               </Text>
             )}
           </TouchableOpacity>
@@ -180,7 +182,7 @@ export default function PersonalInfoScreen() {
               {/* Sheet handle */}
               <View className="bg-white rounded-t-3xl pt-4 pb-2 px-5">
                 <View className="w-10 h-1 bg-gray-200 rounded-full self-center mb-4" />
-                <Text className="text-[#111] text-[16px] font-black mb-4">Select Country</Text>
+                <Text className="text-[#111] text-[16px] font-black mb-4">{t("profile.select_country")}</Text>
 
                 {/* Countries — same card style as profile settings */}
                 <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-8">
@@ -191,7 +193,7 @@ export default function PersonalInfoScreen() {
                       activeOpacity={0.6}
                       className={`flex-row items-center px-4 py-4 ${i < COUNTRIES.length - 1 ? "border-b border-gray-100" : ""}`}
                     >
-                      <Text className="flex-1 text-[#222] text-[14px] font-semibold">{c.name}</Text>
+                      <Text className="flex-1 text-[#222] text-[14px] font-semibold">{t("country.saudi_arabia")}</Text>
                       <View className="flex-row items-center gap-2">
                         <Text style={{ fontSize: 18 }}>{c.flag}</Text>
                         {country.code === c.code

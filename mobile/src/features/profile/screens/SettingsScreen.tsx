@@ -15,8 +15,10 @@ import { useNavigation } from "@react-navigation/native";
 import * as Notifications from "expo-notifications";
 import { useAuth } from "../../../context/AuthContext";
 import { AuthServices } from "../../../services/auth/auth.service";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { logout } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -48,9 +50,9 @@ export default function SettingsScreen() {
       setNotificationsEnabled(newStatus === "granted");
     } else {
       Alert.alert(
-        "Turn off notifications",
-        "To disable, go to your phone Settings → Mismish → Notifications.",
-        [{ text: "OK" }]
+        t("settings.turn_off_title"),
+        t("settings.turn_off_message"),
+        [{ text: t("common.ok") }]
       );
     }
   };
@@ -60,10 +62,11 @@ export default function SettingsScreen() {
     try {
       await AuthServices.deleteAccount();
       closeDeleteSheet();
-      setTimeout(logout, 250);
+      // Clear local session after successful server delete
+      await logout();
     } catch {
       setDeleting(false);
-      Alert.alert("Error", "Could not delete account. Please try again.");
+      Alert.alert(t("common.error"), t("settings.delete_error"));
     }
   };
 
@@ -76,7 +79,7 @@ export default function SettingsScreen() {
         >
           <Feather name="arrow-left" size={16} color="#111" />
         </TouchableOpacity>
-        <Text className="text-[#111] text-[20px] font-black">Settings</Text>
+        <Text className="text-[#111] text-[20px] font-black">{t("settings.title")}</Text>
       </View>
 
       <View className="mx-5 mt-2">
@@ -85,7 +88,7 @@ export default function SettingsScreen() {
             <View className="w-8 h-8 rounded-xl bg-[#F4F4F4] items-center justify-center mr-3">
               <Feather name="bell" size={15} color="#366150" />
             </View>
-            <Text className="flex-1 text-[#222] text-[14px] font-semibold">Push notifications</Text>
+            <Text className="flex-1 text-[#222] text-[14px] font-semibold">{t("settings.push_notifications")}</Text>
             <Switch
               value={notificationsEnabled}
               onValueChange={toggleNotifications}
@@ -102,7 +105,7 @@ export default function SettingsScreen() {
             <View className="w-8 h-8 rounded-xl bg-[#FEF2F2] items-center justify-center mr-3">
               <Feather name="user-x" size={15} color="#EF4444" />
             </View>
-            <Text className="flex-1 text-[#EF4444] text-[14px] font-semibold">Delete account</Text>
+            <Text className="flex-1 text-[#EF4444] text-[14px] font-semibold">{t("settings.delete_account")}</Text>
             <Feather name="chevron-right" size={17} color="#CCC" />
           </TouchableOpacity>
         </View>
@@ -121,10 +124,10 @@ export default function SettingsScreen() {
                 </View>
 
                 <Text className="text-[#111] text-[18px] font-black text-center mb-2">
-                  Delete Account
+                  {t("settings.delete_title")}
                 </Text>
                 <Text className="text-gray-400 text-[13px] font-medium text-center mb-8 leading-5">
-                  This will permanently delete your account and all your data. This action cannot be undone.
+                  {t("settings.delete_message")}
                 </Text>
 
                 <View className="flex-row gap-3">
@@ -132,7 +135,7 @@ export default function SettingsScreen() {
                     onPress={closeDeleteSheet}
                     className="flex-1 h-12 rounded-2xl items-center justify-center bg-[#F4F4F4]"
                   >
-                    <Text className="text-[#111] font-bold text-[14px]">Cancel</Text>
+                    <Text className="text-[#111] font-bold text-[14px]">{t("common.cancel")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={handleDeleteAccount}
@@ -140,7 +143,7 @@ export default function SettingsScreen() {
                     className="flex-1 h-12 rounded-2xl items-center justify-center bg-[#EF4444]"
                   >
                     <Text className="text-white font-bold text-[14px]">
-                      {deleting ? "Deleting…" : "Yes, Delete"}
+                      {deleting ? t("settings.deleting") : t("settings.delete_confirm")}
                     </Text>
                   </TouchableOpacity>
                 </View>

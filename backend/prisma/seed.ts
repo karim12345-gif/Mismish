@@ -1,12 +1,19 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const prisma = new PrismaClient({
-  accelerateUrl: process.env.DATABASE_URL,
-});
+const databaseUrl = process.env.DATABASE_URL ?? "";
+const usesAccelerate =
+  databaseUrl.startsWith("prisma+postgres://") ||
+  databaseUrl.startsWith("prisma://") ||
+  databaseUrl.includes("accelerate.prisma-data.net");
+
+const prisma = usesAccelerate
+  ? new PrismaClient({ accelerateUrl: databaseUrl })
+  : new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
 
 async function main() {
   const password = await bcrypt.hash("password123", 10);

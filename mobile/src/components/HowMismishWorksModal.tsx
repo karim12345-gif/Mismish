@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 interface HowMismishWorksModalProps {
   visible: boolean;
@@ -14,6 +15,7 @@ export const HowMismishWorksModal = ({
   onContinue,
 }: HowMismishWorksModalProps) => {
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -46,13 +48,12 @@ export const HowMismishWorksModal = ({
 
           {/* Title */}
           <Text className="text-[#111] font-black text-[22px] text-center mb-4 leading-tight">
-            How does a Mismish{"\n"}Bag work?
+            {t("how_it_works.title")}
           </Text>
 
           {/* Explanation */}
           <Text className="text-[#666] text-center text-[14px] leading-6 mb-8 px-2 font-medium">
-            The store carefully selects the bag contents from available products
-            — items cannot be modified or individually chosen.
+            {t("how_it_works.description")}
           </Text>
 
           {/* Checkbox */}
@@ -71,7 +72,7 @@ export const HowMismishWorksModal = ({
               {dontShowAgain && <Feather name="check" size={14} color="#FFF" />}
             </View>
             <Text className="text-[#555] font-medium text-[14px]">
-              Don't show this again
+              {t("how_it_works.dont_show")}
             </Text>
           </TouchableOpacity>
 
@@ -80,7 +81,9 @@ export const HowMismishWorksModal = ({
             onPress={() => onContinue(dontShowAgain)}
             className="w-full bg-[#FF7F50] py-[15px] rounded-2xl items-center justify-center shadow-sm shadow-[#FF7F50]/20"
           >
-            <Text className="text-white font-bold text-[16px]">Continue</Text>
+            <Text className="text-white font-bold text-[16px]">
+              {t("common.continue")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

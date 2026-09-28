@@ -12,21 +12,25 @@ import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { AuthenticatedStackParamList } from "../../navigation/AuthenticatedNavigator";
 import { useCart } from "../../context/CartContext";
+import { useTranslation } from "react-i18next";
+import { getLocalizedName } from "../../i18n/localizedContent";
 
 const CORAL = "#FF7F50";
 
-const formatPickupTime = (iso: string) => {
+const formatPickupTime = (iso: string, locale: string, todayLabel: string, tomorrowLabel: string) => {
   const d = new Date(iso);
   const today = new Date();
   const isToday =
     d.getFullYear() === today.getFullYear() &&
     d.getMonth() === today.getMonth() &&
     d.getDate() === today.getDate();
-  const label = isToday ? "Today" : "Tomorrow";
-  return `${label}, ${d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}`;
+  const label = isToday ? todayLabel : tomorrowLabel;
+  return `${label}, ${d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hour12: true })}`;
 };
 
 export default function BookingConfirmedScreen() {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("ar") ? "ar-SA" : "en-US";
   const navigation = useNavigation<any>();
   const route =
     useRoute<RouteProp<AuthenticatedStackParamList, "BookingConfirmed">>();
@@ -35,6 +39,11 @@ export default function BookingConfirmedScreen() {
 
   const bag = order.surpriseBox;
   const vendor = bag?.vendor;
+  const vendorName = getLocalizedName(
+    vendor,
+    i18n.language,
+    t("common.app_name"),
+  );
 
   const handleBackToHome = () => {
     clearCart();
@@ -68,8 +77,8 @@ export default function BookingConfirmedScreen() {
           <View style={styles.checkCircle}>
             <Ionicons name="checkmark" size={36} color={CORAL} />
           </View>
-          <Text style={styles.heroTitle}>Booking Confirmed!</Text>
-          <Text style={styles.heroSubtitle}>Your surprise bag is waiting</Text>
+          <Text style={styles.heroTitle}>{t("checkout.booking_confirmed")}</Text>
+          <Text style={styles.heroSubtitle}>{t("checkout.bag_waiting")}</Text>
         </View>
 
         {/* ── Card ── */}
@@ -77,7 +86,7 @@ export default function BookingConfirmedScreen() {
           {/* Store info */}
           <View style={styles.storeRow}>
             <View style={styles.storeInfo}>
-              <Text style={styles.storeName}>{vendor?.name ?? "Store"}</Text>
+              <Text style={styles.storeName}>{vendorName}</Text>
               {vendor?.address && (
                 <View style={styles.addressRow}>
                   <Ionicons name="location-outline" size={12} color="#888" />
@@ -88,15 +97,15 @@ export default function BookingConfirmedScreen() {
               )}
             </View>
             <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedText}>Verified Store</Text>
+              <Text style={styles.verifiedText}>{t("checkout.verified_store")}</Text>
             </View>
           </View>
 
           {/* PIN Display */}
           <View style={styles.pinWrapper}>
-            <Text style={styles.pinTitle}>Your order requires a PIN</Text>
+            <Text style={styles.pinTitle}>{t("checkout.pin_required")}</Text>
             <Text style={styles.pinSubtitle}>
-              Give this 4-digit code to the cashier to pick up your bag.
+              {t("checkout.pin_instruction")}
             </Text>
 
             <View style={styles.pinBoxContainer}>
@@ -111,28 +120,35 @@ export default function BookingConfirmedScreen() {
           {/* Order details grid */}
           <View style={styles.grid}>
             <View style={styles.gridItem}>
-              <Text style={styles.gridLabel}>ORDER ID</Text>
+              <Text style={styles.gridLabel}>{t("checkout.order_id")}</Text>
               <Text style={styles.gridValue}>{order.orderCode}</Text>
             </View>
             <View style={styles.gridItem}>
-              <Text style={styles.gridLabel}>BAG TYPE</Text>
+              <Text style={styles.gridLabel}>{t("checkout.bag_type")}</Text>
               <Text style={styles.gridValue}>
-                {bag?.name ?? "Surprise Bag"}
+                {bag?.name ?? t("store.default_bag")}
               </Text>
             </View>
             <View style={styles.gridItem}>
-              <Text style={styles.gridLabel}>COLLECT BY</Text>
+              <Text style={styles.gridLabel}>{t("checkout.collect_by")}</Text>
               <View style={styles.collectRow}>
                 <Ionicons name="time-outline" size={13} color={CORAL} />
                 <Text
                   style={[styles.gridValue, { color: CORAL, marginLeft: 4 }]}
                 >
-                  {bag?.pickupEnd ? formatPickupTime(bag.pickupEnd) : "—"}
+                  {bag?.pickupEnd
+                    ? formatPickupTime(
+                        bag.pickupEnd,
+                        locale,
+                        t("common.today"),
+                        t("common.tomorrow"),
+                      )
+                    : "—"}
                 </Text>
               </View>
             </View>
             <View style={styles.gridItem}>
-              <Text style={styles.gridLabel}>QUANTITY</Text>
+              <Text style={styles.gridLabel}>{t("checkout.quantity")}</Text>
               <View style={styles.collectRow}>
                 <MaterialCommunityIcons
                   name="shopping-outline"
@@ -140,7 +156,7 @@ export default function BookingConfirmedScreen() {
                   color="#111"
                 />
                 <Text style={[styles.gridValue, { marginLeft: 4 }]}>
-                  1 Surprise Bag
+                  {t("checkout.one_bag")}
                 </Text>
               </View>
             </View>
@@ -155,21 +171,27 @@ export default function BookingConfirmedScreen() {
               size={18}
               color="#111"
             />
-            <Text style={styles.stepsTitle}>Next Steps</Text>
+            <Text style={styles.stepsTitle}>{t("checkout.next_steps")}</Text>
           </View>
 
           {[
             {
               icon: "location-outline",
-              text: `Go to ${vendor?.name ?? "the store"}`,
+              text: t("checkout.go_to_store", {
+                store: getLocalizedName(
+                  vendor,
+                  i18n.language,
+                  t("checkout.the_store"),
+                ),
+              }),
             },
             {
               icon: "chatbubble-ellipses-outline",
-              text: "Tell the staff you have a Mismish booking",
+              text: t("checkout.tell_staff"),
             },
             {
               icon: "key-outline",
-              text: "Show the 4-digit PIN above to collect",
+              text: t("checkout.show_pin"),
             },
           ].map((step, i) => (
             <View key={i} style={styles.stepRow}>
@@ -190,7 +212,7 @@ export default function BookingConfirmedScreen() {
             onPress={handleBackToHome}
             style={styles.primaryBtn}
           >
-            <Text style={styles.primaryBtnText}>Back to Home</Text>
+            <Text style={styles.primaryBtnText}>{t("common.back_to_home")}</Text>
             <Feather name="arrow-right" size={18} color="#fff" />
           </TouchableOpacity>
 
@@ -198,22 +220,22 @@ export default function BookingConfirmedScreen() {
             onPress={handleViewOrders}
             style={styles.secondaryBtn}
           >
-            <Text style={styles.secondaryBtnText}>View My Orders</Text>
+            <Text style={styles.secondaryBtnText}>{t("checkout.view_orders")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Need help? </Text>
+          <Text style={styles.footerText}>{t("checkout.need_help")} </Text>
           <TouchableOpacity>
             <Text
               style={[styles.footerText, { color: CORAL, fontWeight: "700" }]}
             >
-              Contact Support
+              {t("checkout.contact_support")}
             </Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.footerSecure}>SECURE BOOKING · MISMISH</Text>
+        <Text style={styles.footerSecure}>{t("checkout.secure_booking")}</Text>
       </ScrollView>
     </SafeAreaView>
   );

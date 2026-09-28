@@ -32,7 +32,7 @@ export type AuthenticatedStackParamList = {
   Cart: undefined;
   AddNewCard: undefined;
   Favorites: undefined;
-  BookingConfirmed: { order: Order };
+  BookingConfirmed: { order: Order; orders?: Order[] };
   OrderDetails: { orderId: number };
   DeliveryTracking: { order: Order };
   Search: undefined;

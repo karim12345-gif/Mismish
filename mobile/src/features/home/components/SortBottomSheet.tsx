@@ -8,14 +8,15 @@ import {
   StyleSheet,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 export type SortOption = "" | "pickup_time" | "distance";
 
 const CORAL = "#FF7F50";
 
-const OPTIONS: { value: SortOption; label: string; icon: keyof typeof Feather.glyphMap }[] = [
-  { value: "pickup_time", label: "Pickup Time", icon: "clock" },
-  { value: "distance", label: "Distance", icon: "map-pin" },
+const OPTIONS: { value: SortOption; labelKey: string; icon: keyof typeof Feather.glyphMap }[] = [
+  { value: "pickup_time", labelKey: "home.pickup_time", icon: "clock" },
+  { value: "distance", labelKey: "home.distance", icon: "map-pin" },
 ];
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export function SortBottomSheet({ visible, current, onClose, onApply }: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<SortOption>(current);
 
   useEffect(() => { setSelected(current); }, [current, visible]);
@@ -36,7 +38,7 @@ export function SortBottomSheet({ visible, current, onClose, onApply }: Props) {
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.header}>
-            <Text style={styles.title}>Sort By</Text>
+            <Text style={styles.title}>{t("home.sort_by")}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Feather name="x" size={16} color="#555" />
             </TouchableOpacity>
@@ -53,7 +55,7 @@ export function SortBottomSheet({ visible, current, onClose, onApply }: Props) {
                 >
                   <Feather name={opt.icon} size={16} color={active ? CORAL : "#555"} />
                   <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -65,13 +67,13 @@ export function SortBottomSheet({ visible, current, onClose, onApply }: Props) {
               onPress={() => { onApply(""); onClose(); }}
               style={styles.resetBtn}
             >
-              <Text style={styles.resetLabel}>Reset</Text>
+              <Text style={styles.resetLabel}>{t("common.reset")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => { onApply(selected); onClose(); }}
               style={styles.applyBtn}
             >
-              <Text style={styles.applyLabel}>Apply</Text>
+              <Text style={styles.applyLabel}>{t("common.apply")}</Text>
             </TouchableOpacity>
           </View>
         </View>

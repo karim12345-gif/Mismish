@@ -1,8 +1,9 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { getLocales } from "expo-localization";
-import { I18nManager } from "react-native";
+import { DevSettings, I18nManager } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Updates from "expo-updates";
 
 import en from "./locales/en.json";
 import ar from "./locales/ar.json";
@@ -10,6 +11,31 @@ import ar from "./locales/ar.json";
 const resources = {
   en: { translation: en },
   ar: { translation: ar },
+};
+
+export type SupportedLanguage = keyof typeof resources;
+
+export const setAppLanguage = async (language: SupportedLanguage) => {
+  const isRTL = language === "ar";
+  const directionChanged = I18nManager.isRTL !== isRTL;
+
+  await AsyncStorage.setItem("language", language);
+  await i18n.changeLanguage(language);
+  I18nManager.allowRTL(isRTL);
+  I18nManager.forceRTL(isRTL);
+
+  if (!directionChanged) return;
+
+  if (__DEV__) {
+    DevSettings.reload();
+    return;
+  }
+
+  try {
+    await Updates.reloadAsync();
+  } catch {
+    // Text still updates immediately; RTL applies on the next app launch.
+  }
 };
 
 const initI18n = async () => {

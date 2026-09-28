@@ -2,12 +2,14 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useCart } from "../../../context/CartContext";
+import { useTranslation } from "react-i18next";
 
 interface CheckoutPaymentFooterProps {
   onPayPress: () => void;
 }
 
 export const CheckoutPaymentFooter = ({ onPayPress }: CheckoutPaymentFooterProps) => {
+  const { t } = useTranslation();
   const { cartItems, subtotal } = useCart();
 
   const originalTotal = cartItems.reduce(
@@ -22,7 +24,7 @@ export const CheckoutPaymentFooter = ({ onPayPress }: CheckoutPaymentFooterProps
         <View className="bg-[#18C96D] w-full py-2 px-5 flex-row items-center">
           <Text className="text-white text-[16px] mr-2">🪄</Text>
           <Text className="text-white font-black text-[13px]">
-            You'll save <Text className="underline">SAR {savings.toFixed(2)}</Text> on this order
+            {t("checkout.save_message", { amount: savings.toFixed(2) })}
           </Text>
         </View>
       )}
@@ -34,7 +36,7 @@ export const CheckoutPaymentFooter = ({ onPayPress }: CheckoutPaymentFooterProps
         >
           <FontAwesome name="apple" size={20} color="white" className="mt-0.5" />
           <Text className="text-white font-black text-[20px] ml-1 tracking-tight">
-            Pay · SAR {subtotal.toFixed(2)}
+            {t("checkout.pay", { amount: subtotal.toFixed(2) })}
           </Text>
         </TouchableOpacity>
       </View>

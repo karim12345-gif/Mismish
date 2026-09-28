@@ -1,30 +1,256 @@
 {
-  "welcome": {
-    "title": "مرحباً بكم في مشمش!"
+  "common": {
+    "app_name": "مشمش", "apply": "تطبيق", "back_to_home": "العودة للرئيسية", "cancel": "إلغاء",
+    "change": "تغيير", "close": "إغلاق", "confirm": "تأكيد", "continue": "متابعة", "currency": "ر.س",
+    "edit": "تعديل", "error": "خطأ", "go_back": "رجوع", "help": "مساعدة", "loading": "جارٍ التحميل…", "no": "لا",
+    "optional": "اختياري", "required": "مطلوب", "reset": "إعادة تعيين", "save": "حفظ",
+    "skip_for_now": "تخطي الآن", "today": "اليوم", "tomorrow": "غداً", "try_again": "حاول مرة أخرى",
+    "meters": "{{distance}} م", "kilometers": "{{distance}} كم", "yes": "نعم", "ok": "حسناً"
   },
+  "welcome": { "title": "مرحباً بكم في مشمش!" },
   "onboarding": {
-    "step_1_title": "مرحباً بكم في مشمش!",
-    "step_2_title": "اكتشف متاجر بالقرب منك!",
-    "step_3_title": "استعد للمفاجآت",
-    "step_4_title": "احجز وكن في الموعد",
-    "step_5_title": "استلم واستمتع",
-    "step_6_title": "لا تفوت الفرصة",
-    "next": "التالي",
-    "skip": "تخطي الآن",
-    "get_started": "ابدأ الآن"
+    "step_1_title": "مرحباً بكم في مشمش!", "step_2_title": "اكتشف متاجر بالقرب منك!",
+    "step_3_title": "استعد للمفاجآت", "step_4_title": "احجز وكن في الموعد", "step_5_title": "استلم واستمتع",
+    "step_6_title": "لا تفوت الفرصة", "next": "التالي", "skip": "تخطي", "get_started": "ابدأ الآن",
+    "discount_badge": "خصم يصل إلى 70٪", "instant_pickup": "استلام فوري", "meals_saved": "وجبات تم إنقاذها",
+    "co2_kg": "كجم CO₂", "savings_example": "وفرت 230 ر.س",
+    "cards": {
+      "nearby_title": "اكتشف عروض فائض الطعام بالقرب منك",
+      "nearby_description": "استمتع بطعام شهي من المطاعم والمقاهي المحلية بجزء بسيط من السعر.",
+      "value_title": "حقائب مفاجآت بقيمة رائعة",
+      "value_description": "احصل على صناديق طعام مفاجئة بخصم يصل إلى 70٪. طازجة وشهية ومستدامة.",
+      "pickup_title": "احجز واستلم بسهولة",
+      "pickup_description": "احجز حقيبة المفاجآت واستلمها في الوقت المناسب لك باستخدام نظامنا البسيط.",
+      "impact_title": "وفر المال وساهم في حماية الكوكب",
+      "impact_description": "تابع أثرك الإيجابي على البيئة ومحفظتك مع كل طلب."
+    }
   },
   "auth": {
-    "login": "تسجيل الدخول",
-    "signup": "إنشاء حساب"
+    "login": "تسجيل الدخول", "signup": "إنشاء حساب", "welcome_back": "مرحباً بعودتك",
+    "sign_in_to_continue": "سجّل الدخول للمتابعة", "phone_login_description": "أدخل رقم جوالك السعودي وتحقق من رمز الرسالة النصية.",
+    "continue_with_phone": "المتابعة برقم الجوال", "create_account": "إنشاء حساب", "register_description": "أدخل بياناتك للتسجيل",
+    "full_name": "الاسم الكامل", "full_name_placeholder": "أدخل اسمك الكامل", "email": "البريد الإلكتروني",
+    "email_placeholder": "أدخل بريدك الإلكتروني", "password": "كلمة المرور", "password_placeholder": "أنشئ كلمة مرور",
+    "confirm_password": "تأكيد كلمة المرور", "confirm_password_placeholder": "أكد كلمة المرور", "signing_up": "جارٍ إنشاء الحساب…",
+    "already_have_account": "لديك حساب بالفعل؟", "sign_in": "تسجيل الدخول", "signing_in": "جارٍ تسجيل الدخول…",
+    "continue_with_apple": "المتابعة باستخدام Apple", "continue_with_google": "المتابعة باستخدام Google",
+    "continue_with_email": "المتابعة بالبريد الإلكتروني", "or": "أو", "login_failed": "فشل تسجيل الدخول: {{message}}",
+    "apple_sign_in_failed": "فشل تسجيل الدخول باستخدام Apple", "google_services_unavailable": "خدمات Google Play غير متاحة",
+    "google_sign_in_failed": "فشل تسجيل الدخول باستخدام Google: {{message}}",
+    "otp": {
+      "greeting": "أهلاً بك 👋", "login_prompt": "أنشئ حساباً جديداً أو سجّل الدخول إلى حسابك",
+      "send_code": "إرسال الرمز", "verify_title": "تحقق من رقمك",
+      "verify_instruction": "أدخل الرمز المكون من 4 أرقام المرسل إلى", "edit": "تعديل",
+      "time_remaining": "الوقت المتبقي:", "resend_code": "إعادة إرسال الرمز", "continue": "متابعة",
+      "errors": {
+        "invalid_code": "الرمز غير صحيح. أدخل أحدث رمز وصلك في الرسالة النصية.",
+        "expired_code": "انتهت صلاحية الرمز. اطلب رمزاً جديداً وحاول مرة أخرى.",
+        "too_many_attempts": "محاولات كثيرة جداً. انتظر بضع دقائق ثم حاول مرة أخرى.",
+        "invalid_phone": "أدخل رقم جوال سعودي صحيحاً من دون رمز الدولة.",
+        "verification_failed": "تعذر التحقق من الرمز. اطلب رمزاً جديداً."
+      }
+    }
   },
-  "tabs": {
-    "home": "الرئيسية",
-    "settings": "الإعدادات"
+  "allergies": {
+    "title": "هل لديك حساسية من بعض الأطعمة؟ 🥜", "description": "سننبهك قبل طلب أي حقيبة قد تحتوي على هذه المكونات.",
+    "save_selected": "حفظ المحدد ({{count}})", "none": "لا توجد حساسية", "none_long": "ليس لدي حساسية",
+    "selection_summary": "تم تحديد {{count}} — سننبهك في كل حقيبة.", "screen_title": "حساسية الطعام",
+    "preferences_saved": "تم حفظ التفضيلات ✓", "saved_count": "تم حفظ {{count}} من الاختيارات",
+    "saved": "✓ تم الحفظ", "select_to_save": "اختر نوع حساسية للحفظ",
+    "screen_description": "سنعرض تنبيهاً على أي حقيبة تحتوي على هذه المكونات لتقرر قبل الطلب.",
+    "names": {
+      "Gluten": "الغلوتين", "Dairy": "منتجات الألبان", "Nuts": "المكسرات", "Eggs": "البيض",
+      "Fish": "الأسماك", "Shellfish": "المحار والقشريات", "Soy": "الصويا", "Sesame": "السمسم"
+    }
+  },
+  "location": {
+    "denied_title": "لم يتم السماح بالموقع", "denied_message": "يمكنك تفعيله لاحقاً من الإعدادات لنعرض لك الحقائب القريبة.",
+    "open_settings": "فتح الإعدادات", "continue_anyway": "المتابعة على أي حال", "title": "اعثر على حقائب بالقرب منك 📍",
+    "description": "نستخدم موقعك لعرض حقائب الإنقاذ من المطاعم القريبة. لا نخزن موقعك أو نشاركه.",
+    "nearby": "شاهد المتاح بالقرب منك", "closest": "رتب حسب الأقرب أولاً", "map": "استكشف عرض الخريطة", "enable": "تفعيل الموقع"
+  },
+  "home": {
+    "featured_collections": "مجموعات مميزة", "awesome_bags": "حقائب رائعة في منطقتك 🔥",
+    "bags_load_error": "تعذر تحميل الحقائب الآن.", "no_bags": "لا توجد حقائب متاحة الآن.", "all_stores": "كل المتاجر",
+    "available_now": "متاح الآن ⚡", "stores_load_error": "تعذر تحميل المتاجر الآن.",
+    "no_filter_matches": "لا توجد متاجر تطابق عوامل التصفية.", "search_placeholder": "ابحث عن مطاعم أو وجبات",
+    "sort_by": "الترتيب حسب", "cuisine": "نوع المطبخ", "price": "السعر", "price_range": "نطاق السعر",
+    "pickup_time": "وقت الاستلام", "distance": "المسافة", "map_view": "عرض الخريطة", "nearby_deals": "اعثر على عروض قريبة",
+    "rewards": "المكافآت", "points_example": "240 نقطة", "hero_title": "أنقذ الطعام واكسب المكافآت",
+    "hero_description": "أكمل 3 عمليات إنقاذ هذا الأسبوع لتحصل على قسيمة استرداد نقدي بنسبة 50٪.",
+    "learn_more": "اعرف المزيد", "alerts": "تنبيهات", "now": "الآن", "not_available_today": "غير متاح اليوم",
+    "starts_at": "يبدأ من", "eleven_under": "11 ر.س وأقل", "eleven_under_empty": "لا توجد متاجر لديها حقائب بأقل من 11 ر.س الآن.",
+    "discovering": "جارٍ تحديد الموقع…", "riyadh": "الرياض", "fetching_location": "جارٍ جلب الموقع…",
+    "tap_location": "اضغط لتحديد الموقع",
+    "categories": { "pizza": "بيتزا", "sushi": "سوشي", "healthy": "صحي", "burgers": "برجر" },
+    "collections": {
+      "eleven_under": "11 ر.س وأقل", "catering": "تموين", "dessert": "حلويات",
+      "trending": "رائج", "shawarma": "شاورما"
+    }
+  },
+  "cuisines": {
+    "Restaurant": "مطعم", "Café": "مقهى", "Bakery": "مخبز", "Grocery": "بقالة",
+    "Sweets": "حلويات", "Fast Food": "وجبات سريعة", "Pizza": "بيتزا", "Sandwiches": "ساندويتشات",
+    "Juice & Smoothies": "عصائر وسموذي", "Sushi / Japanese": "سوشي وياباني", "Other": "أخرى"
+  },
+  "map": {
+    "search_placeholder": "ابحث عن مطاعم أو وجبات أو مطابخ", "available_now": "متاح الآن", "my_favorites": "مفضلاتي",
+    "when_available": "وقت التوفر", "later_today": "لاحقاً اليوم", "live": "مباشر", "favorites_only": "المفضلة فقط",
+    "nearby": "الأقرب", "earliest_pickup": "أقرب وقت استلام", "bag_left": "متبقي {{count}} حقيبة",
+    "view_bag": "عرض الحقيبة", "no_bags": "لا توجد حقائب", "save_favorite_hint": "اضغط على القلب بجانب أي مطعم لحفظه هنا.",
+    "saved_restaurants": "{{count}} من المطاعم المحفوظة", "no_favorites": "لا توجد مفضلات بعد"
+  },
+  "favorites": {
+    "title": "مفضلاتي", "empty_title": "لا توجد مفضلات بعد", "empty_description": "اضغط على القلب بجانب أي مطعم لحفظه هنا.",
+    "no_bags": "لا توجد حقائب متاحة", "no_bags_now": "لا توجد حقائب الآن", "explore": "استكشف المطاعم"
+  },
+  "store": {
+    "save_discount": "وفر {{percent}}٪", "only_left": "متبقي {{count}} حقائب فقط!", "get_directions": "الحصول على الاتجاهات",
+    "options": "الخيارات", "self_pickup": "استلام ذاتي", "availability_time": "وقت التوفر", "no_bags": "لا توجد حقائب متاحة الآن.",
+    "explore_branches": "استكشف الفروع الأخرى", "go_to_checkout": "الانتقال للدفع", "new_cart_title": "بدء سلة جديدة؟",
+    "new_cart_message": "لديك منتجات من متجر مختلف. هل تريد إفراغ السلة والإضافة من هذا المتجر؟",
+    "clear_cart": "نعم، أفرغ السلة", "left": "متبقي", "add_to_cart": "أضف إلى السلة", "sold_out": "نفدت الكمية",
+    "availability_title": "وقت التوفر", "default_bag": "حقيبة مفاجآت",
+    "default_description": "تشكيلة شهية من المخبوزات أو الحلويات الطازجة."
+  },
+  "cart": {
+    "title": "سلتي", "complement_title": "أكمل حقيبتك", "complement_description": "استمتع بهذه الإضافات عبر إضافتها إلى طلبك",
+    "empty_title": "السلة فارغة", "empty_description": "يبدو أنك لم تضف أي حقائب بعد.", "subtotal": "المجموع الفرعي",
+    "checkout": "الانتقال للدفع", "reservation": "احجزها قبل نفادها", "milestone": "أضف {{amount}} ر.س للوصول إلى هدفك التالي",
+    "milestone_complete": "هذا الطلب يكمل هدفاً من التحدي!"
+  },
+  "checkout": {
+    "no_bag_title": "خطأ", "no_bag_message": "لم يتم اختيار حقيبة. ارجع وأضف حقيبة.",
+    "order_failed": "فشل الطلب", "order_failed_message": "تعذر إتمام الطلب. حاول مرة أخرى.",
+    "order_details": "تفاصيل طلبك", "held_for": "سيتم حجز حقيبتك لمدة", "store_details": "تفاصيل المتجر",
+    "pickup_time": "وقت الاستلام", "delivery_address": "عنوان التوصيل", "delivery_window": "اختر فترة التوصيل",
+    "fastest_time": "أسرع وقت", "scheduled_time": "وقت مجدول", "delivered_from": "سيتم توصيل طلبك من",
+    "select_delivery_slot": "اختر فترة التوصيل", "nearest_delivery_time": "أقرب وقت متاح لجدولة التوصيل هو",
+    "confirm_delivery_slot": "تأكيد فترة التوصيل", "self_pickup": "استلام ذاتي", "delivery": "توصيل",
+    "order_items": "تفاصيل الطلب", "item": "عنصر", "each": "للقطعة", "save_message": "ستوفر {{amount}} ر.س في هذا الطلب",
+    "pay": "ادفع · {{amount}} ر.س", "rewards_title": "مكافآت مشمش 🎁", "rewards_milestone": "هذا الطلب يكمل الهدف الأول",
+    "payment_method": "طريقة الدفع", "apple_pay": "Apple Pay", "order_summary": "ملخص الطلب",
+    "before_discount": "الإجمالي قبل الخصم", "discount": "خصم مشمش 🪄", "subtotal": "المجموع الفرعي",
+    "vat_included": "جميع الأسعار شاملة ضريبة القيمة المضافة", "total_amount": "المبلغ الإجمالي",
+    "confirm_order": "تأكيد الطلب", "order_type": "نوع الطلب", "pickup_date": "تاريخ الاستلام",
+    "find_another_bag": "العثور على حقيبة أخرى", "coupon": "القسائم", "coupon_placeholder": "أدخل رمز القسيمة",
+    "booking_confirmed": "تم تأكيد الحجز!", "bag_waiting": "حقيبة المفاجآت بانتظارك", "verified_store": "متجر موثق",
+    "pin_required": "يتطلب طلبك رمز استلام", "pin_instruction": "أعط هذا الرمز المكون من 4 أرقام لموظف المتجر لاستلام حقيبتك.",
+    "order_id": "رقم الطلب", "bag_type": "نوع الحقيبة", "collect_by": "موعد الاستلام", "quantity": "الكمية",
+    "one_bag": "حقيبة مفاجآت واحدة", "next_steps": "الخطوات التالية", "view_orders": "عرض طلباتي",
+    "need_help": "تحتاج مساعدة؟", "contact_support": "تواصل مع الدعم", "secure_booking": "حجز آمن · مشمش",
+    "tracking": "تتبع الطلب", "estimated_delivery": "التوصيل المتوقع:", "courier": "مندوب التوصيل",
+    "mismish_delivery": "توصيل مشمش", "your_location": "موقعك", "total_paid": "المبلغ المدفوع",
+    "detecting_location": "جارٍ تحديد موقعك…", "estimating": "جارٍ التقدير…",
+    "sold_out_title": "نفدت للتو!", "expired_title": "انتهى الوقت!",
+    "sold_out_description": "حصل شخص آخر على آخر حقيبة. اكتشف حقائب أخرى قريبة منك!",
+    "expired_description": "انتهت فترة استلام هذه الحقيبة. لا تقلق، ما زالت هناك حقائب أخرى بانتظار إنقاذك!",
+    "go_to_store": "اذهب إلى {{store}}", "the_store": "المتجر",
+    "tell_staff": "أخبر الموظف أن لديك حجزاً من مشمش", "show_pin": "اعرض رمز الاستلام المكوّن من 4 أرقام",
+    "delivery_headlines": {
+      "PENDING": "تم الطلب — جارٍ البحث عن مندوب", "CONFIRMED": "تم تعيين المندوب",
+      "READY_FOR_PICKUP": "المندوب في المتجر", "ON_THE_WAY": "المندوب في طريقه إليك",
+      "DELIVERED": "تم توصيل طلبك!"
+    }
+  },
+  "payment": {
+    "add_card": "إضافة بطاقة جديدة", "name_on_card": "الاسم على البطاقة", "name_placeholder": "أدخل الاسم على البطاقة",
+    "card_number": "رقم البطاقة", "expiry_date": "تاريخ الانتهاء", "expiry_placeholder": "شهر/سنة", "cvv": "رمز الأمان",
+    "my_cards": "بطاقاتي", "empty_title": "لا توجد طرق دفع بعد", "empty_description": "أضف طريقة دفع لإتمام الطلبات بسرعة وسهولة.",
+    "add_new_card": "إضافة بطاقة جديدة"
+  },
+  "orders": {
+    "title": "الطلبات", "details": "تفاصيل الطلب", "load_error": "تعذر تحميل هذا الطلب.", "number": "الطلب رقم {{id}}",
+    "status": "الحالة", "item": "العنصر", "pickup_starts": "بداية الاستلام", "pickup_ends": "نهاية الاستلام",
+    "pickup_code": "رمز الاستلام", "one_bag_price": "حقيبة مفاجآت واحدة · {{price}} ر.س", "rate_bag": "قيّم الحقيبة",
+    "rated": "تقييمك {{rating}} من 5", "order_again": "اطلب مرة أخرى", "view_pin": "عرض الرمز", "directions": "الاتجاهات",
+    "list_load_error": "تعذر تحميل الطلبات.", "empty_active": "ليس لديك طلبات قيد التنفيذ حالياً.",
+    "pin_instruction": "أظهر الرمز لموظف المتجر عند الكاونتر لاستلام حقيبة المفاجآت.", "rate_title": "قيّم حقيبتك",
+    "review_placeholder": "شارك تجربتك (اختياري)", "submit_review": "إرسال التقييم", "maybe_later": "ربما لاحقاً",
+    "active": "النشطة", "past": "الطلبات السابقة", "no_active": "لا توجد طلبات نشطة", "no_past": "لا توجد طلبات سابقة",
+    "cancel_order": "إلغاء الطلب", "cancelling": "جارٍ الإلغاء…", "mark_collected": "تأكيد الاستلام", "marking": "جارٍ التأكيد…",
+    "not_available": "غير متاح", "fallback_order": "طلب مشمش",
+    "rating_labels": { "1": "سيئة جداً", "2": "سيئة", "3": "مقبولة", "4": "جيدة", "5": "رائعة! 🎉" },
+    "statuses": {
+      "PENDING": "قيد الانتظار", "CONFIRMED": "مؤكد", "READY_FOR_PICKUP": "جاهز للاستلام",
+      "ON_THE_WAY": "في الطريق", "DELIVERED": "تم التوصيل", "COMPLETED": "تم الاستلام",
+      "CANCELLED": "ملغي", "REJECTED": "مرفوض", "REFUNDED": "تم رد المبلغ"
+    },
+    "tracking_steps": {
+      "PENDING": "تم تقديم الطلب", "CONFIRMED": "تم تعيين المندوب", "READY_FOR_PICKUP": "في المتجر",
+      "ON_THE_WAY": "في الطريق", "DELIVERED": "تم التوصيل"
+    }
+  },
+  "search": {
+    "prompt": "ماذا تشتهي اليوم؟", "description": "ابحث عن متاجرك المفضلة وسنساعدك في العثور على الأقرب",
+    "no_results": "لا توجد نتائج", "no_match": "لا توجد متاجر تطابق «{{query}}»", "recent": "عمليات البحث الأخيرة", "clear_all": "مسح الكل"
+  },
+  "wallet": {
+    "title": "مكافآت مشمش", "not_enough_title": "النقاط غير كافية", "not_enough_message": "واصل إنقاذ الحقائب لفتح هذه المكافأة.",
+    "redeem_title": "استبدال المكافأة؟", "redeem_message": "{{points}} نقطة مقابل {{title}}", "unlocked_title": "تم فتح المكافأة",
+    "unlocked_message": "رمزك هو {{code}}", "redeem_error": "تعذر الاستبدال", "loading": "جارٍ تحميل المكافآت…",
+    "unavailable": "المكافآت غير متاحة", "balance": "رصيد المكافآت", "points_short": "نقطة",
+    "lifetime": "إجمالي النقاط المكتسبة", "active_rewards": "المكافآت النشطة", "expires": "تنتهي في {{date}}",
+    "redeem_points": "استبدال النقاط", "points": "{{count}} نقطة", "history": "سجل النقاط", "no_points": "لا توجد نقاط بعد",
+    "no_points_description": "أكمل طلباً لتبدأ في كسب مكافآت مشمش.", "no_expiry": "بدون انتهاء",
+    "redeem": "استبدال", "top_tier": "وصلت إلى أعلى فئة", "progress_to": "التقدم إلى {{tier}}",
+    "tiers": { "BRONZE": "برونزية", "SILVER": "فضية", "GOLD": "ذهبية", "PLATINUM": "بلاتينية", "TOP": "أعلى فئة" }
+  },
+  "profile": {
+    "account": "الحساب", "your_impact": "أثرك", "sar_saved": "ريالات تم توفيرها", "meals_rescued": "وجبات تم إنقاذها",
+    "co2_kg": "كجم CO₂", "invite_friends": "ادعُ أصدقاءك", "invite_title": "ادعُ أصدقاءك واكسب المكافآت 🎁",
+    "invite_description": "شارك رمزك لتحصلا معاً على مكافأة عند أول عملية إنقاذ.", "your_code": "رمزك", "share": "مشاركة",
+    "share_friends": "شارك مع الأصدقاء", "personal_info": "المعلومات الشخصية", "payment_method": "طريقة الدفع",
+    "country": "الدولة", "sign_in": "تسجيل الدخول", "food_allergies": "حساسية الطعام", "language": "اللغة",
+    "help": "المساعدة", "contact_support": "تواصل مع الدعم", "faqs": "الأسئلة الشائعة", "settings": "الإعدادات",
+    "terms": "الشروط والأحكام", "logout": "تسجيل الخروج", "dev_reset": "للمطور: إعادة تعيين حالة التطبيق",
+    "logout_title": "تسجيل الخروج", "logout_message": "هل أنت متأكد من رغبتك في تسجيل الخروج؟", "logout_confirm": "نعم، تسجيل الخروج",
+    "select_country": "اختر الدولة", "complete_profile": "إكمال الملف الشخصي", "almost_there": "أوشكت على الانتهاء!",
+    "complete_description": "نحتاج بعض التفاصيل لإكمال حجز حقيبة المفاجآت وضمان استلام سلس.", "first_name": "الاسم الأول",
+    "first_name_placeholder": "مثال: كريم", "last_name": "اسم العائلة", "last_name_placeholder": "مثال: سليم",
+    "email_optional": "البريد الإلكتروني (اختياري)", "email_placeholder": "مثال: hello@mismish.app", "phone_number": "رقم الجوال",
+    "verified_identity": "هوية موثقة", "verified": "موثق", "agree": "أوافق على", "terms_conditions": "الشروط والأحكام",
+    "and": "و", "privacy": "سياسة الخصوصية", "booking_required": "مطلوب لإتمام الحجز",
+    "save_failed": "تعذر حفظ الملف الشخصي. حاول مرة أخرى.", "secure_checkout": "دفع آمن • مشمش العربية V1.0",
+    "update_profile": "تحديث الملف الشخصي", "email": "البريد الإلكتروني",
+    "under_development": "هذه الميزة قيد التطوير حالياً. يرجى العودة لاحقاً!",
+    "share_message": "استخدم رمزي {{code}} في مشمش لإنقاذ الطعام وتوفير المال! 🌱",
+    "invited": "تمت دعوتهم", "joined": "انضموا", "earned": "المكتسب"
   },
   "settings": {
-    "title": "الإعدادات",
-    "language": "اللغة",
-    "english": "الإنجليزية",
-    "arabic": "العربية"
-  }
+    "title": "الإعدادات", "language": "اللغة", "english": "الإنجليزية", "arabic": "العربية",
+    "push_notifications": "الإشعارات", "turn_off_title": "إيقاف الإشعارات",
+    "turn_off_message": "لإيقافها، انتقل إلى إعدادات الهاتف ← مشمش ← الإشعارات.", "delete_account": "حذف الحساب",
+    "delete_title": "حذف الحساب", "delete_message": "سيؤدي ذلك إلى حذف حسابك وجميع بياناتك نهائياً. لا يمكن التراجع عن هذا الإجراء.",
+    "delete_error": "تعذر حذف الحساب. حاول مرة أخرى.", "deleting": "جارٍ الحذف…", "delete_confirm": "نعم، احذف"
+  },
+  "country": { "title": "الدولة", "search": "ابحث عن دولة…", "empty": "لم يتم العثور على دول", "saudi_arabia": "المملكة العربية السعودية" },
+  "faq": {
+    "items": {
+      "what": { "q": "ما هو مشمش؟", "a": "مشمش تطبيق لإنقاذ الطعام يربطك بالمطاعم والمقاهي التي تبيع فائض الطعام بأسعار مخفضة، لتوفر المال وتقلل الهدر." },
+      "allergies": { "q": "لدي حساسية من بعض الأطعمة", "a": "يمكنك تحديد حساسيتك الغذائية من تبويب الحساب ضمن حساسية الطعام. سنعرض تحذيراً على أي حقيبة تحتوي على تلك المكونات." },
+      "completed": { "q": "كيف أعرف أن طلبي قد اكتمل؟", "a": "ستصلك رسالة إشعار، ويمكنك أيضاً متابعة حالة الطلب من تبويب الطلبات." },
+      "missed": { "q": "فاتني وقت الاستلام", "a": "إذا فاتتك فترة الاستلام، يعتبر الطلب مكتملاً ولا يتم إصدار استرداد. يرجى استلام الطلب خلال الوقت الموضح على الحقيبة." },
+      "cancel": { "q": "كيف يمكنني إلغاء طلبي؟", "a": "يمكن إلغاء الطلب قبل بدء فترة الاستلام. انتقل إلى تبويب الطلبات، واختر الطلب، ثم اضغط إلغاء." },
+      "closed": { "q": "كان المتجر مغلقاً وقت الاستلام", "a": "إذا كان المتجر مغلقاً بشكل غير متوقع خلال فترة الاستلام، فتواصل معنا من قسم المساعدة وسنعالج الأمر لك." }
+    }
+  },
+  "support": {
+    "title": "الدعم", "assistant": "مساعد مشمش الذكي", "loading_orders": "جارٍ تحميل طلباتك…", "online": "متصل · ردود فورية",
+    "welcome": "مرحباً! 👋 أنا مساعد دعم مشمش. يمكنني مساعدتك في تتبع الطلبات أو طلب استرداد المبلغ أو الإجابة عن أسئلتك. كيف يمكنني مساعدتك اليوم؟",
+    "connection_error": "عذراً، تعذر الاتصال الآن. راسلنا على {{email}} وسنساعدك سريعاً.", "human_title": "تحدث مع أحد ممثلي الدعم 🤝",
+    "human_description": "سنرسل سجل المحادثة كاملاً إلى فريق الدعم وسيردون عليك خلال بضع ساعات.", "email_team": "مراسلة فريق الدعم",
+    "input_placeholder": "اسألني عن أي شيء…", "contact_title": "تواصل مع الدعم", "email_us": "راسلنا على {{email}}",
+    "email_subject": "طلب دعم من مشمش",
+    "email_body": "مرحباً فريق دعم مشمش،\n\nيحتاج أحد العملاء إلى المساعدة. تجدون سجل المحادثة أدناه:\n\n{{transcript}}\n\nيرجى المتابعة. شكراً لكم.",
+    "no_conversation": "(لا توجد محادثة بعد)", "customer": "العميل", "ai": "المساعد", "quick_track": "تتبع طلبي",
+    "quick_refund": "طلب استرداد", "quick_wrong": "الطلب غير صحيح", "quick_human": "التحدث مع الدعم"
+  },
+  "how_it_works": {
+    "title": "كيف تعمل حقيبة مشمش؟",
+    "description": "يختار المتجر محتويات الحقيبة بعناية من المنتجات المتاحة، ولا يمكن تعديل العناصر أو اختيارها بشكل فردي.",
+    "dont_show": "لا تعرض هذا مرة أخرى"
+  },
+  "navigation": { "home": "الرئيسية", "map": "الخريطة", "orders": "الطلبات", "account": "الحساب" },
+  "tabs": { "home": "الرئيسية", "settings": "الإعدادات" }
 }

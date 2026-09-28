@@ -1,14 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { AppError } from "../../shared/lib/AppError";
+import { handleControllerError as handle } from "../../shared/http/handleControllerError";
 import * as storesService from "./stores.service";
-
-const handle = (error: unknown, res: Response, next: NextFunction): void => {
-  error instanceof AppError
-    ? res
-        .status(error.statusCode)
-        .json({ status: "error", message: error.message })
-    : next(error);
-};
 
 export const getStores = async (
   _req: Request,

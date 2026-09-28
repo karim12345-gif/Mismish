@@ -6,7 +6,7 @@ The existing Firebase/Expo provider remains behind `sendPushNotification`.
 Automatic triggers are currently limited to:
 
 - A newly published offer notifying users who favorited its merchant
-- Pickup reminders 1 hour and 15 minutes before `SurpriseBox.pickupStart`
+- Pickup reminders 30 and 15 minutes before `SurpriseBox.pickupEnd`
 - A one-time completion notification when an order becomes `COMPLETED`
 
 Independent database timestamps prevent duplicate reminders and completion
@@ -14,8 +14,9 @@ messages across restarts. Timers re-check current status and pickup time before
 delivery. Updating a listing pickup time reschedules active orders. Cancelled,
 delivered, completed, or collected orders have their timers removed.
 
-For local manual testing, run with `PICKUP_REMINDER_TEST_MODE=true` to use 2- and
-1-minute offsets. This flag is ignored in production.
+For local manual testing, run with `PICKUP_REMINDER_TEST_MODE=true` to send the
+30- and 15-minute reminders 2 and 1 minutes before pickup ends. This flag is
+ignored in production.
 
 ## High-Level Overview
 
@@ -30,6 +31,12 @@ For local manual testing, run with `PICKUP_REMINDER_TEST_MODE=true` to use 2- an
 ---
 
 ## API Structure
+
+Backend feature modules keep routes, schemas, controllers, and stable service
+facades at the module root. Responsibility-based implementations live under
+each module's `services/` directory. Shared email and notification facades keep
+provider-specific code out of business modules. See
+[CODE_ORGANIZATION.md](./CODE_ORGANIZATION.md) for the current code map.
 
 ### Authentication Endpoints
 - `POST /api/auth/user/signup` - Customer registration

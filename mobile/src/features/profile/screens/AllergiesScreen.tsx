@@ -10,9 +10,11 @@ import { useUserAllergies } from "../../../context/AllergyContext";
 import { useUpdateAllergies } from "../../../hooks/useAllergies";
 import { useAuth } from "../../../context/AuthContext";
 import { ALLERGY_PENDING_KEY } from "../../../constants/storage";
+import { useTranslation } from "react-i18next";
 
 export default function AllergiesScreen() {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const { userAllergies, setUserAllergies } = useUserAllergies();
   const { mutate: saveAllergies } = useUpdateAllergies();
   const { isAuthenticated } = useAuth();
@@ -38,8 +40,8 @@ export default function AllergiesScreen() {
     const finish = () => {
       Toast.show({
         type: "success",
-        text1: "Preferences saved ✓",
-        text2: `${selected.length} allergen${selected.length > 1 ? "s" : ""} saved`,
+        text1: t("allergies.preferences_saved"),
+        text2: t("allergies.saved_count", { count: selected.length }),
         visibilityTime: 2000,
         topOffset: 60,
       });
@@ -63,12 +65,14 @@ export default function AllergiesScreen() {
         >
           <Feather name="arrow-left" size={16} color="#111" />
         </TouchableOpacity>
-        <Text className="text-[#111] text-[20px] font-black">Food Allergies</Text>
+        <Text className="text-[#111] text-[20px] font-black">
+          {t("allergies.screen_title")}
+        </Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         <Text className="text-gray-400 text-[13px] font-medium mb-6 leading-5">
-          We'll show a warning on any bag that contains these ingredients so you can decide before ordering.
+          {t("allergies.screen_description")}
         </Text>
 
         {/* Allergen chips */}
@@ -91,7 +95,7 @@ export default function AllergiesScreen() {
                   className="font-bold text-[14px]"
                   style={{ color: active ? "#FF7F50" : "#444" }}
                 >
-                  {allergen.label}
+                  {t(`allergies.names.${allergen.id}`)}
                 </Text>
               </TouchableOpacity>
             );
@@ -113,10 +117,10 @@ export default function AllergiesScreen() {
             style={{ color: selected.length === 0 ? "#9CA3AF" : "#fff" }}
           >
             {saved
-              ? "✓ Saved"
+              ? t("allergies.saved")
               : selected.length > 0
-              ? `Save ${selected.length} Allergen${selected.length > 1 ? "s" : ""}`
-              : "Select an allergen to save"}
+              ? t("allergies.save_selected", { count: selected.length })
+              : t("allergies.select_to_save")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

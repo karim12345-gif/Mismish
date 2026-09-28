@@ -6,6 +6,7 @@ import { SortBottomSheet, SortOption } from "./SortBottomSheet";
 import { CuisineBottomSheet } from "./CuisineBottomSheet";
 import { PriceBottomSheet, PriceRange } from "./PriceBottomSheet";
 import { ALL_CUISINES } from "../../../constants/cuisines";
+import { useTranslation } from "react-i18next";
 
 const CORAL = "#FF7F50";
 
@@ -28,6 +29,7 @@ export const HomeFilters = ({
   onCuisineChange,
   onPriceChange,
 }: Props) => {
+  const { t } = useTranslation();
   const [sortOpen, setSortOpen] = useState(false);
   const [cuisineOpen, setCuisineOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
@@ -62,7 +64,7 @@ export const HomeFilters = ({
               className="text-[13px] font-bold mr-1"
               style={{ color: sortActive ? CORAL : "#222" }}
             >
-              Sort By
+              {t("home.sort_by")}
             </Text>
             {sortActive ? (
               <View
@@ -98,7 +100,9 @@ export const HomeFilters = ({
               className="text-[13px] font-bold mr-1"
               style={{ color: cuisineActive ? CORAL : "#222" }}
             >
-              {cuisineActive ? activeCuisine : "Cuisine"}
+              {cuisineActive
+                ? t(`cuisines.${activeCuisine}`)
+                : t("home.cuisine")}
             </Text>
             {cuisineActive ? (
               <TouchableOpacity
@@ -128,7 +132,7 @@ export const HomeFilters = ({
               className="text-[13px] font-bold mr-1"
               style={{ color: priceActive ? CORAL : "#222" }}
             >
-              {priceActive ? activePriceRange : "Price"}
+              {priceActive ? activePriceRange : t("home.price")}
             </Text>
             {priceActive ? (
               <TouchableOpacity

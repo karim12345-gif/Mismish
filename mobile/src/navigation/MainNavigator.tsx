@@ -90,22 +90,22 @@ const MainNavigator = () => {
         <Tab.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: "Home" }}
+          options={{ title: t("navigation.home") }}
         />
         <Tab.Screen
           name="Map"
           component={MapScreen}
-          options={{ title: "Map" }}
+          options={{ title: t("navigation.map") }}
         />
         <Tab.Screen
           name="Orders"
           component={OrdersScreen}
-          options={{ title: "Orders" }}
+          options={{ title: t("navigation.orders") }}
         />
         <Tab.Screen
           name="Account"
           component={ProfileScreen}
-          options={{ title: "Account" }}
+          options={{ title: t("navigation.account") }}
         />
       </Tab.Navigator>
     </View>

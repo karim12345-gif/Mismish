@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useStores } from "../../hooks/useStores";
 import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
+import { useTranslation } from "react-i18next";
 
 const CORAL = "#FF7F50";
 
@@ -24,6 +25,7 @@ interface Props {
 
 export function FavoritesModal({ visible, onClose }: Props) {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const { isFavorite, toggleFavorite, favoriteIds } = useFavorites();
   const { data: stores = [] } = useStores();
   const slideAnim = useRef(new Animated.Value(600)).current;
@@ -70,7 +72,7 @@ export function FavoritesModal({ visible, onClose }: Props) {
 
         {/* Header row */}
         <View style={styles.headerRow}>
-          <Text style={styles.title}>My Favorites</Text>
+          <Text style={styles.title}>{t("favorites.title")}</Text>
           <TouchableOpacity
             onPress={onClose}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -82,9 +84,9 @@ export function FavoritesModal({ visible, onClose }: Props) {
         {favoriteStores.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="heart-outline" size={48} color="#E0E0E0" />
-            <Text style={styles.emptyTitle}>No favorites yet</Text>
+            <Text style={styles.emptyTitle}>{t("favorites.empty_title")}</Text>
             <Text style={styles.emptySubtitle}>
-              Tap the heart on any restaurant to save it here.
+              {t("favorites.empty_description")}
             </Text>
           </View>
         ) : (
@@ -125,7 +127,9 @@ export function FavoritesModal({ visible, onClose }: Props) {
                     </Text>
                     {bag ? (
                       <View style={styles.rowPriceRow}>
-                        <Text style={styles.rowPrice}>SAR {bag.price}</Text>
+                        <Text style={styles.rowPrice}>
+                          {t("common.currency")} {bag.price}
+                        </Text>
                         {savings && (
                           <View style={styles.savingsBadge}>
                             <Text style={styles.savingsText}>-{savings}%</Text>
@@ -134,7 +138,7 @@ export function FavoritesModal({ visible, onClose }: Props) {
                       </View>
                     ) : (
                       <Text style={styles.rowUnavailable}>
-                        No bags right now
+                        {t("favorites.no_bags_now")}
                       </Text>
                     )}
                   </View>

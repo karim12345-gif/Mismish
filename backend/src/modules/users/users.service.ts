@@ -56,9 +56,18 @@ export const updateMyProfile = async (
 export const savePushToken = async (
   userId: number,
   pushToken: string,
+  preferredLanguage?: string,
 ): Promise<void> => {
   if (!pushToken) throw new AppError(400, "pushToken is required");
-  await prisma.user.update({ where: { id: userId }, data: { pushToken } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      pushToken,
+      ...(preferredLanguage === "ar" || preferredLanguage === "en"
+        ? { preferredLanguage }
+        : {}),
+    },
+  });
 };
 
 export const updateAllergies = async (

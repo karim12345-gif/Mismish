@@ -61,8 +61,12 @@ export interface RegisterVendorBody {
   email: string;
   password: string;
   name: string;
+  nameArabic?: string;
+  category?: string;
   address?: string;
   description?: string;
+  openingHours?: string;
+  closingHours?: string;
   latitude?: number;
   longitude?: number;
 }

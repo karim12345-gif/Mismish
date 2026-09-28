@@ -12,9 +12,11 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useAuth } from "../../context/AuthContext";
 import { useLocation } from "../../context/LocationContext";
+import { useTranslation } from "react-i18next";
 
 export default function SelectLocationScreen() {
   const { setLocationSelected } = useAuth();
+  const { t } = useTranslation();
   const { setLocationByCoords } = useLocation();
   const [loading, setLoading] = useState(false);
 
@@ -30,11 +32,11 @@ export default function SelectLocationScreen() {
         setLocationByCoords(loc.coords.latitude, loc.coords.longitude);
       } else {
         Alert.alert(
-          "Location Denied",
-          "You can enable it later in Settings so we can show bags near you.",
+          t("location.denied_title"),
+          t("location.denied_message"),
           [
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
-            { text: "Continue anyway", style: "cancel" },
+            { text: t("location.open_settings"), onPress: () => Linking.openSettings() },
+            { text: t("location.continue_anyway"), style: "cancel" },
           ],
         );
       }
@@ -68,19 +70,18 @@ export default function SelectLocationScreen() {
 
         {/* Copy */}
         <Text className="text-[#111] font-black text-[28px] text-center mb-3 leading-tight">
-          Find bags{"\n"}near you 📍
+          {t("location.title")}
         </Text>
         <Text className="text-gray-500 text-[15px] text-center leading-6 mb-12">
-          We use your location to show rescue bags from restaurants close to you.
-          We never store or share it.
+          {t("location.description")}
         </Text>
 
         {/* Perks */}
         <View className="w-full gap-3 mb-12">
           {[
-            { icon: "store", label: "See what's available nearby" },
-            { icon: "map-marker-distance", label: "Sort by closest first" },
-            { icon: "map-search", label: "Explore the map view" },
+            { icon: "store", label: t("location.nearby") },
+            { icon: "map-marker-distance", label: t("location.closest") },
+            { icon: "map-search", label: t("location.map") },
           ].map((item) => (
             <View key={item.label} className="flex-row items-center">
               <View
@@ -111,14 +112,14 @@ export default function SelectLocationScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-white font-black text-[16px]">
-              Enable Location
+              {t("location.enable")}
             </Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={handleSkip} className="py-3 items-center">
           <Text className="text-gray-400 font-semibold text-[14px]">
-            Skip for now
+            {t("common.skip_for_now")}
           </Text>
         </TouchableOpacity>
       </View>

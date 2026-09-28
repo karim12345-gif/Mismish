@@ -4,6 +4,7 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useUserAllergies } from "../../context/AllergyContext";
 import { hasAllergenWarning } from "../../utils/allergenUtils";
 import { AllergenPopover, AllergenAnchor } from "../../components/AllergenPopover/AllergenPopover";
+import { useTranslation } from "react-i18next";
 
 interface StoreItemCardProps {
   title: string;
@@ -34,6 +35,7 @@ export const StoreItemCard = ({
   onAdd,
   onItemPress,
 }: StoreItemCardProps) => {
+  const { t } = useTranslation();
   const scale = useRef(new Animated.Value(1)).current;
   const alertsBtnRef = useRef<View>(null);
   const isSoldOut = quantity >= maxQuantity;
@@ -83,10 +85,10 @@ export const StoreItemCard = ({
           {/* Price row + Alerts trigger */}
           <View className="flex-row items-center">
             <Text className="text-[#FF7F50] font-black text-[14px] mr-2">
-              SR {price}
+              {t("common.currency")} {price}
             </Text>
             <Text className="text-[#AAA] font-bold text-[11px] line-through mr-3">
-              SR {originalPrice}
+              {t("common.currency")} {originalPrice}
             </Text>
 
             {/* ⓘ Alerts / ⚠️ Alerts trigger — only if bag has allergens */}
@@ -109,7 +111,7 @@ export const StoreItemCard = ({
                     color: hasWarning ? "#C0392B" : "#AAAAAA",
                     marginLeft: 3,
                   }}>
-                    Alerts
+                    {t("home.alerts")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -135,7 +137,9 @@ export const StoreItemCard = ({
           {isSoldOut && (
             <View className="absolute inset-0 items-center justify-center rounded-2xl">
               <View className="bg-black/60 px-2.5 py-1 rounded-lg">
-                <Text className="text-white text-[10px] font-black tracking-wide">SOLD OUT</Text>
+                <Text className="text-white text-[10px] font-black tracking-wide">
+                  {t("store.sold_out")}
+                </Text>
               </View>
             </View>
           )}

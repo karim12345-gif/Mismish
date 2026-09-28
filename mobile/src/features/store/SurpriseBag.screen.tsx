@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -25,31 +25,35 @@ import { useFavorites } from "../../hooks/useFavorites";
 import { AuthenticatedStackParamList } from "../../navigation/AuthenticatedNavigator";
 import { SurpriseBagSkeleton } from "./SurpriseBagSkeleton";
 import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
+import { useTranslation } from "react-i18next";
+import { getLocalizedName } from "../../i18n/localizedContent";
 
 const { width } = Dimensions.get("window");
 
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", {
+const fmtTime = (iso: string, locale: string) =>
+  new Date(iso).toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
 
 // Label is based on pickupStart so cross-midnight windows (e.g. 11 PM – 2 AM) show "Today"
-const pickupDayLabel = (pickupStart: string): "Today" | "Tomorrow" => {
+const pickupDay = (pickupStart: string): "today" | "tomorrow" => {
   const d = new Date(pickupStart);
   const today = new Date();
   return d.getFullYear() === today.getFullYear() &&
     d.getMonth() === today.getMonth() &&
     d.getDate() === today.getDate()
-    ? "Today"
-    : "Tomorrow";
+    ? "today"
+    : "tomorrow";
 };
 
-const formatPickupTime = (start: string, end: string): string =>
-  `${fmtTime(start)} – ${fmtTime(end)}`;
+const formatPickupTime = (start: string, end: string, locale: string): string =>
+  `${fmtTime(start, locale)} – ${fmtTime(end, locale)}`;
 
 export default function SurpriseBagScreen() {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("ar") ? "ar-SA" : "en-US";
   const navigation = useNavigation();
   const route =
     useRoute<RouteProp<AuthenticatedStackParamList, "SurpriseBag">>();
@@ -80,6 +84,7 @@ export default function SurpriseBagScreen() {
   const [selectedDate, setSelectedDate] = useState<"today" | "tomorrow">(
     "today",
   );
+  const autoOpenHandledRef = useRef(false);
   const [pendingAdd, setPendingAdd] = useState<Omit<
     import("../../context/CartContext").CartItemProduct,
     "quantity"
@@ -108,7 +113,7 @@ export default function SurpriseBagScreen() {
     setSelectedBag(null);
     if (inventory?.[0]) {
       setSelectedDate(
-        pickupDayLabel(inventory[0].pickupStart) === "Today"
+        pickupDay(inventory[0].pickupStart) === "today"
           ? "today"
           : "tomorrow",
       );
@@ -118,23 +123,21 @@ export default function SurpriseBagScreen() {
   }, [inventory, storeId]);
 
   useEffect(() => {
-    if (route.params?.autoOpenSheet && totalQuantity === 0 && inventory?.[0]) {
-      const bag = inventory[0];
-      const timer = setTimeout(() => {
-        handleAddToCart({
-          id: String(bag.id),
-          surpriseBoxId: bag.id,
-          storeId: Number(storeId),
-          title: bag.name,
-          price: bag.price,
-          originalPrice: bag.originalPrice ?? undefined,
-          imageUrl: bag.imageUrl ?? DEFAULT_LISTING_IMAGE,
-          pickupOffset: selectedDate === "tomorrow" ? 1 : 0,
-        });
-        setSheetVisible(true);
-      }, 2500);
-      return () => clearTimeout(timer);
+    if (
+      !route.params?.autoOpenSheet ||
+      !inventory?.[0] ||
+      autoOpenHandledRef.current
+    ) {
+      return;
     }
+
+    const timer = setTimeout(() => {
+      autoOpenHandledRef.current = true;
+      setSelectedBag(inventory[0]);
+      setSheetVisible(true);
+    }, 250);
+
+    return () => clearTimeout(timer);
   }, [route.params?.autoOpenSheet, inventory]);
 
   useEffect(() => {
@@ -173,7 +176,11 @@ export default function SurpriseBagScreen() {
     setTimeout(() => proceedFromCheckoutPress(), 400);
   };
 
-  const storeName = store?.name ?? "Store";
+  const storeName = getLocalizedName(
+    store,
+    i18n.language,
+    t("common.app_name"),
+  );
   const storeCategory = store?.category ?? "";
   const firstBag = inventory?.[0];
   const storeProfileImage = store?.name?.includes("Coffee Address")
@@ -249,18 +256,17 @@ export default function SurpriseBagScreen() {
               {firstBag.originalPrice && (
                 <View className="bg-[#FF7F50] rounded-full px-4 py-1.5 mb-2.5 shadow-sm">
                   <Text className="text-white font-black text-[15px]">
-                    Save{" "}
-                    {Math.round(
-                      (1 - firstBag.price / firstBag.originalPrice) * 100,
-                    )}
-                    %
+                    {t("store.save_discount", {
+                      percent: Math.round(
+                        (1 - firstBag.price / firstBag.originalPrice) * 100,
+                      ),
+                    })}
                   </Text>
                 </View>
               )}
               <View className="bg-[#FF8A8A] rounded-full px-4 py-1 shadow-sm">
                 <Text className="text-white font-bold text-[11px]">
-                  Only {firstBag.quantity} bag
-                  {firstBag.quantity !== 1 ? "s" : ""} left!
+                  {t("store.only_left", { count: firstBag.quantity })}
                 </Text>
               </View>
             </View>
@@ -323,7 +329,7 @@ export default function SurpriseBagScreen() {
                   className="flex-row items-center"
                 >
                   <Text className="text-[#FF7F50] text-[11px] font-bold mr-1">
-                    Get Directions
+                    {t("store.get_directions")}
                   </Text>
                   <Feather
                     name="navigation"
@@ -335,10 +341,10 @@ export default function SurpriseBagScreen() {
               </View>
               <View className="flex-1 items-center justify-center pl-4">
                 <Text className="text-gray-500 text-[11px] font-medium mb-1">
-                  Options
+                  {t("store.options")}
                 </Text>
                 <Text className="text-[#111] text-[11px] font-black tracking-tight text-center">
-                  Self Pickup
+                  {t("store.self_pickup")}
                 </Text>
               </View>
             </View>
@@ -350,18 +356,19 @@ export default function SurpriseBagScreen() {
           <View className="px-5 mb-5 flex-row items-center justify-between">
             <View>
               <Text className="text-[#111] font-black text-[16px] mb-1.5">
-                Availability Time
+                {t("store.availability_time")}
               </Text>
               <View className="flex-row items-center">
                 <Feather name="clock" size={16} color="#18C96D" />
                 <Text className="text-[#366150] font-black text-[13px] ml-1 mr-0.5">
-                  {selectedDate === "tomorrow" ? "Tomorrow" : "Today"}
+                  {t(`common.${selectedDate}`)}
                 </Text>
                 <Text className="text-[#366150] font-medium text-[13px]">
                   —{" "}
                   {formatPickupTime(
                     selectedBag?.pickupStart ?? firstBag?.pickupStart,
                     selectedBag?.pickupEnd ?? firstBag?.pickupEnd,
+                    locale,
                   )}
                 </Text>
               </View>
@@ -371,7 +378,7 @@ export default function SurpriseBagScreen() {
               className="border border-[#FF7F50] rounded-full px-4 py-1.5 bg-white shadow-sm shadow-black/5"
             >
               <Text className="text-[#FF7F50] font-bold text-[11px]">
-                Change
+                {t("common.change")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -383,7 +390,7 @@ export default function SurpriseBagScreen() {
         <View className="px-5 mb-2">
           {(inventory ?? []).length === 0 ? (
             <Text className="text-gray-400 text-center py-8">
-              No bags available right now.
+              {t("store.no_bags")}
             </Text>
           ) : (
             (inventory ?? []).map((bag: any, index: number) => {
@@ -398,7 +405,7 @@ export default function SurpriseBagScreen() {
                     price={String(bag.price)}
                     originalPrice={String(bag.originalPrice ?? bag.price * 2)}
                     imageUrl={bag.imageUrl ?? DEFAULT_LISTING_IMAGE}
-                    leftCount={`${bag.quantity} left`}
+                    leftCount={t("store.only_left", { count: bag.quantity })}
                     quantity={cartQty}
                     maxQuantity={bag.quantity}
                     allergens={bag.allergens ?? []}
@@ -436,7 +443,7 @@ export default function SurpriseBagScreen() {
               color="#111"
             />
             <Text className="text-[#111] font-black text-[15px] ml-3">
-              Explore Other Branches
+              {t("store.explore_branches")}
             </Text>
           </View>
           <Feather name="chevron-right" size={20} color="#111" />
@@ -469,12 +476,12 @@ export default function SurpriseBagScreen() {
             }`}
           >
             {totalQuantity > 0
-              ? `SAR ${subtotal.toFixed(2)}`
-              : "Go to checkout"}
+              ? `${t("common.currency")} ${subtotal.toFixed(2)}`
+              : t("store.go_to_checkout")}
           </Text>
           {totalQuantity > 0 && (
             <Text className="text-white font-black text-[15px]">
-              Go to checkout
+              {t("store.go_to_checkout")}
             </Text>
           )}
         </TouchableOpacity>
@@ -536,7 +543,7 @@ export default function SurpriseBagScreen() {
                 textAlign: "center",
               }}
             >
-              Start a new cart?
+              {t("store.new_cart_title")}
             </Text>
             <Text
               style={{
@@ -547,8 +554,7 @@ export default function SurpriseBagScreen() {
                 marginBottom: 24,
               }}
             >
-              You already have items from a different store. Clear your cart and
-              add from this one instead?
+              {t("store.new_cart_message")}
             </Text>
             <View style={{ flexDirection: "row", gap: 12 }}>
               <TouchableOpacity
@@ -566,7 +572,7 @@ export default function SurpriseBagScreen() {
                 <Text
                   style={{ color: "#FF7F50", fontWeight: "700", fontSize: 15 }}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -583,7 +589,7 @@ export default function SurpriseBagScreen() {
                 <Text
                   style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}
                 >
-                  Yes, Clear
+                  {t("store.clear_cart")}
                 </Text>
               </TouchableOpacity>
             </View>

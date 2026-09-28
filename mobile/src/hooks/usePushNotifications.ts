@@ -4,16 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { MY_ORDERS_QUERY_KEY } from "./useMyOrders";
 import { openNotificationData } from "../navigation/navigationRef";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
 export function usePushNotifications() {
   const queryClient = useQueryClient();
 

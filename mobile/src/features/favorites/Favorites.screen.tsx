@@ -16,11 +16,13 @@ import { useFavorites } from "../../hooks/useFavorites";
 import { useStores } from "../../hooks/useStores";
 import { Store } from "../../services/store/store.service";
 import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
+import { useTranslation } from "react-i18next";
 
 const CORAL = "#FF7F50";
 
 export default function FavoritesScreen() {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const { favoriteIds, isFavorite, toggleFavorite } = useFavorites();
   const { data: stores = [] } = useStores();
 
@@ -62,10 +64,10 @@ export default function FavoritesScreen() {
 
           {bag ? (
             <View style={styles.priceRow}>
-              <Text style={styles.price}>SAR {bag.price}</Text>
+              <Text style={styles.price}>{t("common.currency")} {bag.price}</Text>
               {bag.originalPrice && (
                 <Text style={styles.originalPrice}>
-                  SAR {bag.originalPrice}
+                  {t("common.currency")} {bag.originalPrice}
                 </Text>
               )}
               {savings && (
@@ -75,7 +77,7 @@ export default function FavoritesScreen() {
               )}
             </View>
           ) : (
-            <Text style={styles.noBags}>No bags available</Text>
+            <Text style={styles.noBags}>{t("favorites.no_bags")}</Text>
           )}
         </View>
 
@@ -105,22 +107,22 @@ export default function FavoritesScreen() {
         >
           <Feather name="arrow-left" size={22} color="#111" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Favorites</Text>
+        <Text style={styles.headerTitle}>{t("favorites.title")}</Text>
         <View style={{ width: 22 }} />
       </View>
 
       {favoriteStores.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="heart-outline" size={64} color="#E0E0E0" />
-          <Text style={styles.emptyTitle}>No favorites yet</Text>
+          <Text style={styles.emptyTitle}>{t("favorites.empty_title")}</Text>
           <Text style={styles.emptySubtitle}>
-            Tap the heart on any restaurant to save it here.
+            {t("favorites.empty_description")}
           </Text>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.exploreButton}
           >
-            <Text style={styles.exploreButtonText}>Explore Restaurants</Text>
+            <Text style={styles.exploreButtonText}>{t("favorites.explore")}</Text>
           </TouchableOpacity>
         </View>
       ) : (

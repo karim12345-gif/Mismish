@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 const CORAL = "#FF7F50";
 const TILE_WIDTH = (Dimensions.get("window").width - 48 - 24) / 3;
@@ -37,6 +38,7 @@ interface Props {
 }
 
 export function CuisineBottomSheet({ visible, current, categories, onClose, onApply }: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState(current);
 
   useEffect(() => { setSelected(current); }, [current, visible]);
@@ -47,7 +49,7 @@ export function CuisineBottomSheet({ visible, current, categories, onClose, onAp
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.header}>
-            <Text style={styles.title}>Cuisine</Text>
+            <Text style={styles.title}>{t("home.cuisine")}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Feather name="x" size={16} color="#555" />
             </TouchableOpacity>
@@ -71,7 +73,7 @@ export function CuisineBottomSheet({ visible, current, categories, onClose, onAp
                       style={[styles.tileLabel, active && styles.tileLabelActive]}
                       numberOfLines={1}
                     >
-                      {cat}
+                      {t(`cuisines.${cat}`)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -84,13 +86,13 @@ export function CuisineBottomSheet({ visible, current, categories, onClose, onAp
               onPress={() => { onApply(""); onClose(); }}
               style={styles.resetBtn}
             >
-              <Text style={styles.resetLabel}>Reset</Text>
+              <Text style={styles.resetLabel}>{t("common.reset")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => { onApply(selected); onClose(); }}
               style={styles.applyBtn}
             >
-              <Text style={styles.applyLabel}>Apply</Text>
+              <Text style={styles.applyLabel}>{t("common.apply")}</Text>
             </TouchableOpacity>
           </View>
         </View>

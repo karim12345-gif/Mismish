@@ -6,8 +6,8 @@ import {
   type OtpLanguage,
 } from "./authentica";
 
-// Supported: Egypt (+20), Saudi Arabia (+966), UAE (+971)
-export const phoneRegex = /^\+(?:20|966|971)\d{9,10}$/;
+// E.164: leading +, non-zero country code, and up to 15 total digits.
+export const phoneRegex = /^\+[1-9]\d{7,14}$/;
 
 export const generateOTP = (): string =>
   crypto.randomInt(1000, 10_000).toString();

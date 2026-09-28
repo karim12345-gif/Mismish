@@ -4,6 +4,8 @@ import { Feather } from "@expo/vector-icons";
 
 import { CartItemProduct } from "../../../context/CartContext";
 import { DEFAULT_LISTING_IMAGE } from "../../../constants/images";
+import { useTranslation } from "react-i18next";
+import { calculateCartLineTotal } from "../../../utils/cartTotals";
 
 interface CartItemProps {
   item: CartItemProduct;
@@ -18,8 +20,14 @@ export const CartItem = ({
   onDecrement,
   maxQuantity,
 }: CartItemProps) => {
+  const { t } = useTranslation();
   const effectiveMax = maxQuantity ?? item.maxQuantity;
   const atMax = effectiveMax !== undefined && item.quantity >= effectiveMax;
+  const lineTotal = calculateCartLineTotal(item);
+  const originalLineTotal = item.originalPrice
+    ? item.originalPrice * item.quantity
+    : undefined;
+
   return (
     <View className="flex-row items-center justify-between px-5 py-6 border-b border-gray-100 bg-white">
       {/* Item Info */}
@@ -37,11 +45,11 @@ export const CartItem = ({
           </Text>
           <View className="flex-row items-center">
             <Text className="text-[#FF7F50] font-black text-[14px] mr-2">
-              ﷼ {item.price.toFixed(2)}
+              {t("common.currency")} {lineTotal.toFixed(2)}
             </Text>
-            {item.originalPrice && (
+            {originalLineTotal !== undefined && (
               <Text className="text-gray-400 font-bold text-[12px] line-through decoration-dotted">
-                ﷼ {item.originalPrice.toFixed(2)}
+                {t("common.currency")} {originalLineTotal.toFixed(2)}
               </Text>
             )}
           </View>

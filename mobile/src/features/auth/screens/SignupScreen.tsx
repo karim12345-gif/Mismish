@@ -5,12 +5,14 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "@components/Input";
 import { Button, IconButton } from "@components/index";
+import { useTranslation } from "react-i18next";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 
 const SignupScreen = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -36,42 +38,47 @@ const SignupScreen = () => {
             className="p-2 -ml-2"
             icon={<Ionicons name="chevron-back" size={24} color="#000" />}
           />
-          <StyledText className="text-xl font-bold ml-2">Sign Up</StyledText>
+          <StyledText className="text-xl font-bold ml-2">
+            {t("auth.signup")}
+          </StyledText>
         </StyledView>
 
         <StyledView className="mb-8">
           <StyledText className="text-3xl font-bold text-[#146566] mb-2">
-            Create Account
+            {t("auth.create_account")}
           </StyledText>
           <StyledText className="text-gray-500">
-            Enter your details to register
+            {t("auth.register_description")}
           </StyledText>
         </StyledView>
 
         {/* Form */}
-        <Input label="Full Name" placeholder="Enter your full name" />
+        <Input
+          label={t("auth.full_name")}
+          placeholder={t("auth.full_name_placeholder")}
+        />
 
         <Input
-          label="Email"
-          placeholder="Enter your email"
+          label={t("auth.email")}
+          placeholder={t("auth.email_placeholder")}
           keyboardType="email-address"
           autoCapitalize="none"
         />
 
         <Input
-          label="Password"
-          placeholder="Create a password"
+          label={t("auth.password")}
+          placeholder={t("auth.password_placeholder")}
           secureTextEntry
         />
 
         <Input
-          label="Confirm Password"
-          placeholder="Confirm your password"
+          label={t("auth.confirm_password")}
+          placeholder={t("auth.confirm_password_placeholder")}
           secureTextEntry
         />
 
         <Button
-          label={isLoading ? "Signing up..." : "Sign Up"}
+          label={isLoading ? t("auth.signing_up") : t("auth.signup")}
           className="mt-6 bg-[#F59E0B]"
           onPress={handleSignup}
           isLoading={isLoading}
@@ -80,13 +87,13 @@ const SignupScreen = () => {
         {/* Footer */}
         <StyledView className="flex-row justify-center mt-6">
           <StyledText className="text-gray-500">
-            Already have an account?
+            {t("auth.already_have_account")}
           </StyledText>
           <StyledText
             onPress={() => navigation.navigate("Login" as never)}
             className="text-[#F59E0B] font-bold ml-1"
           >
-            Sign in
+            {t("auth.sign_in")}
           </StyledText>
         </StyledView>
       </ScrollView>

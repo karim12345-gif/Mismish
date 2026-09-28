@@ -1,35 +1,36 @@
 import React from "react";
 import { ScrollView, TouchableOpacity, Text, View, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 
 const COLLECTIONS = [
   {
     id: 1,
-    name: "11 & Under",
+    nameKey: "home.collections.eleven_under",
     image:
       "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=200&auto=format&fit=crop",
   },
   {
     id: 2,
-    name: "Catering",
+    nameKey: "home.collections.catering",
     image:
       "https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=200&auto=format&fit=crop",
   },
   {
     id: 3,
-    name: "Dessert",
+    nameKey: "home.collections.dessert",
     image:
       "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?q=80&w=200&auto=format&fit=crop",
   },
   {
     id: 4,
-    name: "Trending",
+    nameKey: "home.collections.trending",
     image:
       "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=200&auto=format&fit=crop",
   },
   {
     id: 5,
-    name: "Shawarma",
+    nameKey: "home.collections.shawarma",
     image:
       "https://images.unsplash.com/photo-1644485746765-b1a774291884?q=80&w=200&auto=format&fit=crop",
   },
@@ -37,6 +38,7 @@ const COLLECTIONS = [
 
 export const HomeFeaturedCollections = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
 
   const handleCollectionPress = (col: typeof COLLECTIONS[0]) => {
     if (col.id === 1) navigation.navigate("ElevenUnder");
@@ -45,7 +47,7 @@ export const HomeFeaturedCollections = () => {
   return (
     <View className="mt-6 mb-2">
       <Text className="px-5 text-[#111] text-[16px] font-black tracking-tight mb-4">
-        Featured Collections
+        {t("home.featured_collections")}
       </Text>
       <ScrollView
         horizontal
@@ -62,7 +64,7 @@ export const HomeFeaturedCollections = () => {
               />
             </View>
             <Text className="text-[#333] font-semibold text-[11px]">
-              {col.name}
+              {t(col.nameKey)}
             </Text>
           </TouchableOpacity>
         ))}

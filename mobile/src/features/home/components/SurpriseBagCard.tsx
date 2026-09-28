@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useUserAllergies } from "../../../context/AllergyContext";
 import { hasAllergenWarning } from "../../../utils/allergenUtils";
 import { AllergenPopover, AllergenAnchor } from "../../../components/AllergenPopover/AllergenPopover";
+import { useTranslation } from "react-i18next";
 
 interface SurpriseBagCardProps {
   storeId: number;
@@ -34,6 +35,7 @@ export const SurpriseBagCard = ({
   ingredients = [],
 }: SurpriseBagCardProps) => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const { userAllergies } = useUserAllergies();
   const alertsBtnRef = useRef<View>(null);
 
@@ -128,7 +130,7 @@ export const SurpriseBagCard = ({
                     color: hasWarning ? "#C0392B" : "#AAAAAA",
                     marginLeft: 3,
                   }}>
-                    Alerts
+                    {t("home.alerts")}
                   </Text>
                 </TouchableOpacity>
               </View>

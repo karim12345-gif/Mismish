@@ -12,8 +12,10 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
 import { useAuth } from "../../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function CompleteProfileScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { user } = useAuth();
   const { mutate: updateProfile, isPending, error } = useUpdateProfile();
@@ -49,7 +51,7 @@ export default function CompleteProfileScreen() {
           <Feather name="chevron-left" size={24} color="#111" />
         </TouchableOpacity>
         <Text className="text-[#111] font-black text-[18px]">
-          Complete Profile
+          {t("profile.complete_profile")}
         </Text>
         <TouchableOpacity className="w-8 h-8 items-center justify-center -mr-2">
           <MaterialCommunityIcons name="dots-vertical" size={24} color="#111" />
@@ -61,11 +63,10 @@ export default function CompleteProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text className="text-[#1B4332] font-black text-3xl mb-3 tracking-tight">
-          Almost there!
+          {t("profile.almost_there")}
         </Text>
         <Text className="text-gray-600 font-medium text-[15px] leading-6 mb-10">
-          We just need a few details to finalize your surprise bag booking and
-          ensure a smooth pickup.
+          {t("profile.complete_description")}
         </Text>
 
         {/* Name Fields */}
@@ -74,12 +75,12 @@ export default function CompleteProfileScreen() {
             <View className="flex-row items-center mb-1.5">
               <Feather name="user" size={12} color="#111" />
               <Text className="text-[#444] font-bold text-[13px] ml-1.5">
-                First Name <Text className="text-[#FF7F50]">*</Text>
+                {t("profile.first_name")} <Text className="text-[#FF7F50]">*</Text>
               </Text>
             </View>
             <TextInput
               className="border border-gray-200 rounded-xl h-12 px-4 shadow-sm shadow-black/5 bg-white font-medium text-[15px] text-[#111]"
-              placeholder="e.g. Karim"
+              placeholder={t("profile.first_name_placeholder")}
               placeholderTextColor="#A1A1A1"
               value={firstName}
               onChangeText={setFirstName}
@@ -89,12 +90,12 @@ export default function CompleteProfileScreen() {
           <View className="flex-1 ml-2">
             <View className="flex-row items-center mb-1.5">
               <Text className="text-[#444] font-bold text-[13px] ml-1">
-                Last Name <Text className="text-[#FF7F50]">*</Text>
+                {t("profile.last_name")} <Text className="text-[#FF7F50]">*</Text>
               </Text>
             </View>
             <TextInput
               className="border border-gray-200 rounded-xl h-12 px-4 shadow-sm shadow-black/5 bg-white font-medium text-[15px] text-[#111]"
-              placeholder="e.g. Salim"
+              placeholder={t("profile.last_name_placeholder")}
               placeholderTextColor="#A1A1A1"
               value={lastName}
               onChangeText={setLastName}
@@ -107,12 +108,12 @@ export default function CompleteProfileScreen() {
           <View className="flex-row items-center mb-1.5">
             <Feather name="mail" size={12} color="#111" />
             <Text className="text-[#444] font-bold text-[13px] ml-1.5">
-              Email Address (optional)
+              {t("profile.email_optional")}
             </Text>
           </View>
           <TextInput
             className="border border-gray-200 rounded-xl h-12 px-4 shadow-sm shadow-black/5 bg-white font-medium text-[15px] text-[#111]"
-            placeholder="e.g. hello@mismish.app"
+            placeholder={t("profile.email_placeholder")}
             placeholderTextColor="#A1A1A1"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -126,7 +127,7 @@ export default function CompleteProfileScreen() {
           <View className="flex-row items-center mb-1.5">
             <Feather name="phone" size={12} color="#111" />
             <Text className="text-[#444] font-bold text-[13px] ml-1.5">
-              Phone Number
+              {t("profile.phone_number")}
             </Text>
           </View>
           <View className="border border-dashed border-gray-300 rounded-2xl p-4 flex-row items-center justify-between bg-[#FAFAFA]">
@@ -139,14 +140,14 @@ export default function CompleteProfileScreen() {
                   {displayPhone}
                 </Text>
                 <Text className="text-gray-400 font-bold text-[10px] tracking-wider uppercase">
-                  Verified Identity
+                  {t("profile.verified_identity")}
                 </Text>
               </View>
             </View>
             <View className="bg-white border border-gray-200 rounded-full px-3 py-1 flex-row items-center shadow-sm shadow-black/5">
               <Feather name="check-circle" size={11} color="#333" />
               <Text className="text-[#333] font-bold text-[11px] ml-1.5">
-                Verified
+                {t("profile.verified")}
               </Text>
             </View>
           </View>
@@ -170,20 +171,20 @@ export default function CompleteProfileScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-[#333] font-medium text-[14px] leading-5 mb-2">
-                I agree to the{" "}
+                {t("profile.agree")}{" "}
                 <Text className="text-[#FF7F50] font-bold underline">
-                  Terms & Conditions
+                  {t("profile.terms_conditions")}
                 </Text>{" "}
-                and{" "}
+                {t("profile.and")}{" "}
                 <Text className="text-[#FF7F50] font-bold underline">
-                  Privacy Policy
+                  {t("profile.privacy")}
                 </Text>
                 .
               </Text>
               <View className="flex-row items-center">
                 <Feather name="info" size={12} color="#666" />
                 <Text className="text-gray-500 text-[11px] font-medium ml-1.5">
-                  Required to process your booking
+                  {t("profile.booking_required")}
                 </Text>
               </View>
             </View>
@@ -192,7 +193,7 @@ export default function CompleteProfileScreen() {
 
         {error && (
           <Text className="text-red-500 text-[13px] font-medium mb-4 text-center">
-            Failed to save profile. Please try again.
+            {t("profile.save_failed")}
           </Text>
         )}
       </ScrollView>
@@ -216,12 +217,12 @@ export default function CompleteProfileScreen() {
                 isFormValid ? "text-white" : "text-gray-400"
               }`}
             >
-              Confirm Order
+              {t("checkout.confirm_order")}
             </Text>
           )}
         </TouchableOpacity>
         <Text className="text-center text-gray-400 font-bold text-[9px] tracking-widest mt-5 mb-4 uppercase">
-          Secure Checkout • Mismish English V1.0
+          {t("profile.secure_checkout")}
         </Text>
       </View>
     </SafeAreaView>

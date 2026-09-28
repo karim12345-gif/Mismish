@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { AIAssistantBottomSheet } from "../../../components/AIAssistantBottomSheet";
+import { useTranslation } from "react-i18next";
 
 export const CheckoutHeader = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [timeLeft, setTimeLeft] = useState(592); // 09:52
   const [aiVisible, setAiVisible] = useState(false);
@@ -31,20 +33,22 @@ export const CheckoutHeader = () => {
         </TouchableOpacity>
 
         <Text className="text-[#111] font-black text-[16px]">
-          Your order details
+          {t("checkout.order_details")}
         </Text>
 
         <TouchableOpacity
           className="flex-row items-center -mr-1"
           onPress={() => setAiVisible(true)}
         >
-          <Text className="text-[#111] font-bold text-[13px] mr-1.5">Help</Text>
+          <Text className="text-[#111] font-bold text-[13px] mr-1.5">
+            {t("common.help")}
+          </Text>
           <Feather name="headphones" size={18} color="#111" />
         </TouchableOpacity>
       </View>
 
       <Text className="text-center text-[#D32F2F] font-bold text-[13px]">
-        Your bag will be held for {minutes.toString().padStart(2, "0")}:
+        {t("checkout.held_for")} {minutes.toString().padStart(2, "0")}:
         {seconds.toString().padStart(2, "0")}
       </Text>
 

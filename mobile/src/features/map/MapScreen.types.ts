@@ -11,7 +11,7 @@ export interface ClusterItem {
   store: Store;
 }
 
-export type ActiveFilter = "Available Now" | "My Favorites" | "";
+export type ActiveFilter = "available" | "favorites" | "";
 
 export interface StoreBottomCardProps {
   store: Store;
@@ -21,7 +21,8 @@ export interface StoreBottomCardProps {
 }
 
 export type FilterChip = {
-  label: string;
+  value: Exclude<ActiveFilter, "">;
+  labelKey: string;
   icon: React.ComponentProps<typeof Ionicons>["name"] | null;
 };
 
@@ -33,6 +34,6 @@ export const RIYADH: Region = {
 };
 
 export const FILTER_CHIPS: FilterChip[] = [
-  { label: "Available Now", icon: null },
-  { label: "My Favorites", icon: "heart-outline" },
+  { value: "available", labelKey: "map.available_now", icon: null },
+  { value: "favorites", labelKey: "map.my_favorites", icon: "heart-outline" },
 ];

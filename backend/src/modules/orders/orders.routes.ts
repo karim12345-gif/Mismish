@@ -19,10 +19,12 @@ router.post(
 router.get("/", authorize("user"), ordersController.getMyOrders);
 router.get("/stats", authorize("user"), ordersController.getUserImpactStats);
 router.get("/:id", authorize("user"), ordersController.getOrderById);
-router.patch("/:id/collect", authorize("user"), ordersController.collectOrder);
 router.patch("/:id/cancel", authorize("user"), ordersController.cancelOrder);
 
-// DEV ONLY — remove before production
-router.patch("/:id/dev-status", ordersController.devSetOrderStatus);
+// Local testing helpers are never exposed by a production process.
+if (process.env.NODE_ENV !== "production") {
+  router.patch("/:id/collect", authorize("user"), ordersController.collectOrder);
+  router.patch("/:id/dev-status", authorize("user"), ordersController.devSetOrderStatus);
+}
 
 export default router;

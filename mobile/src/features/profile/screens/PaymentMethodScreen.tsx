@@ -4,8 +4,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useCards } from "../../../context/CardsContext";
+import { useTranslation } from "react-i18next";
 
 export default function PaymentMethodScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { cards, removeCard } = useCards();
 
@@ -19,7 +21,7 @@ export default function PaymentMethodScreen() {
         >
           <Feather name="arrow-left" size={18} color="#111" />
         </TouchableOpacity>
-        <Text className="text-[#111] text-[18px] font-black">My Cards</Text>
+        <Text className="text-[#111] text-[18px] font-black">{t("payment.my_cards")}</Text>
       </View>
 
       {cards.length === 0 ? (
@@ -34,15 +36,15 @@ export default function PaymentMethodScreen() {
               <Text className="text-white font-black text-[12px]">!</Text>
             </View>
           </View>
-          <Text className="text-[#111] text-[20px] font-black mb-2 text-center">No Payment Methods Yet</Text>
+          <Text className="text-[#111] text-[20px] font-black mb-2 text-center">{t("payment.empty_title")}</Text>
           <Text className="text-gray-400 text-[13px] font-medium text-center leading-5 mb-8">
-            Add a payment method for faster checkout and seamless ordering.
+            {t("payment.empty_description")}
           </Text>
           <TouchableOpacity
             onPress={() => navigation.navigate("AddNewCard")}
             className="bg-[#366150] h-12 px-10 rounded-2xl items-center justify-center"
           >
-            <Text className="text-white font-bold text-[15px]">Add new card</Text>
+            <Text className="text-white font-bold text-[15px]">{t("payment.add_new_card")}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -74,7 +76,7 @@ export default function PaymentMethodScreen() {
             className="flex-row items-center justify-center gap-2 bg-white rounded-2xl border border-gray-100 shadow-sm shadow-black/5 py-4"
           >
             <Feather name="plus" size={16} color="#366150" />
-            <Text className="text-[#366150] font-bold text-[14px]">Add new card</Text>
+            <Text className="text-[#366150] font-bold text-[14px]">{t("payment.add_new_card")}</Text>
           </TouchableOpacity>
         </View>
       )}

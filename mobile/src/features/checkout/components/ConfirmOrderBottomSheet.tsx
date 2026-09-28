@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 interface ConfirmOrderBottomSheetProps {
   visible: boolean;
@@ -21,8 +22,8 @@ interface ConfirmOrderBottomSheetProps {
   fulfillment?: "pickup" | "delivery";
 }
 
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", {
+const fmtTime = (iso: string, locale: string) =>
+  new Date(iso).toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
@@ -45,6 +46,8 @@ export const ConfirmOrderBottomSheet = ({
   pickupOffset = 0,
   fulfillment = "pickup",
 }: ConfirmOrderBottomSheetProps) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("ar") ? "ar-SA" : "en-US";
   const slideAnim = useRef(new Animated.Value(500)).current;
 
   useEffect(() => {
@@ -77,7 +80,7 @@ export const ConfirmOrderBottomSheet = ({
           {/* Header */}
           <View className="mb-6 items-center flex-row justify-center relative">
             <Text className="text-[#111] font-black text-[18px]">
-              Confirm Order
+              {t("checkout.confirm_order")}
             </Text>
             <TouchableOpacity
               onPress={onClose}
@@ -91,33 +94,33 @@ export const ConfirmOrderBottomSheet = ({
           <View className="border border-gray-100 rounded-2xl p-5 mb-8 bg-white shadow-sm shadow-black/5">
             <View className="flex-row justify-between items-center mb-5">
               <Text className="text-[#111] font-black text-[15px]">
-                Order Type
+                {t("checkout.order_type")}
               </Text>
               <View className="bg-[#FFF0EB] px-3 py-1 rounded-full border border-[#FFE0D6]">
                 <Text className="text-[#FF7F50] font-black text-[12px]">
-                  {fulfillment === "delivery" ? "Delivery" : "Self Pickup"}
+                  {fulfillment === "delivery" ? t("checkout.delivery") : t("checkout.self_pickup")}
                 </Text>
               </View>
             </View>
 
             <View className="flex-row justify-between items-center mb-5">
               <Text className="text-[#111] font-black text-[15px]">
-                Pickup Date
+                {t("checkout.pickup_date")}
               </Text>
               <Text className="text-gray-500 font-medium text-[14px]">
                 {pickupStart && pickupEnd
-                  ? (pickupOffset === 1 ? "Tomorrow" : "Today")
+                  ? (pickupOffset === 1 ? t("common.tomorrow") : t("common.today"))
                   : "—"}
               </Text>
             </View>
 
             <View className="flex-row justify-between items-center">
               <Text className="text-[#111] font-black text-[15px]">
-                Pickup Time
+                {t("checkout.pickup_time")}
               </Text>
               <Text className="text-gray-500 font-medium text-[14px]">
                 {pickupStart && pickupEnd
-                  ? `${fmtTime(pickupStart)} – ${fmtTime(pickupEnd)}`
+                  ? `${fmtTime(pickupStart, locale)} – ${fmtTime(pickupEnd, locale)}`
                   : "—"}
               </Text>
             </View>
@@ -134,7 +137,7 @@ export const ConfirmOrderBottomSheet = ({
             {isLoading ? (
               <ActivityIndicator color="#FF7F50" />
             ) : (
-              <Text className="text-white font-black text-[16px]">Confirm</Text>
+              <Text className="text-white font-black text-[16px]">{t("common.confirm")}</Text>
             )}
           </TouchableOpacity>
         </Animated.View>

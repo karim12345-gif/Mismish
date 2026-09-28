@@ -14,6 +14,7 @@ import { AuthStackParamList } from "../../../navigation/types";
 import { Button, BottomSheet, IconButton } from "@components/index";
 import { useAuth } from "../../../context/AuthContext";
 import { useSocialLogin } from "../../../hooks/useSocialLogin";
+import { useTranslation } from "react-i18next";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -26,6 +27,7 @@ type AuthStartScreenNavigationProp = StackNavigationProp<
 
 const AuthStartScreen = () => {
   const navigation = useNavigation<AuthStartScreenNavigationProp>();
+  const { t } = useTranslation();
   const { login } = useAuth();
   const { mutate: socialLoginMutation, isPending } = useSocialLogin();
 
@@ -60,9 +62,10 @@ const AuthStartScreen = () => {
             onError: (error: any) => {
               console.error("Apple Backend Error:", error);
               Alert.alert(
-                "Error",
-                "Login failed: " +
-                  (error.response?.data?.message || error.message),
+                t("common.error"),
+                t("auth.login_failed", {
+                  message: error.response?.data?.message || error.message,
+                }),
               );
             },
           },
@@ -75,7 +78,7 @@ const AuthStartScreen = () => {
         // handle that the user canceled the sign-in flow
       } else {
         console.error(e);
-        Alert.alert("Error", "Apple Sign in failed");
+        Alert.alert(t("common.error"), t("auth.apple_sign_in_failed"));
       }
     }
   };
@@ -98,9 +101,10 @@ const AuthStartScreen = () => {
             onError: (error: any) => {
               console.error("Google Backend Error:", error);
               Alert.alert(
-                "Error",
-                "Login failed: " +
-                  (error.response?.data?.message || error.message),
+                t("common.error"),
+                t("auth.login_failed", {
+                  message: error.response?.data?.message || error.message,
+                }),
               );
             },
           },
@@ -115,11 +119,14 @@ const AuthStartScreen = () => {
         // operation (e.g. sign in) is in progress already
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         // play services not available or outdated
-        Alert.alert("Error", "Google Play Services not available");
+        Alert.alert(t("common.error"), t("auth.google_services_unavailable"));
       } else {
         // some other error happened
         console.error(error);
-        Alert.alert("Error", "Google Sign in failed: " + error.message);
+        Alert.alert(
+          t("common.error"),
+          t("auth.google_sign_in_failed", { message: error.message }),
+        );
       }
     }
   };
@@ -154,7 +161,7 @@ const AuthStartScreen = () => {
         <StyledView className="w-full">
           {/* Apple */}
           <Button
-            label={isPending ? "Signing in..." : "Continue with apple"}
+            label={isPending ? t("auth.signing_in") : t("auth.continue_with_apple")}
             onPress={handleAppleLogin}
             disabled={isPending}
             isLoading={isPending} // Show spinner if loading
@@ -167,7 +174,7 @@ const AuthStartScreen = () => {
 
           {/* Google */}
           <Button
-            label={isPending ? "Signing in..." : "Continue with Google"}
+            label={isPending ? t("auth.signing_in") : t("auth.continue_with_google")}
             onPress={handleGoogleLogin}
             disabled={isPending}
             isLoading={isPending}
@@ -181,7 +188,7 @@ const AuthStartScreen = () => {
           {/* Email */}
           <Button
             variant="primary"
-            label="Continue with email"
+            label={t("auth.continue_with_email")}
             onPress={() => navigation.navigate("Signup")}
             className="w-full bg-[#F59E0B] mb-6 border-0"
           />
@@ -189,7 +196,7 @@ const AuthStartScreen = () => {
           {/* Divider */}
           <StyledView className="flex-row items-center w-full mb-6">
             <StyledView className="flex-1 h-[1px] bg-white/30" />
-            <StyledText className="mx-4 text-white">or</StyledText>
+            <StyledText className="mx-4 text-white">{t("auth.or")}</StyledText>
             <StyledView className="flex-1 h-[1px] bg-white/30" />
           </StyledView>
 
@@ -197,10 +204,10 @@ const AuthStartScreen = () => {
           {/* Sign In Link */}
           <StyledView className="flex-row items-center justify-center">
             <StyledText className="text-white mr-1">
-              Already have an account?
+              {t("auth.already_have_account")}
             </StyledText>
             <Button
-              label="Sign in"
+              label={t("auth.sign_in")}
               onPress={() => navigation.navigate("Login")}
               variant="ghost"
               className="ml-1"

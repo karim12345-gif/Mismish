@@ -12,33 +12,29 @@ const ONBOARDING_IMAGES = {
 export const ONBOARDING_SLIDES: readonly Slide[] = [
   {
     id: "surplus",
-    title: "Find surplus deals near you",
-    description:
-      "Discover delicious food from local restaurants and cafes at a fraction of the price.",
+    title: "onboarding.cards.nearby_title",
+    description: "onboarding.cards.nearby_description",
     icon: require("@assets/images/map.png"),
     decoration: require("@assets/images/Container.png"),
   },
   {
     id: "surprise",
-    title: "Surprise bags with great value",
-    description:
-      "Get mystery food boxes with up to 70% discount. Fresh, delicious, and sustainable.",
+    title: "onboarding.cards.value_title",
+    description: "onboarding.cards.value_description",
     icon: require("@assets/images/shopping-bag.png"),
     decoration: require("@assets/images/sparkles.png"),
   },
   {
     id: "booking",
-    title: "Book & pick up easily",
-    description:
-      "Reserve your surprise bag and pick it up at your convenience with our simple QR system.",
+    title: "onboarding.cards.pickup_title",
+    description: "onboarding.cards.pickup_description",
     icon: require("@assets/images/scan-line.png"), // these aren't actually used by the new illustrations
     decoration: require("@assets/images/qr-code.png"),
   },
   {
     id: "impact",
-    title: "Save money, save the planet",
-    description:
-      "Track your positive impact on the environment and your wallet with every order.",
+    title: "onboarding.cards.impact_title",
+    description: "onboarding.cards.impact_description",
     icon: require("@assets/images/map.png"), // generic fallback, not used by new illustrations
     decoration: require("@assets/images/Container.png"),
   },

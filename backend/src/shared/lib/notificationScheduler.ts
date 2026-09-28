@@ -8,16 +8,25 @@ import {
 type SchedulableOrder = {
   id: number;
   deliveryMethod: "PICKUP" | "DELIVERY";
-  pickupOneHourReminderSentAt: Date | null;
+  pickupReminderSentAt: Date | null;
   pickupFifteenMinuteReminderSentAt: Date | null;
-  surpriseBox: { pickupStart: Date };
+  pickupWindowEnd?: Date | null;
+  surpriseBox: { pickupEnd: Date };
 };
 
 const reminderTimers = new Map<string, NodeJS.Timeout>();
-const reminderKinds: PickupReminderKind[] = ["oneHour", "fifteenMinutes"];
+const reminderKinds: PickupReminderKind[] = [
+  "thirtyMinutes",
+  "fifteenMinutes",
+];
 
 const timerKey = (orderId: number, kind: PickupReminderKind) =>
   `${orderId}:${kind}`;
+
+/** Effective pickup end: persisted window (today/tomorrow offset) or listing pickupEnd. */
+export function resolvePickupWindowEnd(order: SchedulableOrder): Date {
+  return order.pickupWindowEnd ?? order.surpriseBox.pickupEnd;
+}
 
 export function cancelPickupReminders(orderId: number): void {
   for (const kind of reminderKinds) {
@@ -32,13 +41,25 @@ export function schedulePickupReminders(order: SchedulableOrder): void {
   cancelPickupReminders(order.id);
   if (order.deliveryMethod !== "PICKUP") return;
 
+  const now = Date.now();
+  const scheduledPickupEndMs = resolvePickupWindowEnd(order).getTime();
+  const remainingMs = scheduledPickupEndMs - now;
+  if (remainingMs <= 0) return;
+
+  const fifteenMinuteOffsetMs = getPickupReminderDefinition(
+    "fifteenMinutes",
+  ).offsetMs;
+
   for (const kind of reminderKinds) {
     const definition = getPickupReminderDefinition(kind);
     if (order[definition.sentField]) continue;
 
-    const scheduledPickupStartMs = order.surpriseBox.pickupStart.getTime();
-    const delay = scheduledPickupStartMs - definition.offsetMs - Date.now();
-    if (delay <= 0) continue;
+    // Inside the final 15-minute window, send only the urgent reminder.
+    if (kind === "thirtyMinutes" && remainingMs <= fifteenMinuteOffsetMs) {
+      continue;
+    }
+
+    const delay = Math.max(0, remainingMs - definition.offsetMs);
 
     const key = timerKey(order.id, kind);
     console.info(
@@ -52,7 +73,7 @@ export function schedulePickupReminders(order: SchedulableOrder): void {
         const result = await notificationService.sendPickupReminder(
           order.id,
           kind,
-          scheduledPickupStartMs,
+          scheduledPickupEndMs,
         );
 
         if (result.outcome === "reschedule") {
@@ -73,6 +94,15 @@ export function schedulePickupReminders(order: SchedulableOrder): void {
   }
 }
 
+const orderReminderSelect = {
+  id: true,
+  deliveryMethod: true,
+  pickupReminderSentAt: true,
+  pickupFifteenMinuteReminderSentAt: true,
+  pickupWindowEnd: true,
+  surpriseBox: { select: { pickupEnd: true } },
+} as const;
+
 export async function reschedulePickupRemindersForOrder(
   orderId: number,
 ): Promise<void> {
@@ -83,13 +113,7 @@ export async function reschedulePickupRemindersForOrder(
       status: { notIn: ["COMPLETED", "CANCELLED", "DELIVERED"] },
       pickupStatus: "PENDING",
     },
-    select: {
-      id: true,
-      deliveryMethod: true,
-      pickupOneHourReminderSentAt: true,
-      pickupFifteenMinuteReminderSentAt: true,
-      surpriseBox: { select: { pickupStart: true } },
-    },
+    select: orderReminderSelect,
   });
 
   if (!order) {
@@ -110,37 +134,36 @@ export async function reschedulePickupRemindersForListing(
       status: { notIn: ["COMPLETED", "CANCELLED", "DELIVERED"] },
       pickupStatus: "PENDING",
     },
-    select: {
-      id: true,
-      deliveryMethod: true,
-      pickupOneHourReminderSentAt: true,
-      pickupFifteenMinuteReminderSentAt: true,
-      surpriseBox: { select: { pickupStart: true } },
-    },
+    select: orderReminderSelect,
   });
 
   orders.forEach(schedulePickupReminders);
 }
 
 export async function reSchedulePendingNotifications(): Promise<void> {
+  const now = new Date();
   const pendingOrders = await prisma.order.findMany({
     where: {
       deliveryMethod: "PICKUP",
       status: { notIn: ["COMPLETED", "CANCELLED", "DELIVERED"] },
       pickupStatus: "PENDING",
-      surpriseBox: { pickupStart: { gt: new Date() } },
       OR: [
-        { pickupOneHourReminderSentAt: null },
-        { pickupFifteenMinuteReminderSentAt: null },
+        { pickupWindowEnd: { gt: now } },
+        {
+          pickupWindowEnd: null,
+          surpriseBox: { pickupEnd: { gt: now } },
+        },
+      ],
+      AND: [
+        {
+          OR: [
+            { pickupReminderSentAt: null },
+            { pickupFifteenMinuteReminderSentAt: null },
+          ],
+        },
       ],
     },
-    select: {
-      id: true,
-      deliveryMethod: true,
-      pickupOneHourReminderSentAt: true,
-      pickupFifteenMinuteReminderSentAt: true,
-      surpriseBox: { select: { pickupStart: true } },
-    },
+    select: orderReminderSelect,
   });
 
   console.info(

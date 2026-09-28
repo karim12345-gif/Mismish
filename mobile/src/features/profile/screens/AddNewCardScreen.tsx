@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
@@ -9,11 +8,14 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useCards, detectBrand } from "../../../context/CardsContext";
+import { useTranslation } from "react-i18next";
 
 export default function AddNewCardScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { addCard } = useCards();
   const [name, setName] = useState("");
@@ -40,7 +42,7 @@ export default function AddNewCardScreen() {
 
         <View className="flex-1 items-center">
           <Text className="text-[#111] font-black text-[16px]">
-            Add New Card
+            {t("payment.add_card")}
           </Text>
         </View>
       </View>
@@ -57,12 +59,12 @@ export default function AddNewCardScreen() {
           {/* Form Fields */}
           <View className="mb-5">
             <Text className="text-[#111] font-black text-[13px] mb-2">
-              Name on Card
+              {t("payment.name_on_card")}
             </Text>
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Enter Name on Card"
+              placeholder={t("payment.name_placeholder")}
               placeholderTextColor="#A1A1A1"
               className="w-full h-[52px] border border-gray-200 rounded-xl px-4 text-[#111] font-medium text-[14px]"
             />
@@ -70,7 +72,7 @@ export default function AddNewCardScreen() {
 
           <View className="mb-5">
             <Text className="text-[#111] font-black text-[13px] mb-2">
-              Card Number
+              {t("payment.card_number")}
             </Text>
             <TextInput
               value={cardNumber}
@@ -86,12 +88,12 @@ export default function AddNewCardScreen() {
           <View className="flex-row items-center justify-between mb-5">
             <View className="w-[48%]">
               <Text className="text-[#111] font-black text-[13px] mb-2">
-                Expiry Date
+                {t("payment.expiry_date")}
               </Text>
               <TextInput
                 value={expiry}
                 onChangeText={setExpiry}
-                placeholder="MM/YY"
+                placeholder={t("payment.expiry_placeholder")}
                 placeholderTextColor="#A1A1A1"
                 maxLength={5}
                 className="w-full h-[52px] border border-gray-200 rounded-xl px-4 text-[#111] font-medium text-[14px]"
@@ -99,7 +101,7 @@ export default function AddNewCardScreen() {
             </View>
             <View className="w-[48%]">
               <Text className="text-[#111] font-black text-[13px] mb-2">
-                CVV
+                {t("payment.cvv")}
               </Text>
               <TextInput
                 value={cvv}
@@ -137,7 +139,7 @@ export default function AddNewCardScreen() {
           <Text
             className={`font-black text-[16px] ${isFormValid ? "text-white" : "text-gray-400"}`}
           >
-            Continue
+            {t("common.continue")}
           </Text>
         </TouchableOpacity>
       </View>

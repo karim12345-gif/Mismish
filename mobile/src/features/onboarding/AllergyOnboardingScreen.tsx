@@ -6,9 +6,11 @@ import { useNavigation } from "@react-navigation/native";
 import { ALL_ALLERGENS } from "../../constants/allergens";
 import { useAllergies, useUpdateAllergies } from "../../hooks/useAllergies";
 import { ALLERGY_ONBOARDED_KEY } from "../../constants/storage";
+import { useTranslation } from "react-i18next";
 
 export default function AllergyOnboardingScreen() {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const { data: existingAllergies } = useAllergies();
   const [selected, setSelected] = useState<string[]>([]);
   const { mutate: saveAllergies, isPending } = useUpdateAllergies();
@@ -50,11 +52,10 @@ export default function AllergyOnboardingScreen() {
         <View className="flex-1 px-6 pt-10 pb-8">
           {/* Header */}
           <Text className="text-[#111] font-black text-[30px] mb-2 leading-tight">
-            Any food allergies? 🥜
+            {t("allergies.title")}
           </Text>
           <Text className="text-gray-500 font-medium text-[15px] mb-8 leading-6">
-            We'll warn you before you order a bag that may contain these
-            ingredients.
+            {t("allergies.description")}
           </Text>
 
           {/* Allergen grid */}
@@ -79,7 +80,7 @@ export default function AllergyOnboardingScreen() {
                     className="font-bold text-[14px]"
                     style={{ color: active ? "#FF7F50" : "#444" }}
                   >
-                    {allergen.label}
+                    {t(`allergies.names.${allergen.id}`)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -93,8 +94,7 @@ export default function AllergyOnboardingScreen() {
                 {selected.length}
               </Text>
               <Text className="text-[#FF7F50] font-semibold text-[13px]">
-                {selected.length === 1 ? "allergen" : "allergens"} selected —
-                we'll warn you on every bag.
+                {t("allergies.selection_summary", { count: selected.length })}
               </Text>
             </View>
           )}
@@ -108,8 +108,8 @@ export default function AllergyOnboardingScreen() {
           >
             <Text className="text-white font-black text-[16px]">
               {selected.length > 0
-                ? `Save ${selected.length} Allergen${selected.length > 1 ? "s" : ""}`
-                : "I have no allergies"}
+                ? t("allergies.save_selected", { count: selected.length })
+                : t("allergies.none_long")}
             </Text>
           </TouchableOpacity>
 
@@ -118,7 +118,7 @@ export default function AllergyOnboardingScreen() {
             className="items-center py-3"
           >
             <Text className="text-gray-400 font-semibold text-[14px]">
-              Skip for now
+              {t("common.skip_for_now")}
             </Text>
           </TouchableOpacity>
         </View>

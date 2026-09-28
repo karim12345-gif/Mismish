@@ -7,8 +7,8 @@ import {
   ViewToken,
   TouchableOpacity,
   Image,
-  SafeAreaView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { styled } from "nativewind";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ import {
 } from "./onboarding.constants";
 import { Props, Slide } from "./types";
 import { useAuth } from "../../../context/AuthContext";
+import { setAppLanguage } from "../../../i18n";
 
 const StyledText = styled(Text);
 
@@ -53,7 +54,10 @@ export const WelcomeIllustration = () => (
 // Slide 2 — Surprise Bag
 // Mystery bag with food items peeking out
 // ─────────────────────────────────────────────
-export const SurpriseIllustration = () => (
+export const SurpriseIllustration = () => {
+  const { t } = useTranslation();
+
+  return (
   <View className="relative items-center justify-center">
     {/* Rotated organic background */}
     <View
@@ -95,7 +99,7 @@ export const SurpriseIllustration = () => (
         {/* Discount badge */}
         <View className="bg-[#FF7F50] rounded-full px-4 py-1 mt-3">
           <Text className="text-white text-xs font-extrabold tracking-wider">
-            UP TO 70% OFF
+            {t("onboarding.discount_badge")}
           </Text>
         </View>
       </View>
@@ -106,13 +110,17 @@ export const SurpriseIllustration = () => (
       </View>
     </View>
   </View>
-);
+  );
+};
 
 // ─────────────────────────────────────────────
 // Slide 3 — Book & Collect (QR)
 // Already implemented in original code — keeping exact same structure
 // ─────────────────────────────────────────────
-export const BookingIllustration = () => (
+export const BookingIllustration = () => {
+  const { t } = useTranslation();
+
+  return (
   <View className="relative items-center justify-center">
     {/* Arrow badge top left */}
     <View className="absolute -top-6 -left-6 bg-white w-14 h-14 rounded-full items-center justify-center z-20 shadow-sm shadow-[#00000020]">
@@ -169,17 +177,21 @@ export const BookingIllustration = () => (
     {/* Instant pickup label */}
     <View className="absolute -bottom-16 bg-white px-5 py-2 rounded-full shadow-sm shadow-[#00000010]">
       <Text className="text-[#333] text-xs font-extrabold tracking-widest">
-        INSTANT PICK-UP
+        {t("onboarding.instant_pickup")}
       </Text>
     </View>
   </View>
-);
+  );
+};
 
 // ─────────────────────────────────────────────
 // Slide 4 — Save & Impact
 // Eco stats / saved meals counter
 // ─────────────────────────────────────────────
-export const ImpactIllustration = () => (
+export const ImpactIllustration = () => {
+  const { t } = useTranslation();
+
+  return (
   <View className="w-[240px] h-[240px] bg-white rounded-[60px] items-center justify-center overflow-hidden shadow-sm shadow-black/5">
     {/* Green blob */}
     <View
@@ -197,18 +209,24 @@ export const ImpactIllustration = () => (
       <View className="flex-row gap-2 w-full">
         <View className="flex-1 bg-[#F9F9F9] border border-[#E8E8E8] rounded-2xl p-2 items-center">
           <Text className="text-[#366150] text-lg font-black">38</Text>
-          <Text className="text-[9px] font-bold text-[#888]">Meals saved</Text>
+          <Text className="text-[9px] font-bold text-[#888]">
+            {t("onboarding.meals_saved")}
+          </Text>
         </View>
         <View className="flex-1 bg-[#366150] rounded-2xl p-2 items-center">
           <Text className="text-white text-lg font-black">5.2</Text>
-          <Text className="text-[9px] font-bold text-[#A8D5BC]">kg CO₂</Text>
+          <Text className="text-[9px] font-bold text-[#A8D5BC]">
+            {t("onboarding.co2_kg")}
+          </Text>
         </View>
       </View>
 
       {/* SAR saved badge */}
       <View className="bg-[#FF7F50] rounded-full px-4 py-1.5 flex-row items-center gap-1">
         <Feather name="trending-down" size={12} color="#fff" />
-        <Text className="text-white text-xs font-extrabold">SAR 230 saved</Text>
+        <Text className="text-white text-xs font-extrabold">
+          {t("onboarding.savings_example")}
+        </Text>
       </View>
     </View>
 
@@ -217,7 +235,8 @@ export const ImpactIllustration = () => (
       <Feather name="star" size={14} color="#FF7F50" />
     </View>
   </View>
-);
+  );
+};
 
 // ─────────────────────────────────────────────
 // Helper: QR corner piece
@@ -279,9 +298,9 @@ const OnboardingScreen = ({ navigation }: Props) => {
     completeIntro();
   };
 
-  const toggleLanguage = () => {
+  const toggleLanguage = async () => {
     const nextLang = i18n.language === "en" ? "ar" : "en";
-    i18n.changeLanguage(nextLang);
+    await setAppLanguage(nextLang);
   };
 
   const renderIllustration = (id: string) => {
@@ -314,7 +333,7 @@ const OnboardingScreen = ({ navigation }: Props) => {
         >
           <MaterialCommunityIcons name="earth" size={18} color="#FF7F50" />
           <StyledText className="text-[#FF7F50] ml-1 font-medium pb-1">
-            عربي
+            {i18n.language.startsWith("ar") ? t("settings.english") : t("settings.arabic")}
           </StyledText>
         </TouchableOpacity>
       </View>
@@ -342,10 +361,10 @@ const OnboardingScreen = ({ navigation }: Props) => {
       <View className="absolute bottom-0 w-full bg-white rounded-t-[32px] px-8 pt-10 pb-12 shadow-2xl shadow-black">
         <View className="items-center">
           <StyledText className="text-[#000000] text-2xl font-extrabold text-center mb-4">
-            {ONBOARDING_SLIDES[currentIndex].title}
+            {t(ONBOARDING_SLIDES[currentIndex].title)}
           </StyledText>
           <StyledText className="text-[#555] text-base text-center mb-10 leading-6 px-2">
-            {ONBOARDING_SLIDES[currentIndex].description}
+            {t(ONBOARDING_SLIDES[currentIndex].description)}
           </StyledText>
 
           <View className="flex-row mb-8">

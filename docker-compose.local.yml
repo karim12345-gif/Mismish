@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mismish-local-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mismish
+      POSTGRES_PASSWORD: mismish_local
+      POSTGRES_DB: mismish_local
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - mismish-local-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mismish -d mismish_local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mismish-local-pg-data:
+    name: mismish-local-pg-data
+

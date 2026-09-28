@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import compression from "compression";
 import path from "path";
 
 import { errorHandler } from "./shared/middleware/errorHandler";
@@ -23,14 +23,14 @@ import { reSchedulePendingNotifications } from "./shared/lib/notificationSchedul
 import { bootstrapAdmin } from "./shared/lib/bootstrapAdmin";
 import adminRoutes from "./modules/admin/admin.routes";
 import rewardsRoutes from "./modules/rewards/rewards.routes";
-
-dotenv.config();
+import healthRoutes from "./modules/health/health.routes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── Global Middleware ────────────────────────────────────────────────────────
 app.use(helmet());
+app.use(compression());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
@@ -59,6 +59,7 @@ app.get(
 );
 
 // ─── Routes — /api/{module}/v1 ────────────────────────────────────────────────
+app.use("/health", healthRoutes);
 app.use("/api/auth/v1", authRoutes);
 app.use("/api/orders/v1", ordersRoutes);
 app.use("/api/listings/v1", listingsRoutes);

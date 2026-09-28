@@ -32,6 +32,23 @@ The mobile app sends its current language with OTP send and resend requests.
 Template `7` is used for English and template `8` for Arabic. Requests from
 older clients without a language continue to use English.
 
+The OTP phone and verification screens use the same mobile locale. Their labels,
+actions, and known validation errors are available in both English and Arabic.
+
+## Implementation Map
+
+- `mobile/src/components/GuestAuthModal.tsx` owns the OTP flow state and calls the
+  existing authentication service.
+- `mobile/src/components/guest-auth/` contains the focused phone/verification UI
+  components and shared OTP presentation utilities.
+- `mobile/src/services/auth/auth.service.ts` sends the selected `en` or `ar`
+  language to the backend.
+- `src/modules/auth/` validates the request and runs the existing authentication
+  flow.
+- `src/shared/lib/sms.ts` selects development mode or production delivery.
+- `src/shared/lib/authentica.ts` is the only Authentica provider integration and
+  maps the selected language to the configured template.
+
 For local development without sending real SMS messages, set `SMS_DEV_MODE=true`.
 The backend prints a development code and the mobile form is prefilled with it.
 

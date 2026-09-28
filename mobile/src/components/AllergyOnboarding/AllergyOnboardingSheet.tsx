@@ -16,6 +16,7 @@ import {
   ALLERGY_ONBOARDED_KEY,
   ALLERGY_PENDING_KEY,
 } from "../../constants/storage";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   visible: boolean;
@@ -27,6 +28,7 @@ export const AllergyOnboardingSheet = ({ visible, onDone }: Props) => {
   const { mutate: saveAllergies } = useUpdateAllergies();
   const { isAuthenticated } = useAuth();
   const { setUserAllergies } = useUserAllergies();
+  const { t } = useTranslation();
 
   const toggle = (id: string) => {
     setSelected((prev) =>
@@ -65,10 +67,10 @@ export const AllergyOnboardingSheet = ({ visible, onDone }: Props) => {
 
             {/* Header */}
             <Text className="text-[#111] font-black text-[22px] mb-1">
-              Any food allergies? 🥜
+              {t("allergies.title")}
             </Text>
             <Text className="text-gray-500 font-medium text-[14px] mb-6 leading-5">
-              We'll warn you before you order a bag that may contain these ingredients.
+              {t("allergies.description")}
             </Text>
 
             {/* Allergen grid */}
@@ -95,7 +97,7 @@ export const AllergyOnboardingSheet = ({ visible, onDone }: Props) => {
                         className="font-bold text-[13px]"
                         style={{ color: active ? "#FF7F50" : "#444" }}
                       >
-                        {allergen.label}
+                        {t(`allergies.names.${allergen.id}`)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -111,14 +113,14 @@ export const AllergyOnboardingSheet = ({ visible, onDone }: Props) => {
             >
               <Text className="text-white font-black text-[16px]">
                 {selected.length > 0
-                  ? `Save ${selected.length} Allergen${selected.length > 1 ? "s" : ""}`
-                  : "No Allergies"}
+                  ? t("allergies.save_selected", { count: selected.length })
+                  : t("allergies.none")}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleSave} className="items-center py-2">
               <Text className="text-gray-400 font-semibold text-[13px]">
-                Skip for now
+                {t("common.skip_for_now")}
               </Text>
             </TouchableOpacity>
           </View>

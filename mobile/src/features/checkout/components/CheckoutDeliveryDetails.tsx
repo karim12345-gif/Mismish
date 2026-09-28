@@ -3,11 +3,12 @@ import { View, Text, TouchableOpacity, Modal, Pressable } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { Feather } from "@expo/vector-icons";
 import { useLocation } from "../../../context/LocationContext";
+import { useTranslation } from "react-i18next";
 
-const fmtHour = (date: Date) =>
-  date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+const fmtHour = (date: Date, locale: string) =>
+  date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hour12: true });
 
-const buildSlots = () => {
+const buildSlots = (locale: string) => {
   const slots = [];
   const base = new Date();
   base.setMinutes(0, 0, 0);
@@ -15,7 +16,7 @@ const buildSlots = () => {
   for (let i = 0; i < 4; i++) {
     const start = new Date(base.getTime() + i * 60 * 60 * 1000);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
-    slots.push({ label: `${fmtHour(start)} – ${fmtHour(end)}`, start, end });
+    slots.push({ label: `${fmtHour(start, locale)} – ${fmtHour(end, locale)}`, start, end });
   }
   return slots;
 };
@@ -25,15 +26,17 @@ interface Props {
 }
 
 export const CheckoutDeliveryDetails = ({ address }: Props) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("ar") ? "ar-SA" : "en-US";
   const { location } = useLocation();
   const [windowType, setWindowType] = useState<"fastest" | "scheduled">("fastest");
   const [slotPickerVisible, setSlotPickerVisible] = useState(false);
-  const slots = buildSlots();
+  const slots = buildSlots(locale);
   const [selectedSlot, setSelectedSlot] = useState(slots[0]);
 
   const deliveryLabel = windowType === "fastest"
-    ? `${fmtHour(slots[0].start)} – ${fmtHour(slots[0].end)}`
-    : `${fmtHour(selectedSlot.start)} – ${fmtHour(selectedSlot.end)}`;
+    ? `${fmtHour(slots[0].start, locale)} – ${fmtHour(slots[0].end, locale)}`
+    : `${fmtHour(selectedSlot.start, locale)} – ${fmtHour(selectedSlot.end, locale)}`;
 
   const region = location
     ? {
@@ -67,25 +70,25 @@ export const CheckoutDeliveryDetails = ({ address }: Props) => {
 
       <View className="px-5 py-5">
         {/* Address */}
-        <Text className="text-[#111] font-black text-[15px] mb-3">Delivery address</Text>
+        <Text className="text-[#111] font-black text-[15px] mb-3">{t("checkout.delivery_address")}</Text>
         <View className="flex-row items-center mb-5">
           <Feather name="map-pin" size={14} color="#366150" />
           <Text className="text-gray-600 font-medium text-[13px] ml-2 flex-1" numberOfLines={2}>
-            {address || "Detecting your location..."}
+            {address || t("checkout.detecting_location")}
           </Text>
         </View>
 
         <View className="h-[1px] bg-gray-100 mb-5" />
 
         {/* Delivery window */}
-        <Text className="text-[#111] font-black text-[15px] mb-3">Choose a delivery window</Text>
+        <Text className="text-[#111] font-black text-[15px] mb-3">{t("checkout.delivery_window")}</Text>
         <View className="flex-row gap-3 mb-3">
           <TouchableOpacity
             onPress={() => setWindowType("fastest")}
             className={`flex-1 py-3 rounded-2xl border items-center ${windowType === "fastest" ? "border-[#366150] bg-[#E8F0ED]" : "border-gray-200 bg-white"}`}
           >
             <Text className={`font-bold text-[13px] ${windowType === "fastest" ? "text-[#366150]" : "text-gray-500"}`}>
-              Fastest Time
+              {t("checkout.fastest_time")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -93,13 +96,13 @@ export const CheckoutDeliveryDetails = ({ address }: Props) => {
             className={`flex-1 py-3 rounded-2xl border items-center ${windowType === "scheduled" ? "border-[#366150] bg-[#E8F0ED]" : "border-gray-200 bg-white"}`}
           >
             <Text className={`font-bold text-[13px] ${windowType === "scheduled" ? "text-[#366150]" : "text-gray-500"}`}>
-              Scheduled Time
+              {t("checkout.scheduled_time")}
             </Text>
           </TouchableOpacity>
         </View>
 
         <Text className="text-gray-400 text-[12px] font-medium">
-          Your order will be delivered from{" "}
+          {t("checkout.delivered_from")}{" "}
           <Text className="text-[#366150] font-bold">{deliveryLabel}</Text>
         </Text>
       </View>
@@ -110,7 +113,7 @@ export const CheckoutDeliveryDetails = ({ address }: Props) => {
           <Pressable>
             <View className="bg-white rounded-t-3xl px-5 pt-5 pb-10">
               <View className="flex-row items-center justify-between mb-5">
-                <Text className="text-[#111] font-black text-[17px]">Select Delivery Time Slot</Text>
+                <Text className="text-[#111] font-black text-[17px]">{t("checkout.select_delivery_slot")}</Text>
                 <TouchableOpacity onPress={() => setSlotPickerVisible(false)}
                   className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center">
                   <Feather name="x" size={16} color="#555" />
@@ -119,10 +122,10 @@ export const CheckoutDeliveryDetails = ({ address }: Props) => {
 
               <View className="bg-[#E8F0ED] rounded-2xl px-4 py-3 mb-4">
                 <Text className="text-gray-600 text-[12px] font-medium text-center">
-                  The nearest time to schedule your delivery is
+                  {t("checkout.nearest_delivery_time")}
                 </Text>
                 <Text className="text-[#366150] font-black text-[14px] text-center mt-0.5">
-                  {`${fmtHour(slots[0].start)} – ${fmtHour(slots[0].end)}`}
+                  {`${fmtHour(slots[0].start, locale)} – ${fmtHour(slots[0].end, locale)}`}
                 </Text>
               </View>
 
@@ -146,7 +149,7 @@ export const CheckoutDeliveryDetails = ({ address }: Props) => {
                 onPress={() => setSlotPickerVisible(false)}
                 className="bg-[#366150] h-13 rounded-2xl items-center justify-center mt-2 py-4"
               >
-                <Text className="text-white font-black text-[15px]">Confirm Delivery Slot</Text>
+                <Text className="text-white font-black text-[15px]">{t("checkout.confirm_delivery_slot")}</Text>
               </TouchableOpacity>
             </View>
           </Pressable>

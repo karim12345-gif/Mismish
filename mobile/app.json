@@ -21,9 +21,13 @@
         "NSLocalNetworkUsageDescription": "Mismish needs local network access to connect to the development server.",
         "NSBonjourServices": [
           "_expo._tcp",
+          "_react-native-metro._tcp",
+          "_expo._tcp",
           "_react-native-metro._tcp"
         ],
         "UIBackgroundModes": [
+          "fetch",
+          "remote-notification",
           "fetch",
           "remote-notification"
         ],
@@ -42,8 +46,24 @@
             "CFBundleURLSchemes": [
               "com.googleusercontent.apps.505490363229-enso09ftem17pq92gc6e4i60tv0qsk0d"
             ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "com.mismish.app"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "exp+mobile"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.505490363229-enso09ftem17pq92gc6e4i60tv0qsk0d"
+            ]
           }
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       },
       "appleTeamId": "LJ5NJ37RFB"
     },
@@ -78,7 +98,14 @@
           "iosUrlScheme": "com.googleusercontent.apps.505490363229-enso09ftem17pq92gc6e4i60tv0qsk0d"
         }
       ],
-      "expo-apple-authentication"
-    ]
+      "expo-apple-authentication",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "32470e02-8d05-4573-a47c-0e8ab409da72"
+      }
+    },
+    "owner": "karimsalim991996s-team"
   }
 }

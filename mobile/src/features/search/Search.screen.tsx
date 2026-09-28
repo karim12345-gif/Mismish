@@ -22,44 +22,48 @@ import { StoreCard } from "../home/components/StoreCard";
 import { SearchSkeleton } from "./components/SearchSkeleton";
 import { Store } from "../../services/store/store.service";
 import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
+import { useTranslation } from "react-i18next";
+import { getLocalizedName } from "../../i18n/localizedContent";
 
 const HISTORY_KEY = "@mismish_search_history";
 const MAX_HISTORY = 10;
 
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", {
+const fmtTime = (iso: string, language: string) =>
+  new Date(iso).toLocaleTimeString(language === "ar" ? "ar-SA" : "en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
 
 function EmptyState() {
+  const { t } = useTranslation();
   return (
     <View className="flex-1 items-center justify-center pb-32">
       <View className="w-20 h-20 rounded-full bg-gray-100 items-center justify-center mb-5">
         <Ionicons name="search" size={36} color="#FF7F50" />
       </View>
       <Text className="text-[#111] font-black text-[20px] mb-2">
-        What are you craving today?
+        {t("search.prompt")}
       </Text>
       <Text className="text-gray-400 font-medium text-[14px] text-center px-10">
-        Search for your favorite stores and we'll help you find the nearest one
+        {t("search.description")}
       </Text>
     </View>
   );
 }
 
 function NoResults({ query }: { query: string }) {
+  const { t } = useTranslation();
   return (
     <View className="flex-1 items-center justify-center pb-32">
       <View className="w-20 h-20 rounded-full bg-gray-100 items-center justify-center mb-5">
         <Feather name="search" size={36} color="#ccc" />
       </View>
       <Text className="text-[#111] font-black text-[18px] mb-2">
-        No results found
+        {t("search.no_results")}
       </Text>
       <Text className="text-gray-400 font-medium text-[14px] text-center px-10">
-        No stores match "{query}"
+        {t("search.no_match", { query })}
       </Text>
     </View>
   );
@@ -67,6 +71,7 @@ function NoResults({ query }: { query: string }) {
 
 export default function SearchScreen() {
   const navigation = useNavigation<any>();
+  const { t, i18n } = useTranslation();
   const inputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -129,6 +134,7 @@ export default function SearchScreen() {
     return stores.filter(
       (s) =>
         s.name.toLowerCase().includes(q) ||
+        s.nameArabic?.toLowerCase().includes(q) ||
         s.category?.toLowerCase().includes(q) ||
         s.address?.toLowerCase().includes(q) ||
         s.listings.some((l) => l.name.toLowerCase().includes(q)),
@@ -151,12 +157,15 @@ export default function SearchScreen() {
     return (
       <StoreCard
         storeId={store.id}
-        title={store.name}
+        title={getLocalizedName(store, i18n.language)}
         branch={store.category ?? store.address?.split(",")[0] ?? ""}
-        price={firstBag ? `${firstBag.price} SAR` : "—"}
+        price={firstBag ? `${firstBag.price} ${t("common.currency")}` : "—"}
         timeRange={
           firstBag
-            ? `${fmtTime(firstBag.pickupStart)} - ${fmtTime(firstBag.pickupEnd)}`
+            ? `${fmtTime(firstBag.pickupStart, i18n.language)} - ${fmtTime(
+                firstBag.pickupEnd,
+                i18n.language,
+              )}`
             : "—"
         }
         distance="—"
@@ -166,7 +175,7 @@ export default function SearchScreen() {
         logoUrl={
           store.imageUrl ?? store.listings[0]?.imageUrl ?? DEFAULT_LISTING_IMAGE
         }
-        leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
+        leftCount={t("map.bag_left", { count: totalLeft })}
         hasListings={totalLeft > 0}
         rating={store.rating}
         reviewCount={store.reviewCount}
@@ -201,7 +210,7 @@ export default function SearchScreen() {
             autoFocus
             value={query}
             onChangeText={setQuery}
-            placeholder="Search for restaurants or meals"
+            placeholder={t("home.search_placeholder")}
             placeholderTextColor="#aaa"
             className="flex-1 text-[#111] text-[14px] font-medium ml-2"
             returnKeyType="search"
@@ -230,11 +239,11 @@ export default function SearchScreen() {
         <View className="flex-1 px-5 pt-5">
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-[#111] font-black text-[16px]">
-              Recent Search
+              {t("search.recent")}
             </Text>
             <TouchableOpacity onPress={clearHistory}>
               <Text className="text-gray-400 text-[13px] font-semibold">
-                Clear All
+                {t("search.clear_all")}
               </Text>
             </TouchableOpacity>
           </View>

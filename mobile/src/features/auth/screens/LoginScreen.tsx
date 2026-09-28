@@ -35,17 +35,19 @@ const LoginScreen = () => {
 
         <StyledView className="mb-8">
           <StyledText className="text-3xl font-bold text-[#146566] mb-2">
-            Welcome Back
+            {t("auth.welcome_back")}
           </StyledText>
-          <StyledText className="text-gray-500">Sign in to continue</StyledText>
+          <StyledText className="text-gray-500">
+            {t("auth.sign_in_to_continue")}
+          </StyledText>
         </StyledView>
 
         <StyledText className="text-gray-500 mb-8">
-          Enter your Saudi phone number and verify the Firebase OTP code.
+          {t("auth.phone_login_description")}
         </StyledText>
 
         <Button
-          label="Continue with phone"
+          label={t("auth.continue_with_phone")}
           className="bg-[#F59E0B]"
           onPress={() => setAuthVisible(true)}
         />

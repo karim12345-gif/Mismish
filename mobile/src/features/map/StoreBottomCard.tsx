@@ -4,6 +4,8 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { StoreBottomCardProps } from "./MapScreen.types";
 import { styles, FALLBACK_IMAGE, CORAL } from "./MapScreen.styles";
+import { useTranslation } from "react-i18next";
+import { getLocalizedName } from "../../i18n/localizedContent";
 
 export function StoreBottomCard({
   store,
@@ -12,6 +14,7 @@ export function StoreBottomCard({
   onToggleFavorite,
 }: StoreBottomCardProps) {
   const navigation = useNavigation<any>();
+  const { t, i18n } = useTranslation();
   const slideAnim = useRef(new Animated.Value(250)).current;
 
   useEffect(() => {
@@ -65,7 +68,9 @@ export function StoreBottomCard({
             resizeMode="cover"
           />
           <View style={{ flex: 1 }}>
-            <Text style={styles.storeName}>{store.name}</Text>
+            <Text style={styles.storeName}>
+              {getLocalizedName(store, i18n.language)}
+            </Text>
             <Text style={styles.storeMeta}>
               {store.category}
               {store.address ? ` · ${store.address.split(",")[0]}` : ""}
@@ -77,9 +82,9 @@ export function StoreBottomCard({
           <View style={styles.bagRow}>
             <View>
               <View style={styles.priceRow}>
-                <Text style={styles.price}>SAR {bag.price}</Text>
+                <Text style={styles.price}>{t("common.currency")} {bag.price}</Text>
                 {bag.originalPrice && (
-                  <Text style={styles.originalPrice}>SAR {bag.originalPrice}</Text>
+                  <Text style={styles.originalPrice}>{t("common.currency")} {bag.originalPrice}</Text>
                 )}
                 {savings && (
                   <View style={styles.savingsBadge}>
@@ -88,7 +93,7 @@ export function StoreBottomCard({
                 )}
               </View>
               <Text style={styles.quantityText}>
-                {bag.quantity} bag{bag.quantity !== 1 ? "s" : ""} left
+                {t("map.bag_left", { count: bag.quantity })}
               </Text>
             </View>
 
@@ -98,12 +103,12 @@ export function StoreBottomCard({
               }
               style={styles.viewBagButton}
             >
-              <Text style={styles.viewBagText}>View Bag</Text>
+              <Text style={styles.viewBagText}>{t("map.view_bag")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, opacity: 0.45 }}>
-            <Text style={styles.noBagsText}>Not available today</Text>
+            <Text style={styles.noBagsText}>{t("home.not_available_today")}</Text>
           </View>
         )}
       </View>

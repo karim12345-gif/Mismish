@@ -1,16 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { AppError } from "../../shared/lib/AppError";
+import { handleControllerError as handle } from "../../shared/http/handleControllerError";
 import * as ordersService from "./orders.service";
 import type { CreateOrderBody } from "./orders.types";
 import { OrderStatus } from "@prisma/client";
-
-const handle = (error: unknown, res: Response, next: NextFunction): void => {
-  error instanceof AppError
-    ? res
-        .status(error.statusCode)
-        .json({ status: "error", message: error.message })
-    : next(error);
-};
 
 export const createOrder = async (
   req: Request<{}, {}, CreateOrderBody>,

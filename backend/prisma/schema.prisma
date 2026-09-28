@@ -24,6 +24,7 @@ model User {
   longitude          Float?
   address            String?
   pushToken          String?
+  preferredLanguage  String              @default("en")
   passwordChangedAt  DateTime?
   allergies          String[]
   orders             Order[]
@@ -183,6 +184,8 @@ model Order {
   quantity                          Int                 @default(1)
   deliveryMethod                    DeliveryMethod
   deliveryAddress                   String?
+  pickupOffset                      Int                 @default(0)
+  pickupWindowEnd                   DateTime?
   pickupReminderSentAt              DateTime?
   pickupOneHourReminderSentAt       DateTime?
   pickupFifteenMinuteReminderSentAt DateTime?

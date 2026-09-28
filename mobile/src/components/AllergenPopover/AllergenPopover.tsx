@@ -10,6 +10,7 @@ import {
 import { ALL_ALLERGENS } from "../../constants/allergens";
 import { isUserAllergicTo } from "../../utils/allergenUtils";
 import { useUserAllergies } from "../../context/AllergyContext";
+import { useTranslation } from "react-i18next";
 
 const SCREEN = Dimensions.get("window");
 const POPOVER_WIDTH = 240;
@@ -38,6 +39,7 @@ export const AllergenPopover = ({
   allergens,
 }: AllergenPopoverProps) => {
   const { userAllergies } = useUserAllergies();
+  const { t } = useTranslation();
 
   if (!anchor || allergens.length === 0) return null;
 
@@ -107,7 +109,7 @@ export const AllergenPopover = ({
                           flex: 1,
                         }}
                       >
-                        {found?.label ?? id}
+                        {found ? t(`allergies.names.${found.id}`) : id}
                       </Text>
                     </View>
                   );

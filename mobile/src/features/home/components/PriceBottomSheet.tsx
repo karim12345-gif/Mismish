@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 export type PriceRange = "" | "1-15" | "16-25" | "25+";
 
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export function PriceBottomSheet({ visible, current, onClose, onApply }: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<PriceRange>(current);
 
   useEffect(() => { setSelected(current); }, [current, visible]);
@@ -37,7 +39,7 @@ export function PriceBottomSheet({ visible, current, onClose, onApply }: Props) 
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.header}>
-            <Text style={styles.title}>Price Range</Text>
+            <Text style={styles.title}>{t("home.price_range")}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Feather name="x" size={16} color="#555" />
             </TouchableOpacity>
@@ -65,13 +67,13 @@ export function PriceBottomSheet({ visible, current, onClose, onApply }: Props) 
               onPress={() => { onApply(""); onClose(); }}
               style={styles.resetBtn}
             >
-              <Text style={styles.resetLabel}>Reset</Text>
+              <Text style={styles.resetLabel}>{t("common.reset")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => { onApply(selected); onClose(); }}
               style={styles.applyBtn}
             >
-              <Text style={styles.applyLabel}>Apply</Text>
+              <Text style={styles.applyLabel}>{t("common.apply")}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -1,14 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { AppError } from "../../shared/lib/AppError";
+import { handleControllerError as handle } from "../../shared/http/handleControllerError";
 import * as adminService from "./admin.service";
-
-const handle = (error: unknown, res: Response, next: NextFunction): void => {
-  error instanceof AppError
-    ? res
-        .status(error.statusCode)
-        .json({ status: "error", message: error.message })
-    : next(error);
-};
 
 const adminIdFrom = (req: Request): number => req.user?.id ?? 0;
 

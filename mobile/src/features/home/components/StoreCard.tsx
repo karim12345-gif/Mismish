@@ -6,6 +6,7 @@ import { useFavorites } from "../../../hooks/useFavorites";
 import { useUserAllergies } from "../../../context/AllergyContext";
 import { hasAllergenWarning } from "../../../utils/allergenUtils";
 import { AllergenPopover, AllergenAnchor } from "../../../components/AllergenPopover/AllergenPopover";
+import { useTranslation } from "react-i18next";
 
 interface StoreCardProps {
   storeId: number;
@@ -41,6 +42,7 @@ export const StoreCard = ({
   ingredients = [],
 }: StoreCardProps) => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(storeId);
   const { userAllergies } = useUserAllergies();
@@ -143,7 +145,7 @@ export const StoreCard = ({
                         color: hasWarning ? "#C0392B" : "#AAAAAA",
                         marginLeft: 3,
                       }}>
-                        Alerts
+                        {t("home.alerts")}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -156,20 +158,24 @@ export const StoreCard = ({
                 <View className="flex-row items-center border border-green-100 bg-green-50 self-start px-2 py-0.5 rounded-full">
                   <MaterialCommunityIcons name="clock-outline" size={12} color="#18C96D" />
                   <Text className="text-[#18C96D] text-[10px] font-bold ml-1">
-                    Now <Text className="font-medium text-gray-500">, {timeRange}</Text>
+                    {t("home.now")} <Text className="font-medium text-gray-500">, {timeRange}</Text>
                   </Text>
                 </View>
               ) : (
                 <View className="flex-row items-center border border-gray-200 bg-gray-100 self-start px-2 py-0.5 rounded-full">
                   <MaterialCommunityIcons name="clock-remove-outline" size={12} color="#999" />
-                  <Text className="text-gray-400 text-[10px] font-bold ml-1">Not available today</Text>
+                  <Text className="text-gray-400 text-[10px] font-bold ml-1">
+                    {t("home.not_available_today")}
+                  </Text>
                 </View>
               )}
             </View>
 
             <View className="items-end shrink-0">
               {hasListings && (
-                <Text className="text-gray-500 text-[11px] font-bold mb-0.5">Starts at</Text>
+                <Text className="text-gray-500 text-[11px] font-bold mb-0.5">
+                  {t("home.starts_at")}
+                </Text>
               )}
               <Text
                 className="font-black text-[15px]"

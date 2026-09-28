@@ -76,7 +76,8 @@ const logout = async (refreshToken: string): Promise<void> => {
 };
 
 const deleteAccount = async (): Promise<void> => {
-  await api.delete("/user/me");
+  // Correct mount: /api/users/v1/me (see USER_ENDPOINTS.ME)
+  await api.delete("/users/v1/me");
 };
 
 const AuthServices = {

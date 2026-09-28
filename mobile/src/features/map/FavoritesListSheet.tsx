@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Store } from "../../services/store/store.service";
 import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
+import { useTranslation } from "react-i18next";
 
 const CORAL = "#FF7F50";
 
@@ -27,6 +28,7 @@ export function FavoritesListSheet({
   onToggleFavorite,
   onSelectStore,
 }: Props) {
+  const { t } = useTranslation();
   const slideAnim = useRef(new Animated.Value(220)).current;
 
   useEffect(() => {
@@ -49,13 +51,13 @@ export function FavoritesListSheet({
 
       <Text style={styles.title}>
         {favoriteStores.length > 0
-          ? `${favoriteStores.length} Saved Restaurant${favoriteStores.length !== 1 ? "s" : ""}`
-          : "No Favorites Yet"}
+          ? t("map.saved_restaurants", { count: favoriteStores.length })
+          : t("map.no_favorites")}
       </Text>
 
       {favoriteStores.length === 0 ? (
         <Text style={styles.emptyText}>
-          Tap the heart on any restaurant to save it here.
+          {t("map.save_favorite_hint")}
         </Text>
       ) : (
         <FlatList
@@ -103,9 +105,9 @@ export function FavoritesListSheet({
                     {item.category ?? "—"}
                   </Text>
                   {bag ? (
-                    <Text style={styles.cardPrice}>SAR {bag.price}</Text>
+                    <Text style={styles.cardPrice}>{t("common.currency")} {bag.price}</Text>
                   ) : (
-                    <Text style={styles.cardUnavailable}>No bags</Text>
+                    <Text style={styles.cardUnavailable}>{t("map.no_bags")}</Text>
                   )}
                 </View>
               </TouchableOpacity>

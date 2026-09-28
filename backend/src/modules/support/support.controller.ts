@@ -1,13 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { AppError } from "../../shared/lib/AppError";
+import { handleControllerError as handle } from "../../shared/http/handleControllerError";
 import * as supportService from "./support.service";
 import type { ChatRequestBody } from "./support.schemas";
-
-const handle = (error: unknown, res: Response, next: NextFunction): void => {
-  error instanceof AppError
-    ? res.status(error.statusCode).json({ status: "error", message: error.message })
-    : next(error);
-};
 
 export const chatWithSupport = async (
   req: Request<{}, {}, ChatRequestBody>,

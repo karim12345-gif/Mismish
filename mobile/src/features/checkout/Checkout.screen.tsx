@@ -15,12 +15,20 @@ import { ConfirmOrderBottomSheet, isPickupExpired } from "./components/ConfirmOr
 import { useCreateOrder } from "../../hooks/useCreateOrder";
 import { useCart } from "../../context/CartContext";
 import { useStores } from "../../hooks/useStores";
+import { useTranslation } from "react-i18next";
+import { OrderServices } from "../../services/order/order.service";
+import type { Order } from "../../services/order/order.service";
+import { useQueryClient } from "@tanstack/react-query";
+import { STORES_QUERY_KEY } from "../../hooks/useStores";
 
 export default function CheckoutScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const queryClient = useQueryClient();
   const { cartItems, clearCart } = useCart();
-  const { mutate: createOrder, isPending } = useCreateOrder();
+  const { isPending: createHookPending } = useCreateOrder();
   const { data: stores = [] } = useStores();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const cartBoxId = cartItems.find((i: any) => i.surpriseBoxId)?.surpriseBoxId;
   const activeStore = stores.find((s) =>
@@ -43,49 +51,89 @@ export default function CheckoutScreen() {
     navigation.navigate("MainTabs" as never);
   };
 
-  const handleConfirm = () => {
-    const cartItem = cartItems.find((i: any) => i.surpriseBoxId);
-    const surpriseBoxId = cartItem?.surpriseBoxId;
-
-    if (!surpriseBoxId) {
-      Alert.alert("Error", "No bag selected. Please go back and add a bag.");
-      return;
-    }
-
-    const quantity    = cartItem?.quantity ?? 1;
-    const pickupOffset = cartItem?.pickupOffset ?? 0;
-
-    if (activeBag?.pickupEnd && isPickupExpired(activeBag.pickupEnd, pickupOffset)) {
-      setConfirmSheetVisible(false);
-      setErrorModalVisible(true);
-      return;
-    }
-
-    // Backend handles atomic decrement of qty bags in one transaction
-    createOrder(
-      { surpriseBoxId, deliveryMethod: "PICKUP", pickupOffset, quantity },
-      {
-        onSuccess: (response) => {
-          setConfirmSheetVisible(false);
-          clearCart();
-          (navigation.navigate as any)("BookingConfirmed", { order: response.data });
-        },
-        onError: (err: any) => {
-          setConfirmSheetVisible(false);
-          const msg = err?.response?.data?.message ?? "";
-          if (msg === "Sorry, this bag just sold out") {
-            setErrorReason("sold_out");
-            setErrorModalVisible(true);
-          } else if (msg === "Pickup time has ended") {
-            setErrorReason("expired");
-            setErrorModalVisible(true);
-          } else {
-            Alert.alert("Order Failed", msg || "Could not place order. Try again.");
-          }
-        },
-      },
-    );
+  const invalidateAfterOrders = () => {
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
+    queryClient.invalidateQueries({ queryKey: STORES_QUERY_KEY });
   };
+
+  const handleConfirm = async () => {
+    const lineItems = cartItems.filter((i: any) => i.surpriseBoxId);
+    if (lineItems.length === 0) {
+      Alert.alert(t("checkout.no_bag_title"), t("checkout.no_bag_message"));
+      return;
+    }
+
+    // Pre-check expiry for every line against its own listing + offset
+    for (const item of lineItems) {
+      const store = stores.find((s) =>
+        s.listings.some((l) => l.id === item.surpriseBoxId),
+      );
+      const bag = store?.listings.find((l) => l.id === item.surpriseBoxId);
+      const offset = item.pickupOffset ?? 0;
+      if (bag?.pickupEnd && isPickupExpired(bag.pickupEnd, offset)) {
+        setConfirmSheetVisible(false);
+        setErrorReason("expired");
+        setErrorModalVisible(true);
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    const created: Order[] = [];
+
+    try {
+      for (const item of lineItems) {
+        const response = await OrderServices.createOrder({
+          surpriseBoxId: item.surpriseBoxId!,
+          deliveryMethod: "PICKUP",
+          pickupOffset: item.pickupOffset ?? 0,
+          quantity: item.quantity ?? 1,
+        });
+        created.push(response.data);
+      }
+
+      invalidateAfterOrders();
+      setConfirmSheetVisible(false);
+      clearCart();
+      (navigation.navigate as any)("BookingConfirmed", {
+        order: created[0],
+        orders: created,
+      });
+    } catch (err: any) {
+      setConfirmSheetVisible(false);
+      const msg = err?.response?.data?.message ?? "";
+
+      if (created.length > 0) {
+        invalidateAfterOrders();
+        clearCart();
+        Alert.alert(
+          t("checkout.order_failed"),
+          msg
+            ? `${msg}\n(${created.length}/${lineItems.length})`
+            : t("checkout.order_failed_message"),
+        );
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainTabs", params: { screen: "Orders" } }],
+        });
+        return;
+      }
+
+      if (msg === "Sorry, this bag just sold out") {
+        setErrorReason("sold_out");
+        setErrorModalVisible(true);
+      } else if (msg === "Pickup time has ended") {
+        setErrorReason("expired");
+        setErrorModalVisible(true);
+      } else {
+        Alert.alert(t("checkout.order_failed"), msg || t("checkout.order_failed_message"));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isLoading = isSubmitting || createHookPending;
 
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
@@ -128,7 +176,7 @@ export default function CheckoutScreen() {
         visible={confirmSheetVisible}
         onClose={() => setConfirmSheetVisible(false)}
         onConfirm={handleConfirm}
-        isLoading={isPending}
+        isLoading={isLoading}
         pickupStart={activeBag?.pickupStart}
         pickupEnd={activeBag?.pickupEnd}
         pickupOffset={cartItems[0]?.pickupOffset ?? 0}

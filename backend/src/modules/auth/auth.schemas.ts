@@ -1,6 +1,5 @@
 import { z } from "zod";
-
-const phoneRegex = /^\+(?:20|966|971)\d{9,10}$/;
+import { phoneRegex } from "../../shared/lib/sms";
 
 // ─── Customer ────────────────────────────────────────────────────────────────
 
@@ -10,7 +9,7 @@ export const SendOtpSchema = z.object({
       .string()
       .regex(
         phoneRegex,
-        "Invalid phone number. Must be +20, +966, or +971 followed by 9-10 digits",
+        "Invalid phone number. Use international format, for example +9665XXXXXXXX",
       ),
     language: z.enum(["en", "ar"]).optional(),
   }),
@@ -90,9 +89,12 @@ export const VendorSignupSchema = z.object({
     email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     name: z.string().min(2, "Name must be at least 2 characters"),
+    nameArabic: z.string().optional(),
     address: z.string().optional(),
     description: z.string().optional(),
     category: z.string().optional(),
+    openingHours: z.string().optional(),
+    closingHours: z.string().optional(),
     latitude: z.number().min(-90).max(90).optional(),
     longitude: z.number().min(-180).max(180).optional(),
   }),

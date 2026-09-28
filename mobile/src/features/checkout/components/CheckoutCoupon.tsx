@@ -1,17 +1,21 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export const CheckoutCoupon = () => {
+  const { t } = useTranslation();
   const [couponCode, setCouponCode] = useState("");
 
   return (
     <View className="bg-white px-5 py-5 border-t-[8px] border-gray-50">
-      <Text className="text-[#111] font-black text-[15px] mb-3">Coupons</Text>
+      <Text className="text-[#111] font-black text-[15px] mb-3">
+        {t("checkout.coupon")}
+      </Text>
 
       <View className="flex-row items-center">
         <View className="flex-1 border border-gray-200 rounded-xl h-14 mr-3 bg-white justify-center px-4">
           <TextInput
-            placeholder="Enter Coupon Code"
+            placeholder={t("checkout.coupon_placeholder")}
             placeholderTextColor="#A1A1A1"
             className="font-medium text-[15px] text-[#111]"
             value={couponCode}
@@ -29,7 +33,7 @@ export const CheckoutCoupon = () => {
               couponCode.trim() ? "text-white" : "text-gray-400"
             }`}
           >
-            Apply
+            {t("common.apply")}
           </Text>
         </TouchableOpacity>
       </View>

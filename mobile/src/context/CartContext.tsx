@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEFAULT_LISTING_IMAGE } from "../constants/images";
+import { calculateCartSubtotal } from "../utils/cartTotals";
 
 const CART_STORAGE_KEY = "@mismish_cart";
 
@@ -158,10 +159,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const cartStoreId = cartItems[0]?.storeId ?? null;
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
+  const subtotal = calculateCartSubtotal(cartItems);
 
   return (
     <CartContext.Provider

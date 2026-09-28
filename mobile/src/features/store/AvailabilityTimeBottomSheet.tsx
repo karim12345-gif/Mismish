@@ -8,6 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 interface AvailabilityTimeBottomSheetProps {
   visible: boolean;
@@ -18,27 +19,32 @@ interface AvailabilityTimeBottomSheetProps {
   pickupEnd: string;
 }
 
-const fmtDate = (iso: string, offset = 0) => {
+const fmtDate = (iso: string, locale: string, offset = 0) => {
   const d = new Date(iso);
   d.setDate(d.getDate() + offset);
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
   });
 };
 
-const fmtTime = (iso: string, offset = 0) => {
+const fmtTime = (iso: string, locale: string, offset = 0) => {
   const d = new Date(iso);
   d.setDate(d.getDate() + offset);
-  return d.toLocaleTimeString("en-US", {
+  return d.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
 };
 
-const formatTimeRange = (start: string, end: string, offset = 0) => {
+const formatTimeRange = (
+  start: string,
+  end: string,
+  locale: string,
+  offset = 0,
+) => {
   const s = new Date(start);
   const e = new Date(end);
 
@@ -48,9 +54,9 @@ const formatTimeRange = (start: string, end: string, offset = 0) => {
   const eHours = e.getHours() * 60 + e.getMinutes();
 
   if (sHours > eHours) {
-    return `${fmtTime(end, offset)} – ${fmtTime(start, offset)}`;
+    return `${fmtTime(end, locale, offset)} – ${fmtTime(start, locale, offset)}`;
   }
-  return `${fmtTime(start, offset)} – ${fmtTime(end, offset)}`;
+  return `${fmtTime(start, locale, offset)} – ${fmtTime(end, locale, offset)}`;
 };
 
 export const AvailabilityTimeBottomSheet = ({
@@ -61,6 +67,8 @@ export const AvailabilityTimeBottomSheet = ({
   pickupStart,
   pickupEnd,
 }: AvailabilityTimeBottomSheetProps) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("ar") ? "ar-SA" : "en-US";
   const slideAnim = useRef(new Animated.Value(500)).current;
 
   useEffect(() => {
@@ -76,11 +84,11 @@ export const AvailabilityTimeBottomSheet = ({
   const options: {
     key: "today" | "tomorrow";
     offset: number;
-    label: string;
+    labelKey: "common.today" | "common.tomorrow";
     icon: string;
   }[] = [
-    { key: "today", offset: 0, label: "Today", icon: "clock" },
-    { key: "tomorrow", offset: 1, label: "Tomorrow", icon: "calendar" },
+    { key: "today", offset: 0, labelKey: "common.today", icon: "clock" },
+    { key: "tomorrow", offset: 1, labelKey: "common.tomorrow", icon: "calendar" },
   ];
 
   return (
@@ -95,7 +103,7 @@ export const AvailabilityTimeBottomSheet = ({
           {/* Header */}
           <View className="flex-row items-center justify-center mb-6 relative">
             <Text className="text-[#111] font-black text-[18px]">
-              Availability Time
+              {t("store.availability_title")}
             </Text>
             <TouchableOpacity
               onPress={onClose}
@@ -107,7 +115,7 @@ export const AvailabilityTimeBottomSheet = ({
 
           {/* Options */}
           <View className="flex-row justify-between mb-8">
-            {options.map(({ key, offset, label, icon }) => {
+            {options.map(({ key, offset, labelKey, icon }) => {
               const isSelected = selectedDate === key;
               return (
                 <TouchableOpacity
@@ -128,16 +136,16 @@ export const AvailabilityTimeBottomSheet = ({
                     )}
                   </View>
                   <Text className="text-gray-500 font-medium text-[12px] mb-1">
-                    {fmtDate(pickupEnd, offset)}
+                    {fmtDate(pickupEnd, locale, offset)}
                   </Text>
                   <View className="flex-row items-center mb-1.5">
                     <Feather name={icon as any} size={20} color="#111" />
                     <Text className="text-[#111] font-black text-[16px] ml-1.5">
-                      {label}
+                      {t(labelKey)}
                     </Text>
                   </View>
                   <Text className="text-gray-400 font-medium text-[11px]">
-                    {formatTimeRange(pickupStart, pickupEnd, offset)}
+                    {formatTimeRange(pickupStart, pickupEnd, locale, offset)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -148,7 +156,9 @@ export const AvailabilityTimeBottomSheet = ({
             onPress={onClose}
             className="w-full h-14 bg-[#FF7F50] rounded-2xl items-center justify-center shadow-sm shadow-[#FF7F50]/30"
           >
-            <Text className="text-white font-black text-[16px]">Confirm</Text>
+            <Text className="text-white font-black text-[16px]">
+              {t("common.confirm")}
+            </Text>
           </TouchableOpacity>
         </Animated.View>
       </View>

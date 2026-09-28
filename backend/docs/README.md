@@ -22,6 +22,9 @@ Complete guide to JWT token management implementation. Covers dual-token system 
 ### [AUTHENTICA_OTP.md](./AUTHENTICA_OTP.md)
 Customer SMS OTP delivery and verification through Authentica, including required backend environment variables.
 
+### [CODE_ORGANIZATION.md](./CODE_ORGANIZATION.md)
+Backend module boundaries, stable service facades, and the responsibility map for authentication, notifications, email, admin, vendor, and order code.
+
 ---
 
 ## 🚀 Quick Start
@@ -31,6 +34,7 @@ Customer SMS OTP delivery and verification through Authentica, including require
 3. **Wondering why we did X?** Check [TRADEOFFS.md](./TRADEOFFS.md)
 4. **Working on Phase 1?** Follow [PHASE_1_TASKS.md](./PHASE_1_TASKS.md)
 5. **Implementing authentication?** See [JWT_TOKEN_MANAGEMENT.md](./JWT_TOKEN_MANAGEMENT.md)
+6. **Navigating backend code?** See [CODE_ORGANIZATION.md](./CODE_ORGANIZATION.md)
 
 
 Quick note: to generate JWT base64 token , we use openssl rand -base64 64

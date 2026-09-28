@@ -40,8 +40,10 @@ import {
   DEFAULT_MAP_FILTERS,
 } from "./MapFilterSheet";
 import { ALL_CUISINES } from "../../constants/cuisines";
+import { useTranslation } from "react-i18next";
 
 export default function MapScreen() {
+  const { t } = useTranslation();
   const { data: stores = [] } = useStores();
   const { isFavorite, toggleFavorite, favoriteIds } = useFavorites();
 
@@ -49,7 +51,7 @@ export default function MapScreen() {
   const route = useRoute<RouteProp<MainTabParamList, "Map">>();
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [activeFilter, setActiveFilter] =
-    useState<ActiveFilter>("Available Now");
+    useState<ActiveFilter>("available");
   const [latDelta, setLatDelta] = useState(RIYADH.latitudeDelta);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [mapFilters, setMapFilters] = useState<MapFilters>(DEFAULT_MAP_FILTERS);
@@ -115,9 +117,9 @@ export default function MapScreen() {
 
     return stores.filter((s) => {
       // chip filters
-      if (activeFilter === "Available Now" && s.listings.length === 0)
+      if (activeFilter === "available" && s.listings.length === 0)
         return false;
-      if (activeFilter === "My Favorites" && !isFavorite(s.id)) return false;
+      if (activeFilter === "favorites" && !isFavorite(s.id)) return false;
 
       // sheet: cuisine
       if (mapFilters.cuisine && s.category !== mapFilters.cuisine) return false;
@@ -246,7 +248,7 @@ export default function MapScreen() {
             style={styles.searchIcon}
           />
           <Text style={styles.searchInput}>
-            Search restaurants, meals, or cuisine
+            {t("map.search_placeholder")}
           </Text>
         </TouchableOpacity>
 
@@ -270,12 +272,11 @@ export default function MapScreen() {
           </TouchableOpacity>
 
           {FILTER_CHIPS.map((chip) => {
-            const active = activeFilter === chip.label;
-            const label = chip.label;
+            const active = activeFilter === chip.value;
             return (
               <TouchableOpacity
-                key={chip.label}
-                onPress={() => handleFilterPress(chip.label as ActiveFilter)}
+                key={chip.value}
+                onPress={() => handleFilterPress(chip.value)}
                 activeOpacity={0.8}
                 style={[styles.filterChip, active && styles.filterChipActive]}
               >
@@ -293,7 +294,7 @@ export default function MapScreen() {
                     active && styles.filterChipLabelActive,
                   ]}
                 >
-                  {label}
+                  {t(chip.labelKey)}
                 </Text>
               </TouchableOpacity>
             );
@@ -315,7 +316,7 @@ export default function MapScreen() {
         <Ionicons name="locate" size={22} color={CORAL} />
       </TouchableOpacity>
 
-      {activeFilter === "My Favorites" && !selectedStore && (
+      {activeFilter === "favorites" && !selectedStore && (
         <FavoritesListSheet
           stores={stores}
           favoriteIds={favoriteIds}

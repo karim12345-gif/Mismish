@@ -1,9 +1,21 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Base URL — no trailing slash, no module name.
-// Each service file appends its own /api/{module}/v1 path.
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+// Base URL includes /api. Each service appends its own /{module}/v1 path.
+const configuredBaseUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+
+if (!configuredBaseUrl) {
+  throw new Error(
+    "Missing EXPO_PUBLIC_API_URL. Set it in mobile/.env for local development " +
+      "or in the selected EAS build profile.",
+  );
+}
+
+if (!/^https?:\/\//i.test(configuredBaseUrl)) {
+  throw new Error("EXPO_PUBLIC_API_URL must be an absolute HTTP(S) URL.");
+}
+
+const BASE_URL = configuredBaseUrl.replace(/\/+$/, "");
 
 const api = axios.create({
   baseURL: BASE_URL,

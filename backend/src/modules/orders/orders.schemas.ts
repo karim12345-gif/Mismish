@@ -7,6 +7,8 @@ export const CreateOrderSchema = z.object({
       surpriseBoxId: z.number().int().positive(),
       deliveryMethod: z.nativeEnum(DeliveryMethod),
       deliveryAddress: z.string().optional(),
+      pickupOffset: z.number().int().min(0).max(1).optional(),
+      quantity: z.number().int().positive().max(50).optional(),
     })
     .refine(
       (d) =>

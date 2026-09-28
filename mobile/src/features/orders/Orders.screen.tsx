@@ -12,14 +12,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useMyOrders } from "../../hooks/useMyOrders";
-import { useCollectOrder } from "../../hooks/useCollectOrder";
 import { useCancelOrder } from "../../hooks/useCancelOrder";
 import { Order } from "../../services/order/order.service";
 import { OrdersSkeleton } from "./components/OrdersSkeleton";
 import { RatingModal } from "./components/RatingModal";
 import { STATUS_CONFIG, styles } from "./Orders.styles";
 import { useSubmitReview } from "../../hooks/useSubmitReview";
+import { useTranslation } from "react-i18next";
+import { getLocalizedName } from "../../i18n/localizedContent";
 
 const ACTIVE_STATUSES: Order["status"][] = [
   "PENDING",
@@ -28,21 +30,21 @@ const ACTIVE_STATUSES: Order["status"][] = [
   "ON_THE_WAY",
 ];
 
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", {
+const fmtTime = (iso: string, locale: string) =>
+  new Date(iso).toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
 
-const dayLabel = (iso: string) => {
+const dayKey = (iso: string): "common.today" | "common.tomorrow" => {
   const d = new Date(iso);
   const today = new Date();
   return d.getFullYear() === today.getFullYear() &&
     d.getMonth() === today.getMonth() &&
     d.getDate() === today.getDate()
-    ? "Today"
-    : "Tomorrow";
+    ? "common.today"
+    : "common.tomorrow";
 };
 
 function OrderCard({
@@ -52,14 +54,14 @@ function OrderCard({
   order: Order;
   onRate: (order: Order) => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("ar") ? "ar-SA" : "en-US";
   const navigation = useNavigation<any>();
-  const { mutate: collectOrder, isPending: isCollecting } = useCollectOrder();
   const { mutate: cancelOrder, isPending: isCancelling } = useCancelOrder();
   const bag = order.surpriseBox;
   const vendor = bag?.vendor;
   const status = STATUS_CONFIG[order.status];
   const isActive = ACTIVE_STATUSES.includes(order.status);
-  const canCollect = order.status === "CONFIRMED" || order.status === "READY_FOR_PICKUP";
   const canCancel = order.status === "PENDING";
   const isPast = order.status === "COMPLETED" || order.status === "CANCELLED";
 
@@ -87,7 +89,7 @@ function OrderCard({
               className="text-[#111] font-black text-[15px] flex-1 mr-2"
               numberOfLines={1}
             >
-              {vendor?.name ?? "Store"}
+              {getLocalizedName(vendor, i18n.language, t("common.app_name"))}
             </Text>
             <View
               className="px-2.5 py-1 rounded-full"
@@ -97,23 +99,23 @@ function OrderCard({
                 className="font-black text-[11px]"
                 style={{ color: status.color }}
               >
-                {status.label}
+                {t(status.labelKey)}
               </Text>
             </View>
           </View>
 
           <Text className="text-gray-500 font-medium text-[13px] mb-1.5">
-            1 Surprise Bag · SAR {bag?.price?.toFixed(2) ?? "—"}
+            {t("orders.one_bag_price", { price: bag?.price?.toFixed(2) ?? "—" })}
           </Text>
 
           {bag?.pickupStart && bag?.pickupEnd && (
             <View className="flex-row items-center">
               <Feather name="clock" size={12} color="#aaa" />
               <Text className="text-gray-400 font-medium text-[12px] ml-1">
-                {fmtTime(bag.pickupStart)} – {fmtTime(bag.pickupEnd)}
+                {fmtTime(bag.pickupStart, locale)} – {fmtTime(bag.pickupEnd, locale)}
                 {"  "}
                 <Text className="text-[#111] font-bold">
-                  {dayLabel(bag.pickupEnd)}
+                  {t(dayKey(bag.pickupEnd))}
                 </Text>
               </Text>
             </View>
@@ -129,7 +131,7 @@ function OrderCard({
         >
           <MaterialCommunityIcons name="star-outline" size={17} color="#F5B224" />
           <Text className="text-[#D97706] font-black text-[13px]">
-            Rate this bag
+            {t("orders.rate_bag")}
           </Text>
         </TouchableOpacity>
       )}
@@ -139,7 +141,7 @@ function OrderCard({
         <View className="mt-1 h-9 rounded-2xl bg-gray-50 flex-row items-center justify-center gap-1.5">
           <MaterialCommunityIcons name="star" size={14} color="#F5B224" />
           <Text className="text-gray-400 font-semibold text-[12px]">
-            You rated this {order.review.rating}/5
+            {t("orders.rated", { rating: order.review.rating })}
           </Text>
         </View>
       )}
@@ -164,7 +166,7 @@ function OrderCard({
         >
           <MaterialCommunityIcons name="shopping-outline" size={14} color="#FF7F50" />
           <Text style={{ color: "#FF7F50", fontWeight: "700", fontSize: 13 }}>
-            Order Again
+            {t("orders.order_again")}
           </Text>
         </TouchableOpacity>
       )}
@@ -179,7 +181,7 @@ function OrderCard({
         >
           <Ionicons name="close-circle-outline" size={15} color="#EF4444" />
           <Text className="text-red-500 font-bold text-[13px]">
-            {isCancelling ? "Cancelling…" : "Cancel Order"}
+            {isCancelling ? t("orders.cancelling") : t("orders.cancel_order")}
           </Text>
         </TouchableOpacity>
       )}
@@ -202,7 +204,7 @@ function OrderCard({
                   includeFontPadding: false,
                 }}
               >
-                View Pin
+                {t("orders.view_pin")}
               </Text>
             </TouchableOpacity>
 
@@ -227,30 +229,11 @@ function OrderCard({
                   includeFontPadding: false,
                 }}
               >
-                Directions
+                {t("orders.directions")}
               </Text>
             </TouchableOpacity>
           </View>
 
-          {canCollect && (
-            <TouchableOpacity
-              onPress={() => collectOrder(order.id)}
-              disabled={isCollecting}
-              className="h-11 rounded-xl border border-[#18C96D] flex-row items-center justify-center gap-2"
-              style={
-                isCollecting ? styles.collectDisabled : styles.collectEnabled
-              }
-            >
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={16}
-                color="#18C96D"
-              />
-              <Text className="text-[#18C96D] font-black text-[13px]">
-                {isCollecting ? "Marking…" : "Mark as Collected"}
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
       )}
     </View>
@@ -258,6 +241,8 @@ function OrderCard({
 }
 
 export default function OrdersScreen() {
+  const { t } = useTranslation();
+  const tabBarHeight = useBottomTabBarHeight();
   const [activeTab, setActiveTab] = useState<"active" | "past">("active");
   const [ratingOrder, setRatingOrder] = useState<Order | null>(null);
   const { data: orders, isLoading, isError, refetch } = useMyOrders();
@@ -283,7 +268,7 @@ export default function OrdersScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#F9F9F9" />
 
       <View className="items-center justify-center pt-2 pb-5">
-        <Text className="text-[#111] font-black text-[18px]">Orders</Text>
+        <Text className="text-[#111] font-black text-[18px]">{t("orders.title")}</Text>
       </View>
 
       {/* Segmented control */}
@@ -307,7 +292,7 @@ export default function OrdersScreen() {
                     isSelected ? "text-white" : "text-[#888]"
                   }`}
                 >
-                  {tab === "active" ? "Active" : "Past Orders"}
+                  {tab === "active" ? t("orders.active") : t("orders.past")}
                 </Text>
                 {tab === "active" && count > 0 && (
                   <View
@@ -340,10 +325,10 @@ export default function OrdersScreen() {
       ) : isError ? (
         <View className="flex-1 items-center justify-center px-8">
           <Text className="text-gray-400 text-center font-medium mb-4">
-            Could not load orders.
+            {t("orders.list_load_error")}
           </Text>
           <TouchableOpacity onPress={() => refetch()}>
-            <Text className="text-[#FF7F50] font-bold">Try again</Text>
+            <Text className="text-[#FF7F50] font-bold">{t("common.try_again")}</Text>
           </TouchableOpacity>
         </View>
       ) : displayed.length === 0 ? (
@@ -354,12 +339,12 @@ export default function OrdersScreen() {
             resizeMode="contain"
           />
           <Text className="text-[#111] font-black text-[20px] mb-2">
-            {activeTab === "active" ? "No Active Orders" : "No Past Orders"}
+            {activeTab === "active" ? t("orders.no_active") : t("orders.no_past")}
           </Text>
           {activeTab === "active" && (
             <View className="items-center mt-1 w-full">
               <Text className="text-[#888] font-medium text-[14px] text-center px-10 mb-6">
-                You don't have any orders in progress right now.
+                {t("orders.empty_active")}
               </Text>
             </View>
           )}
@@ -368,6 +353,7 @@ export default function OrdersScreen() {
         <ScrollView
           className="flex-1 px-5"
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: tabBarHeight + 16 }}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
@@ -391,8 +377,7 @@ export default function OrdersScreen() {
             <View className="flex-row items-center bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl px-4 py-3.5 mb-8 gap-3">
               <Ionicons name="keypad-outline" size={26} color="#16A34A" />
               <Text className="flex-1 text-[#15803D] font-medium text-[13px] leading-5">
-                Show your pin to the shop staff at the counter to collect your
-                surprise bag.
+                {t("orders.pin_instruction")}
               </Text>
             </View>
           )}

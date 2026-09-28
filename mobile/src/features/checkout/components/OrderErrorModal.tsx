@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get("window");
 
@@ -24,6 +25,7 @@ export const OrderErrorModal = ({
   onHomePress,
   reason = "expired",
 }: OrderErrorModalProps) => {
+  const { t } = useTranslation();
   const isSoldOut = reason === "sold_out";
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -37,19 +39,19 @@ export const OrderErrorModal = ({
             />
           </View>
 
-          <Text style={styles.title}>{isSoldOut ? "Just Sold Out!" : "Time's Up!"}</Text>
+          <Text style={styles.title}>{isSoldOut ? t("checkout.sold_out_title") : t("checkout.expired_title")}</Text>
           <Text style={styles.description}>
             {isSoldOut
-              ? "Someone just grabbed the last one before you. Check out other bags nearby!"
-              : "This bag's rescue window has closed. Don't worry, there are plenty of other bags waiting for you to save them!"}
+              ? t("checkout.sold_out_description")
+              : t("checkout.expired_description")}
           </Text>
 
           <TouchableOpacity style={styles.primaryButton} onPress={onHomePress}>
-            <Text style={styles.primaryButtonText}>Find Another Bag</Text>
+            <Text style={styles.primaryButtonText}>{t("checkout.find_another_bag")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryButton} onPress={onClose}>
-            <Text style={styles.secondaryButtonText}>Close</Text>
+            <Text style={styles.secondaryButtonText}>{t("common.close")}</Text>
           </TouchableOpacity>
         </View>
       </View>

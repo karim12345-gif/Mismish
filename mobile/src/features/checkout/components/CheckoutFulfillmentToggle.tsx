@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   method: "pickup" | "delivery";
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export const CheckoutFulfillmentToggle = ({ method, onChange }: Props) => {
+  const { t } = useTranslation();
   return (
     <View className="px-5 pt-4 pb-2">
       <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl p-1 shadow-sm shadow-black/5">
@@ -24,7 +26,7 @@ export const CheckoutFulfillmentToggle = ({ method, onChange }: Props) => {
             color={method === "pickup" ? "#FFF" : "#777"}
           />
           <Text className={`ml-2 font-bold text-[14px] ${method === "pickup" ? "text-white" : "text-gray-500"}`}>
-            Self Pickup
+            {t("checkout.self_pickup")}
           </Text>
         </TouchableOpacity>
 
@@ -41,7 +43,7 @@ export const CheckoutFulfillmentToggle = ({ method, onChange }: Props) => {
             color={method === "delivery" ? "#FFF" : "#777"}
           />
           <Text className={`ml-2 font-bold text-[14px] ${method === "delivery" ? "text-white" : "text-gray-500"}`}>
-            Delivery
+            {t("checkout.delivery")}
           </Text>
         </TouchableOpacity>
       </View>

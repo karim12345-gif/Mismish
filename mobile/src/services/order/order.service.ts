@@ -25,6 +25,8 @@ export interface Order {
   userId: number;
   surpriseBoxId: number;
   quantity: number;
+  pickupOffset?: number;
+  pickupWindowEnd?: string | null;
   status: OrderStatus;
   pickupStatus: PickupStatus;
   orderCode: string;
@@ -43,6 +45,7 @@ export interface Order {
     vendor: {
       id: number;
       name: string;
+      nameArabic: string | null;
       address: string | null;
       latitude: number | null;
       longitude: number | null;

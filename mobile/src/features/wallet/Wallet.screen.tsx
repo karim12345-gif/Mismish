@@ -3,17 +3,18 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useRedeemReward, useRewards } from "../../hooks/useRewards";
 import { Reward } from "../../services/rewards/rewards.service";
+import { useTranslation } from "react-i18next";
 
 const TIER_TARGETS = {
   BRONZE: 500,
@@ -22,21 +23,23 @@ const TIER_TARGETS = {
   PLATINUM: 3000,
 };
 
-const nextTierLabel = {
-  BRONZE: "Silver",
-  SILVER: "Gold",
-  GOLD: "Platinum",
-  PLATINUM: "Top tier",
+const nextTier = {
+  BRONZE: "SILVER",
+  SILVER: "GOLD",
+  GOLD: "PLATINUM",
+  PLATINUM: "TOP",
 };
 
-const formatDate = (value?: string | null) =>
+const formatDate = (value: string | null | undefined, locale: string, fallback: string) =>
   value
-    ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
+    ? new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(
         new Date(value),
       )
-    : "No expiry";
+    : fallback;
 
 export default function WalletScreen() {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith("ar") ? "ar-SA" : "en";
   const navigation = useNavigation();
   const rewardsQuery = useRewards();
   const redeemReward = useRedeemReward();
@@ -55,20 +58,20 @@ export default function WalletScreen() {
 
   const handleRedeem = (reward: Reward) => {
     if (!account || account.pointsBalance < reward.pointsCost) {
-      Alert.alert("Not enough points", "Keep rescuing bags to unlock this reward.");
+      Alert.alert(t("wallet.not_enough_title"), t("wallet.not_enough_message"));
       return;
     }
 
-    Alert.alert("Redeem reward?", `${reward.pointsCost} points for ${reward.title}`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("wallet.redeem_title"), t("wallet.redeem_message", { points: reward.pointsCost, title: reward.title }), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Redeem",
+        text: t("wallet.redeem"),
         onPress: () =>
           redeemReward.mutate(reward.id, {
             onSuccess: (redemption) => {
-              Alert.alert("Reward unlocked", `Your code is ${redemption.code}`);
+              Alert.alert(t("wallet.unlocked_title"), t("wallet.unlocked_message", { code: redemption.code }));
             },
-            onError: (error) => Alert.alert("Could not redeem", error.message),
+            onError: (error) => Alert.alert(t("wallet.redeem_error"), error.message),
           }),
       },
     ]);
@@ -86,7 +89,7 @@ export default function WalletScreen() {
           <Feather name="chevron-left" size={22} color="#112D2B" />
         </TouchableOpacity>
         <Text className="text-[18px] font-black text-[#112D2B]">
-          MishMish Rewards
+          {t("wallet.title")}
         </Text>
         <TouchableOpacity
           onPress={() => rewardsQuery.refetch()}
@@ -112,13 +115,13 @@ export default function WalletScreen() {
           <View className="items-center justify-center py-20">
             <ActivityIndicator color="#F26C4F" />
             <Text className="mt-3 text-[#63716D] font-semibold">
-              Loading rewards...
+              {t("wallet.loading")}
             </Text>
           </View>
         ) : rewardsQuery.isError ? (
           <View className="bg-white rounded-[22px] border border-[#F3D3CB] p-5 mt-4">
             <Text className="text-[#C2410C] font-black text-[16px] mb-2">
-              Rewards are not available
+              {t("wallet.unavailable")}
             </Text>
             <Text className="text-[#63716D] font-medium text-[13px] leading-5">
               {rewardsQuery.error.message}
@@ -134,12 +137,12 @@ export default function WalletScreen() {
                 <View className="flex-row items-center">
                   <Ionicons name="sparkles" size={18} color="#FFF" />
                   <Text className="text-white font-black text-[15px] ml-2">
-                    Rewards balance
+                    {t("wallet.balance")}
                   </Text>
                 </View>
                 <View className="bg-white/20 rounded-full px-3 py-1">
                   <Text className="text-white font-black text-[12px]">
-                    {account?.tier ?? "BRONZE"}
+                    {t(`wallet.tiers.${account?.tier ?? "BRONZE"}`)}
                   </Text>
                 </View>
               </View>
@@ -149,11 +152,11 @@ export default function WalletScreen() {
                   {account?.pointsBalance ?? 0}
                 </Text>
                 <Text className="text-white/85 font-extrabold text-[15px] ml-2 mb-2">
-                  pts
+                  {t("wallet.points_short")}
                 </Text>
               </View>
               <Text className="text-white/85 font-semibold text-[13px] mt-2">
-                {account?.lifetimePoints ?? 0} lifetime points earned
+                {account?.lifetimePoints ?? 0} {t("wallet.lifetime")}
               </Text>
 
               <View className="mt-6">
@@ -165,8 +168,10 @@ export default function WalletScreen() {
                 </View>
                 <Text className="text-white/85 font-semibold text-[12px] mt-2">
                   {account?.tier === "PLATINUM"
-                    ? "You are at the top tier"
-                    : `Progress to ${account ? nextTierLabel[account.tier] : "Silver"}`}
+                    ? t("wallet.top_tier")
+                    : t("wallet.progress_to", {
+                        tier: t(`wallet.tiers.${account ? nextTier[account.tier] : "SILVER"}`),
+                      })}
                 </Text>
               </View>
             </View>
@@ -174,7 +179,7 @@ export default function WalletScreen() {
             {redemptions.length > 0 && (
               <View className="mt-7">
                 <Text className="font-black text-[19px] text-[#112D2B] mb-3">
-                  Active rewards
+                  {t("wallet.active_rewards")}
                 </Text>
                 {redemptions.map((redemption) => (
                   <View
@@ -187,7 +192,9 @@ export default function WalletScreen() {
                           {redemption.reward.title}
                         </Text>
                         <Text className="text-[#63716D] font-semibold text-[12px] mt-1">
-                          Expires {formatDate(redemption.expiresAt)}
+                          {t("wallet.expires", {
+                            date: formatDate(redemption.expiresAt, locale, t("wallet.no_expiry")),
+                          })}
                         </Text>
                       </View>
                       <View className="bg-white rounded-full px-3 py-1.5">
@@ -203,7 +210,7 @@ export default function WalletScreen() {
 
             <View className="mt-7">
               <Text className="font-black text-[19px] text-[#112D2B] mb-3">
-                Redeem points
+                {t("wallet.redeem_points")}
               </Text>
               {rewards.map((reward) => {
                 const canRedeem = (account?.pointsBalance ?? 0) >= reward.pointsCost;
@@ -238,7 +245,7 @@ export default function WalletScreen() {
                         {reward.pointsCost}
                       </Text>
                       <Text className="text-[#63716D] font-semibold text-[11px]">
-                        points
+                        {t("wallet.points_short")}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -248,16 +255,16 @@ export default function WalletScreen() {
 
             <View className="mt-7">
               <Text className="font-black text-[19px] text-[#112D2B] mb-3">
-                Points history
+                {t("wallet.history")}
               </Text>
               {transactions.length === 0 ? (
                 <View className="items-center justify-center bg-white rounded-[22px] p-8 border border-[#E6DED4]">
                   <MaterialCommunityIcons name="history" size={28} color="#A7B3AF" />
                   <Text className="text-[#112D2B] font-black text-[16px] mt-3">
-                    No points yet
+                    {t("wallet.no_points")}
                   </Text>
                   <Text className="text-[#63716D] font-medium text-[12px] text-center mt-1">
-                    Complete an order to start earning MishMish Rewards.
+                    {t("wallet.no_points_description")}
                   </Text>
                 </View>
               ) : (
@@ -278,7 +285,7 @@ export default function WalletScreen() {
                         {transaction.description}
                       </Text>
                       <Text className="text-[#63716D] font-medium text-[11px] mt-1">
-                        {formatDate(transaction.createdAt)}
+                        {formatDate(transaction.createdAt, locale, t("wallet.no_expiry"))}
                       </Text>
                     </View>
                     <Text

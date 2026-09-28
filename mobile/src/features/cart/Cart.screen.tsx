@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   Image,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { CartItem } from "./components/CartItem";
@@ -16,8 +16,10 @@ import { useCart } from "../../context/CartContext";
 import { CartMilestoneTracker } from "./components/CartMilestoneTracker";
 import { useStoreInventory } from "../../hooks/useStoreInventory";
 import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
+import { useTranslation } from "react-i18next";
 
 export default function CartScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { isAuthenticated, user } = useAuth();
   const {
@@ -70,7 +72,9 @@ export default function CartScreen() {
         </TouchableOpacity>
 
         <View className="flex-1 items-center">
-          <Text className="text-[#111] font-black text-[16px]">My Cart</Text>
+          <Text className="text-[#111] font-black text-[16px]">
+            {t("cart.title")}
+          </Text>
         </View>
       </View>
 
@@ -87,10 +91,10 @@ export default function CartScreen() {
               <View className="pt-6 pb-2 bg-white">
                 <View className="px-5 mb-4">
                   <Text className="text-[#111] font-black text-[18px] mb-1">
-                    Complement your bag
+                    {t("cart.complement_title")}
                   </Text>
                   <Text className="text-gray-500 font-medium text-[13px]">
-                    Enjoy any of these add-ons by adding them to your order
+                    {t("cart.complement_description")}
                   </Text>
                 </View>
 
@@ -169,7 +173,7 @@ export default function CartScreen() {
                           {upsell.title}
                         </Text>
                         <Text className="text-[#E7246A] font-black text-[12px]">
-                          ﷼ {upsell.price.toFixed(2)}
+                          {t("common.currency")} {upsell.price.toFixed(2)}
                         </Text>
                       </View>
                     );
@@ -214,10 +218,10 @@ export default function CartScreen() {
               <Ionicons name="cart-outline" size={48} color="#FF7F50" />
             </View>
             <Text className="text-[#111] font-black text-[20px] mb-2">
-              Cart is empty
+              {t("cart.empty_title")}
             </Text>
             <Text className="text-gray-500 font-medium text-[14px]">
-              Looks like you haven't added any bags yet.
+              {t("cart.empty_description")}
             </Text>
           </View>
         )}
@@ -228,10 +232,10 @@ export default function CartScreen() {
         <View className="absolute bottom-0 w-full bg-white shadow-[0_-15px_30px_rgba(0,0,0,0.05)] pt-4 pb-10 px-5">
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-[#111] font-black text-[14px]">
-              Sub-total
+              {t("cart.subtotal")}
             </Text>
             <Text className="text-[#111] font-black text-[15px]">
-              ﷼ {subtotal.toFixed(2)}
+              {t("common.currency")} {subtotal.toFixed(2)}
             </Text>
           </View>
 
@@ -240,7 +244,7 @@ export default function CartScreen() {
             className="w-full h-14 bg-[#FF7F50] rounded-2xl items-center justify-center shadow-sm shadow-[#FF7F50]/30"
           >
             <Text className="text-white font-black text-[16px]">
-              Go to checkout
+              {t("cart.checkout")}
             </Text>
           </TouchableOpacity>
         </View>

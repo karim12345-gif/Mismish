@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useLocation } from "../../../context/LocationContext";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 
 export const HomeHeader = () => {
+  const { t } = useTranslation();
   const { address, isRequestingLocation } = useLocation();
   const navigation = useNavigation<any>();
 
@@ -12,13 +14,13 @@ export const HomeHeader = () => {
     address?.name ||
     address?.district ||
     address?.street ||
-    (isRequestingLocation ? "Discovering..." : "Riyadh");
+    (isRequestingLocation ? t("home.discovering") : t("home.riyadh"));
 
   const secondaryText = address
     ? `${address.streetNumber || ""} ${address.street || ""} ${address.city || ""}`.trim()
     : isRequestingLocation
-      ? "Fetching location..."
-      : "Tap to set location";
+      ? t("home.fetching_location")
+      : t("home.tap_location");
 
   return (
     <View className="flex-row justify-between items-center w-full bg-white px-5 pt-2 pb-4">
@@ -70,7 +72,7 @@ export const HomeHeader = () => {
           onPress={() => navigation.navigate("Wallet")}
         >
           <Text className="font-black text-[#111] text-[13px] mr-1 opacity-80 mt-0.5">
-            ﷼
+            {t("common.currency")}
           </Text>
           <Text className="font-extrabold text-[#111] text-[16px] mr-1.5">
             0

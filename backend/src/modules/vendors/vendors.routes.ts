@@ -1,5 +1,4 @@
 import { Router } from "express";
-import jwt from "jsonwebtoken";
 import { authenticate } from "../../shared/middleware/authenticate";
 import { authorize } from "../../shared/middleware/authorize";
 import { validate } from "../../shared/middleware/validate";
@@ -11,31 +10,33 @@ import {
 } from "./vendors.schemas";
 import * as vendorsController from "./vendors.controller";
 import { addStream, removeStream } from "../../shared/lib/orderStream";
-import type { JwtPayload } from "../../shared/middleware/authenticate";
 
 const router = Router();
 
-// ─── SSE stream ───────────────────────────────────────────────────────────────
-// EventSource can't send Authorization headers, so we accept token as ?token=
-// This route is intentionally placed BEFORE the global authenticate middleware.
-router.get("/stream", (req, res) => {
-  const token = req.query.token as string | undefined;
-  if (!token) { res.status(401).json({ message: "Unauthorized" }); return; }
-
-  let payload: JwtPayload;
-  try {
-    payload = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-  } catch {
-    res.status(401).json({ message: "Invalid token" }); return;
+// ─── SSE stream (before global auth so ?token= can be rejected as 400) ────────
+router.get("/stream", (req, res, next) => {
+  // Reject legacy query-string JWT (never accept ?token=)
+  if (typeof req.query.token === "string" && req.query.token.length > 0) {
+    res.status(400).json({
+      status: "error",
+      error: {
+        code: "auth_query_token_rejected",
+        message:
+          "Query-string tokens are not supported. Use Authorization: Bearer <token>.",
+      },
+    });
+    return;
   }
-  if (payload.type !== "vendor") { res.status(403).json({ message: "Forbidden" }); return; }
+  next();
+}, authenticate, authorize("vendor"), (req, res) => {
+  const vendorId = req.user!.id;
 
   res.setHeader("Content-Type",  "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection",    "keep-alive");
   res.flushHeaders();
 
-  addStream(payload.id, res);
+  addStream(vendorId, res);
 
   // Heartbeat every 25 s keeps connection alive through proxies / load balancers
   const heartbeat = setInterval(() => {
@@ -44,11 +45,11 @@ router.get("/stream", (req, res) => {
 
   req.on("close", () => {
     clearInterval(heartbeat);
-    removeStream(payload.id, res);
+    removeStream(vendorId, res);
   });
 });
 
-// All other vendor routes require a valid vendor token
+// All other vendor routes require a valid vendor token.
 router.use(authenticate, authorize("vendor"));
 
 // ─── Profile ──────────────────────────────────────────────────────────────────

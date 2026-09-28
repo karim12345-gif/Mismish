@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useCards, detectBrand } from "../../../context/CardsContext";
+import { useTranslation } from "react-i18next";
 
 interface AddNewCardBottomSheetProps {
   visible: boolean;
@@ -24,6 +25,7 @@ export const AddNewCardBottomSheet = ({
   onClose,
   onSave,
 }: AddNewCardBottomSheetProps) => {
+  const { t } = useTranslation();
   const slideAnim = useRef(new Animated.Value(600)).current;
   const { addCard } = useCards();
 
@@ -71,7 +73,7 @@ export const AddNewCardBottomSheet = ({
           {/* Header */}
           <View className="flex-row items-center justify-center mb-6 relative">
             <Text className="text-[#111] font-black text-[18px]">
-              Add New Card
+              {t("payment.add_card")}
             </Text>
             <TouchableOpacity
               onPress={onClose}
@@ -84,12 +86,12 @@ export const AddNewCardBottomSheet = ({
           {/* Form Fields */}
           <View className="mb-4">
             <Text className="text-[#111] font-black text-[13px] mb-2">
-              Name on Card
+              {t("payment.name_on_card")}
             </Text>
             <TextInput
               value={name}
               onChangeText={setName}
-              placeholder="Enter Name on Card"
+              placeholder={t("payment.name_placeholder")}
               placeholderTextColor="#A1A1A1"
               className="w-full h-[52px] border border-gray-200 rounded-xl px-4 text-[#111] font-medium text-[14px]"
             />
@@ -97,7 +99,7 @@ export const AddNewCardBottomSheet = ({
 
           <View className="mb-4">
             <Text className="text-[#111] font-black text-[13px] mb-2">
-              Card Number
+              {t("payment.card_number")}
             </Text>
             <TextInput
               value={cardNumber}
@@ -113,12 +115,12 @@ export const AddNewCardBottomSheet = ({
           <View className="flex-row items-center justify-between mb-8">
             <View className="w-[48%]">
               <Text className="text-[#111] font-black text-[13px] mb-2">
-                Expiry Date
+                {t("payment.expiry_date")}
               </Text>
               <TextInput
                 value={expiry}
                 onChangeText={setExpiry}
-                placeholder="MM/YY"
+                placeholder={t("payment.expiry_placeholder")}
                 placeholderTextColor="#A1A1A1"
                 maxLength={5}
                 className="w-full h-[52px] border border-gray-200 rounded-xl px-4 text-[#111] font-medium text-[14px]"
@@ -126,7 +128,7 @@ export const AddNewCardBottomSheet = ({
             </View>
             <View className="w-[48%]">
               <Text className="text-[#111] font-black text-[13px] mb-2">
-                CVV
+                {t("payment.cvv")}
               </Text>
               <TextInput
                 value={cvv}
@@ -162,7 +164,7 @@ export const AddNewCardBottomSheet = ({
             <Text
               className={`font-black text-[16px] ${isFormValid ? "text-white" : "text-gray-400"}`}
             >
-              Continue
+              {t("common.continue")}
             </Text>
           </TouchableOpacity>
         </Animated.View>

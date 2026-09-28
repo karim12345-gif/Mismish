@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 const CORAL = "#FF7F50";
 
@@ -55,10 +56,10 @@ const CUISINE_EMOJI: Record<string, string> = {
   Other: "🛍️",
 };
 
-const AVAILABILITY_OPTIONS: { value: MapAvailability; label: string; icon?: boolean }[] = [
-  { value: "now", label: "Now", icon: true },
-  { value: "later_today", label: "Later Today" },
-  { value: "tomorrow", label: "Tomorrow" },
+const AVAILABILITY_OPTIONS: { value: MapAvailability; labelKey: string; icon?: boolean }[] = [
+  { value: "now", labelKey: "home.now", icon: true },
+  { value: "later_today", labelKey: "map.later_today" },
+  { value: "tomorrow", labelKey: "common.tomorrow" },
 ];
 
 const PRICE_RANGES: { value: MapPriceRange; label: string }[] = [
@@ -67,12 +68,13 @@ const PRICE_RANGES: { value: MapPriceRange; label: string }[] = [
   { value: "25+", label: "﷼ 25+" },
 ];
 
-const SORT_OPTIONS: { value: MapSortOption; label: string }[] = [
-  { value: "nearby", label: "Nearby" },
-  { value: "earliest_pickup", label: "Earliest Pickup Time" },
+const SORT_OPTIONS: { value: MapSortOption; labelKey: string }[] = [
+  { value: "nearby", labelKey: "map.nearby" },
+  { value: "earliest_pickup", labelKey: "map.earliest_pickup" },
 ];
 
 export function MapFilterSheet({ visible, current, categories, onClose, onApply }: Props) {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<MapFilters>(current);
 
   useEffect(() => { setFilters(current); }, [current, visible]);
@@ -114,7 +116,7 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
             {/* When it's available */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>When it's available</Text>
+                <Text style={styles.sectionTitle}>{t("map.when_available")}</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                   <Feather name="x" size={16} color="#555" />
                 </TouchableOpacity>
@@ -131,11 +133,11 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
                     <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
                       {checked && <Feather name="check" size={12} color="#fff" />}
                     </View>
-                    <Text style={styles.checkLabel}>{opt.label}</Text>
+                    <Text style={styles.checkLabel}>{t(opt.labelKey)}</Text>
                     {opt.icon && (
                       <View style={styles.nowBadge}>
                         <Ionicons name="time-outline" size={13} color={CORAL} />
-                        <Text style={styles.nowBadgeText}>Live</Text>
+                        <Text style={styles.nowBadgeText}>{t("map.live")}</Text>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -148,7 +150,7 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
             {/* Favorites */}
             <View style={styles.section}>
               <View style={styles.favRow}>
-                <Text style={styles.sectionTitle}>Favorites Only</Text>
+                <Text style={styles.sectionTitle}>{t("map.favorites_only")}</Text>
                 <Switch
                   value={filters.favoritesOnly}
                   onValueChange={v => setFilters(f => ({ ...f, favoritesOnly: v }))}
@@ -164,7 +166,7 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
             {categories.length > 0 && (
               <>
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Cuisine</Text>
+                  <Text style={styles.sectionTitle}>{t("home.cuisine")}</Text>
                   <View style={styles.cuisineGrid}>
                     {categories.map(cat => {
                       const active = filters.cuisine === cat;
@@ -185,7 +187,7 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
                             style={[styles.cuisineTileLabel, active && styles.cuisineTileLabelActive]}
                             numberOfLines={1}
                           >
-                            {cat}
+                            {t(`cuisines.${cat}`)}
                           </Text>
                         </TouchableOpacity>
                       );
@@ -198,7 +200,7 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
 
             {/* Price Range */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Price Range</Text>
+              <Text style={styles.sectionTitle}>{t("home.price_range")}</Text>
               <View style={styles.priceRow}>
                 {PRICE_RANGES.map(r => {
                   const active = filters.priceRange === r.value;
@@ -226,7 +228,7 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
 
             {/* Sort By */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Sort By</Text>
+              <Text style={styles.sectionTitle}>{t("home.sort_by")}</Text>
               {SORT_OPTIONS.map(opt => {
                 const selected = filters.sortBy === opt.value;
                 return (
@@ -238,7 +240,7 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
                     <View style={[styles.radio, selected && styles.radioSelected]}>
                       {selected && <View style={styles.radioDot} />}
                     </View>
-                    <Text style={styles.radioLabel}>{opt.label}</Text>
+                    <Text style={styles.radioLabel}>{t(opt.labelKey)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -249,11 +251,11 @@ export function MapFilterSheet({ visible, current, categories, onClose, onApply 
           <View style={styles.actions}>
             <TouchableOpacity onPress={handleReset} style={styles.resetBtn}>
               <Text style={styles.resetLabel}>
-                Reset{activeCount > 0 ? ` (${activeCount})` : ""}
+                {t("common.reset")}{activeCount > 0 ? ` (${activeCount})` : ""}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleApply} style={styles.applyBtn}>
-              <Text style={styles.applyLabel}>Apply</Text>
+              <Text style={styles.applyLabel}>{t("common.apply")}</Text>
             </TouchableOpacity>
           </View>
         </View>

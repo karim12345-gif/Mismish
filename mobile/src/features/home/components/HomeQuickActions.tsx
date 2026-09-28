@@ -1,8 +1,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 export const HomeQuickActions = () => {
+  const { t } = useTranslation();
   return (
     <View className="flex-row px-5 justify-between gap-x-3 mt-4 mb-2">
       {/* Map View Card */}
@@ -20,10 +22,10 @@ export const HomeQuickActions = () => {
         </View>
         <View className="flex-1">
           <Text className="text-[15px] font-extrabold text-[#222] mb-0.5">
-            Map View
+            {t("home.map_view")}
           </Text>
           <Text className="text-[#777] text-[12px] font-semibold">
-            Find nearby deals
+            {t("home.nearby_deals")}
           </Text>
         </View>
       </TouchableOpacity>
@@ -43,10 +45,10 @@ export const HomeQuickActions = () => {
         </View>
         <View className="flex-1">
           <Text className="text-[15px] font-extrabold text-[#222] mb-0.5">
-            Rewards
+            {t("home.rewards")}
           </Text>
           <Text className="text-[#777] text-[12px] font-semibold">
-            240 points
+            {t("home.points_example")}
           </Text>
         </View>
       </TouchableOpacity>

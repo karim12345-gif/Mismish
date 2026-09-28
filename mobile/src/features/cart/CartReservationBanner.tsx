@@ -10,6 +10,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useCart } from "../../context/CartContext";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 const CORAL = "#FF7F50";
 const TAB_BAR_HEIGHT = Platform.OS === "ios" ? 95 : 75;
@@ -28,6 +29,7 @@ function getSecondsLeft(pickupEnd?: string): number {
 }
 
 export default function CartReservationBanner() {
+  const { t } = useTranslation();
   const { cartItems, totalQuantity, clearCart } = useCart();
   const navigation = useNavigation<any>();
   const hasItems = totalQuantity > 0;
@@ -99,10 +101,10 @@ export default function CartReservationBanner() {
 
         <View style={styles.middle}>
           <Text style={styles.timerLabel}>
-            Reserve it before it's gone {fmt(secondsLeft)}
+            {t("cart.reservation")} {fmt(secondsLeft)}
           </Text>
           <Text style={styles.storeName} numberOfLines={1}>
-            {firstItem?.title ?? "Surprise Bag"}
+            {firstItem?.title ?? t("store.default_bag")}
           </Text>
         </View>
 

@@ -1,34 +1,36 @@
 import React from "react";
 import { ScrollView, TouchableOpacity, Text, View, Image } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const CATEGORIES = [
   {
     id: 1,
-    name: "Pizza",
+    nameKey: "home.categories.pizza",
     image:
       "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=200&auto=format&fit=crop",
   },
   {
     id: 2,
-    name: "Sushi",
+    nameKey: "home.categories.sushi",
     image:
       "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=200&auto=format&fit=crop",
   },
   {
     id: 3,
-    name: "Healthy",
+    nameKey: "home.categories.healthy",
     image:
       "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=200&auto=format&fit=crop",
   },
   {
     id: 4,
-    name: "Burgers",
+    nameKey: "home.categories.burgers",
     image:
       "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=200&auto=format&fit=crop",
   },
 ];
 
 export const HomeCategories = () => {
+  const { t } = useTranslation();
   return (
     <View className="mt-8 mb-4">
       <ScrollView
@@ -45,7 +47,7 @@ export const HomeCategories = () => {
               />
             </View>
             <Text className="text-[#3b414a] font-extrabold text-[14px]">
-              {cat.name}
+              {t(cat.nameKey)}
             </Text>
           </TouchableOpacity>
         ))}

@@ -20,6 +20,8 @@ import { PriceBottomSheet, PriceRange } from "./components/PriceBottomSheet";
 import { Store } from "../../services/store/store.service";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
+import { useTranslation } from "react-i18next";
+import { getLocalizedName } from "../../i18n/localizedContent";
 
 const CORAL = "#FF7F50";
 const BANNER_BG = "#FDF8EC";
@@ -31,8 +33,8 @@ const FLOAT_ITEMS = [
   { emoji: "🍱", color: "#F4A0B0", pos: { bottom: 20, right: 50 } },
 ];
 
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-US", {
+const fmtTime = (iso: string, language: string) =>
+  new Date(iso).toLocaleTimeString(language === "ar" ? "ar-SA" : "en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
@@ -56,6 +58,7 @@ function FloatingBadge({
 
 export default function ElevenUnderScreen() {
   const navigation = useNavigation<any>();
+  const { t, i18n } = useTranslation();
   const { data: stores, isLoading } = useStores();
 
   const [sortBy, setSortBy] = useState<SortOption>("");
@@ -118,12 +121,15 @@ export default function ElevenUnderScreen() {
     return (
       <StoreCard
         storeId={store.id}
-        title={store.name}
+        title={getLocalizedName(store, i18n.language)}
         branch={store.category ?? store.address?.split(",")[0] ?? ""}
-        price={cheapBag ? `${cheapBag.price} SAR` : "—"}
+        price={cheapBag ? `${cheapBag.price} ${t("common.currency")}` : "—"}
         timeRange={
           cheapBag
-            ? `${fmtTime(cheapBag.pickupStart)} - ${fmtTime(cheapBag.pickupEnd)}`
+            ? `${fmtTime(cheapBag.pickupStart, i18n.language)} - ${fmtTime(
+                cheapBag.pickupEnd,
+                i18n.language,
+              )}`
             : "—"
         }
         distance={store.address?.split(",")[0] ?? "—"}
@@ -132,7 +138,7 @@ export default function ElevenUnderScreen() {
         hasListings={Boolean(cheapBag)}
         imageUrl={cheapBag?.imageUrl ?? store.imageUrl ?? DEFAULT_LISTING_IMAGE}
         logoUrl={store.imageUrl ?? cheapBag?.imageUrl ?? DEFAULT_LISTING_IMAGE}
-        leftCount={`${totalLeft} bag${totalLeft !== 1 ? "s" : ""} left`}
+        leftCount={t("map.bag_left", { count: totalLeft })}
       />
     );
   };
@@ -151,7 +157,7 @@ export default function ElevenUnderScreen() {
         </TouchableOpacity>
 
         <View style={styles.bannerContent}>
-          <Text style={styles.bannerLeftText}>11 and under</Text>
+          <Text style={styles.bannerLeftText}>{t("home.eleven_under")}</Text>
 
           <View style={styles.badgeWrap}>
             <View style={styles.badge}>
@@ -179,7 +185,7 @@ export default function ElevenUnderScreen() {
             style={{ marginRight: 8 }}
           />
           <Text style={styles.searchPlaceholder}>
-            Search for restaurants or meals
+            {t("home.search_placeholder")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -204,7 +210,7 @@ export default function ElevenUnderScreen() {
             <Text
               style={[styles.chipLabel, sortActive && styles.chipLabelActive]}
             >
-              Sort By
+              {t("home.sort_by")}
             </Text>
             {sortActive ? (
               <View style={styles.badge1}>
@@ -231,7 +237,7 @@ export default function ElevenUnderScreen() {
                 cuisineActive && styles.chipLabelActive,
               ]}
             >
-              {cuisineActive ? activeCuisine : "Cuisine"}
+              {cuisineActive ? t(`cuisines.${activeCuisine}`) : t("home.cuisine")}
             </Text>
             {cuisineActive ? (
               <TouchableOpacity
@@ -258,7 +264,7 @@ export default function ElevenUnderScreen() {
             <Text
               style={[styles.chipLabel, priceActive && styles.chipLabelActive]}
             >
-              {priceActive ? activePriceRange : "Price"}
+              {priceActive ? activePriceRange : t("home.price")}
             </Text>
             {priceActive ? (
               <TouchableOpacity
@@ -282,7 +288,7 @@ export default function ElevenUnderScreen() {
       ) : filteredStores.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyText}>
-            No stores with bags under ﷼11 right now.
+            {t("home.eleven_under_empty")}
           </Text>
         </View>
       ) : (

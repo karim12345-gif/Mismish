@@ -16,28 +16,7 @@ import {
 } from "../../components/AllergenPopover/AllergenPopover";
 import { useCart } from "../../context/CartContext";
 import { DEFAULT_LISTING_IMAGE } from "../../constants/images";
-
-const fmtTime = (iso: string, offset = 0) => {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + offset);
-  return d.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-};
-
-const formatTimeRange = (start: string, end: string, offset = 0) => {
-  const s = new Date(start);
-  const e = new Date(end);
-  const sTime = s.getTime();
-  const eTime = e.getTime();
-
-  if (sTime > eTime) {
-    return `${fmtTime(end, offset)} – ${fmtTime(start, offset)}`;
-  }
-  return `${fmtTime(start, offset)} – ${fmtTime(end, offset)}`;
-};
+import { useTranslation } from "react-i18next";
 
 interface SurpriseBagBottomSheetProps {
   visible: boolean;
@@ -61,6 +40,7 @@ export const SurpriseBagBottomSheet = ({
   selectedDate = "today",
   onAddToCart,
 }: SurpriseBagBottomSheetProps) => {
+  const { t } = useTranslation();
   const { addToCart, cartItems, incrementItem, decrementItem } = useCart();
   const { userAllergies } = useUserAllergies();
   const alertsBtnRef = useRef<View>(null);
@@ -90,13 +70,6 @@ export const SurpriseBagBottomSheet = ({
   const handleAddToCart = () => {
     if (item) {
       const offset = selectedDate === "tomorrow" ? 1 : 0;
-      const formattedTime = formatTimeRange(
-        item.pickupStart,
-        item.pickupEnd,
-        offset,
-      );
-      const dayStr = selectedDate === "tomorrow" ? "Tomorrow" : "Today";
-
       const cartItem = {
         id: String(item.id),
         surpriseBoxId: item.id,
@@ -158,28 +131,27 @@ export const SurpriseBagBottomSheet = ({
               {/* Badge */}
               <View className="bg-[#FFF2C2] px-2.5 py-1 rounded-md self-start mb-3">
                 <Text className="text-[#D7402B] text-[10px] font-black">
-                  {item?.quantity ?? 0} Left
+                  {t("store.only_left", { count: item?.quantity ?? 0 })}
                 </Text>
               </View>
 
               {/* Title */}
               <Text className="text-[#111] font-black text-xl mb-3">
-                {item?.name ?? "Surprise Bag"}
+                {item?.name ?? t("store.default_bag")}
               </Text>
 
               {/* Description */}
               <Text className="text-gray-500 font-medium text-[13px] leading-5 mb-5">
-                {item?.description ??
-                  "A delightful assortment of freshly baked pastries or desserts."}
+                {item?.description ?? t("store.default_description")}
               </Text>
 
               {/* Price row + ⓘ Alerts trigger — identical to listing card */}
               <View className="flex-row items-center mb-6">
                 <Text className="text-[#FF7F50] font-black text-[18px] mr-2">
-                  SR {bagPrice}
+                  {t("common.currency")} {bagPrice}
                 </Text>
                 <Text className="text-[#AAA] font-bold text-[12px] line-through mr-3">
-                  SR {bagOriginal}
+                  {t("common.currency")} {bagOriginal}
                 </Text>
 
                 {hasAllergenSection && (
@@ -218,7 +190,7 @@ export const SurpriseBagBottomSheet = ({
                           marginLeft: 4,
                         }}
                       >
-                        Alerts
+                        {t("home.alerts")}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -257,10 +229,10 @@ export const SurpriseBagBottomSheet = ({
                 className="flex-1 bg-[#FF7F50] rounded-xl flex-row items-center justify-between px-5 h-[48px]"
               >
                 <Text className="text-white font-bold text-[15px]">
-                  Add to Cart
+                  {t("store.add_to_cart")}
                 </Text>
                 <Text className="text-white font-bold text-[15px]">
-                  SR {bagPrice}
+                  {t("common.currency")} {bagPrice}
                 </Text>
               </TouchableOpacity>
             )}

@@ -5,17 +5,16 @@ import {
   AuthorizationStatus,
   getMessaging,
   getToken,
-  registerDeviceForRemoteMessages,
   requestPermission,
 } from "@react-native-firebase/messaging";
 import api from "../api";
+import i18n from "../../i18n";
 
 // Show alerts + play sound when app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
-    shouldSetBadge: false,
+    shouldSetBadge: true,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
@@ -61,9 +60,10 @@ export async function registerForPushNotifications(): Promise<void> {
     });
   }
 
-  await registerDeviceForRemoteMessages(messagingInstance);
   const pushToken = await getToken(messagingInstance);
-  console.log("[push] Firebase FCM token:", pushToken);
-  await api.post("/users/v1/push-token", { pushToken });
+  await api.post("/users/v1/push-token", {
+    pushToken,
+    preferredLanguage: i18n.language === "ar" ? "ar" : "en",
+  });
   console.log("[push] token saved to backend");
 }

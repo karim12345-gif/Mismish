@@ -10,12 +10,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Country } from "./PersonalInfoScreen";
+import { useTranslation } from "react-i18next";
 
 const COUNTRIES: Country[] = [
   { flag: "🇸🇦", name: "Saudi Arabia", code: "+966" },
 ];
 
 export default function CountryScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute<any>();
   const { selected, onSelect } = route.params ?? {};
@@ -24,6 +26,7 @@ export default function CountryScreen() {
 
   const filtered = COUNTRIES.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
+    t("country.saudi_arabia").toLowerCase().includes(search.toLowerCase()) ||
     c.code.includes(search)
   );
 
@@ -39,7 +42,7 @@ export default function CountryScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <Feather name="chevron-left" size={26} color="#111" />
         </TouchableOpacity>
-        <Text className="text-[#111] text-[17px] font-semibold">Country</Text>
+        <Text className="text-[#111] text-[17px] font-semibold">{t("country.title")}</Text>
       </View>
 
       {/* Search */}
@@ -49,7 +52,7 @@ export default function CountryScreen() {
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Search country..."
+            placeholder={t("country.search")}
             placeholderTextColor="#bbb"
             className="flex-1 text-[14px] text-[#111]"
           />
@@ -66,7 +69,7 @@ export default function CountryScreen() {
             className="flex-row items-center py-4 border-b border-gray-100"
           >
             <Text style={{ fontSize: 26 }} className="mr-4">{item.flag}</Text>
-            <Text className="flex-1 text-[#111] text-[15px] font-semibold">{item.name}</Text>
+            <Text className="flex-1 text-[#111] text-[15px] font-semibold">{t("country.saudi_arabia")}</Text>
             <Text className="text-gray-400 text-[14px] font-medium mr-3">{item.code}</Text>
             {selected?.code === item.code && (
               <Feather name="check-circle" size={18} color="#366150" />
@@ -76,7 +79,7 @@ export default function CountryScreen() {
         ListEmptyComponent={
           <View className="items-center py-16">
             <Feather name="globe" size={36} color="#ddd" />
-            <Text className="text-gray-300 font-semibold mt-3">No countries found</Text>
+            <Text className="text-gray-300 font-semibold mt-3">{t("country.empty")}</Text>
           </View>
         }
       />

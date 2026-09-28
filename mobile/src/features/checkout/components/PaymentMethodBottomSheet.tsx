@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useCards } from "../../../context/CardsContext";
+import { useTranslation } from "react-i18next";
 
 interface PaymentMethodBottomSheetProps {
   visible: boolean;
@@ -25,6 +26,7 @@ export const PaymentMethodBottomSheet = ({
   onSelectMethod,
   onAddCardPress,
 }: PaymentMethodBottomSheetProps) => {
+  const { t } = useTranslation();
   const slideAnim = useRef(new Animated.Value(500)).current;
   const { cards } = useCards();
 
@@ -58,7 +60,7 @@ export const PaymentMethodBottomSheet = ({
           {/* Header */}
           <View className="flex-row items-center justify-center mb-6 relative">
             <Text className="text-[#111] font-black text-[18px]">
-              Payment Method
+              {t("checkout.payment_method")}
             </Text>
             <TouchableOpacity
               onPress={onClose}
@@ -79,7 +81,7 @@ export const PaymentMethodBottomSheet = ({
               <View className="w-8 items-center justify-center mr-3">
                 <FontAwesome name="apple" size={22} color="#111" />
               </View>
-              <Text className="text-[#111] font-bold text-[14px] flex-1">Apple Pay</Text>
+              <Text className="text-[#111] font-bold text-[14px] flex-1">{t("checkout.apple_pay")}</Text>
               {selectedMethod === "apple_pay" && <Feather name="check-circle" size={18} color="#366150" />}
             </TouchableOpacity>
 
@@ -114,7 +116,7 @@ export const PaymentMethodBottomSheet = ({
           >
             <Feather name="plus" size={16} color="#888" className="mr-2" />
             <Text className="text-gray-600 font-bold text-[13px] ml-1">
-              Add New Card
+              {t("payment.add_card")}
             </Text>
           </TouchableOpacity>
         </Animated.View>

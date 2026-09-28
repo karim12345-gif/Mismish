@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { Order } from "../../../services/order/order.service";
+import { useTranslation } from "react-i18next";
+import { getLocalizedName } from "../../../i18n/localizedContent";
 
 interface Props {
   visible: boolean;
@@ -21,8 +23,6 @@ interface Props {
   onSubmit: (rating: number, comment?: string) => void;
 }
 
-const STAR_LABELS = ["Terrible", "Bad", "Okay", "Good", "Amazing! 🎉"];
-
 export const RatingModal = ({
   visible,
   order,
@@ -30,6 +30,7 @@ export const RatingModal = ({
   onClose,
   onSubmit,
 }: Props) => {
+  const { t, i18n } = useTranslation();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
@@ -78,7 +79,7 @@ export const RatingModal = ({
           {/* Header */}
           <View className="flex-row items-center justify-between mb-5">
             <Text className="text-[#111] font-black text-[18px]">
-              Rate your bag
+              {t("orders.rate_title")}
             </Text>
             <TouchableOpacity onPress={handleClose}>
               <Ionicons name="close" size={22} color="#888" />
@@ -100,10 +101,10 @@ export const RatingModal = ({
             )}
             <View>
               <Text className="text-[#111] font-black text-[15px]">
-                {vendor?.name ?? "Store"}
+                {getLocalizedName(vendor, i18n.language, t("common.app_name"))}
               </Text>
               <Text className="text-gray-400 font-medium text-[13px]">
-                {bag?.name ?? "Surprise Bag"}
+                {bag?.name ?? t("store.default_bag")}
               </Text>
             </View>
           </View>
@@ -129,7 +130,7 @@ export const RatingModal = ({
               className="font-bold text-[14px] h-5"
               style={{ color: rating > 0 ? "#FF7F50" : "transparent" }}
             >
-              {rating > 0 ? STAR_LABELS[rating - 1] : "."}
+              {rating > 0 ? t(`orders.rating_labels.${rating}`) : "."}
             </Text>
           </View>
 
@@ -137,7 +138,7 @@ export const RatingModal = ({
           <TextInput
             value={comment}
             onChangeText={setComment}
-            placeholder="Share your experience (optional)"
+            placeholder={t("orders.review_placeholder")}
             placeholderTextColor="#bbb"
             multiline
             numberOfLines={3}
@@ -162,14 +163,14 @@ export const RatingModal = ({
                 className="font-black text-[15px]"
                 style={{ color: rating === 0 ? "#aaa" : "#fff" }}
               >
-                Submit Review
+                {t("orders.submit_review")}
               </Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleClose} className="items-center py-1">
             <Text className="text-gray-400 font-medium text-[14px]">
-              Maybe later
+              {t("orders.maybe_later")}
             </Text>
           </TouchableOpacity>
         </View>

@@ -1,15 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { AppError } from "../../shared/lib/AppError";
+import { handleControllerError as handle } from "../../shared/http/handleControllerError";
 import * as usersService from "./users.service";
 import type { UpdateProfileBody } from "./users.types";
-
-const handle = (error: unknown, res: Response, next: NextFunction): void => {
-  error instanceof AppError
-    ? res
-        .status(error.statusCode)
-        .json({ status: "error", message: error.message })
-    : next(error);
-};
 
 export const getMyProfile = async (
   req: Request,
@@ -43,7 +35,11 @@ export const savePushToken = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    await usersService.savePushToken(req.user!.id, req.body.pushToken);
+    await usersService.savePushToken(
+      req.user!.id,
+      req.body.pushToken,
+      req.body.preferredLanguage,
+    );
     res.status(200).json({ status: "success" });
   } catch (e) {
     handle(e, res, next);

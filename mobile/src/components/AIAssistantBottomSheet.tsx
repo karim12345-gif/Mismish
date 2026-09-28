@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
-  SafeAreaView,
   TextInput,
   KeyboardAvoidingView,
   Platform,
@@ -13,6 +12,7 @@ import {
   Linking,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import {
   OrderServices,
@@ -23,6 +23,7 @@ import {
   ChatMessage,
   SupportAction,
 } from "../services/support/support.service";
+import { useTranslation } from "react-i18next";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -44,13 +45,6 @@ interface AIAssistantProps {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const SUPPORT_EMAIL = "support@mismish.com";
-
-const QUICK_REPLIES = [
-  "Track my order",
-  "Request a refund",
-  "Order was wrong",
-  "Talk to a human",
-];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -74,6 +68,7 @@ export const AIAssistantBottomSheet = ({
   visible,
   onClose,
 }: AIAssistantProps) => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [history, setHistory] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
@@ -92,7 +87,7 @@ export const AIAssistantBottomSheet = ({
       {
         id: makeId(),
         role: "bot",
-        text: "Hi! 👋 I'm Mismish's AI support. I can help you track orders, request refunds, or answer any questions. How can I help you today?",
+        text: t("support.welcome"),
       },
     ]);
     setHistory([]);
@@ -112,7 +107,7 @@ export const AIAssistantBottomSheet = ({
     };
 
     fetchOrders();
-  }, [visible]);
+  }, [visible, t]);
 
   useEffect(() => {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
@@ -169,33 +164,45 @@ export const AIAssistantBottomSheet = ({
           prev.filter((m) => m.id !== loadingId).concat({
             id: makeId(),
             role: "bot",
-            text: `Sorry, I couldn't connect right now. Please email us at ${SUPPORT_EMAIL} and we'll sort it out quickly.${devHint}`,
+            text: `${t("support.connection_error", { email: SUPPORT_EMAIL })}${devHint}`,
           }),
         );
       } finally {
         setIsSending(false);
       }
     },
-    [history, orders, isSending],
+    [history, orders, isSending, t],
   );
 
   const handleEscalate = useCallback(() => {
     const transcript = history
       .filter((m) => m.role !== "system")
-      .map((m) => `${m.role === "user" ? "Customer" : "AI"}: ${m.content}`)
+      .map(
+        (m) =>
+          `${m.role === "user" ? t("support.customer") : t("support.ai")}: ${m.content}`,
+      )
       .join("\n\n");
 
-    const subject = encodeURIComponent("Mismish Support Request");
+    const subject = encodeURIComponent(t("support.email_subject"));
     const body = encodeURIComponent(
-      `Hi Mismish support team,\n\nA customer needs help. Chat transcript below:\n\n${transcript || "(no conversation yet)"}\n\nPlease follow up. Thank you.`,
+      t("support.email_body", {
+        transcript: transcript || t("support.no_conversation"),
+      }),
     );
 
     Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`).catch(() =>
-      Alert.alert("Contact Support", `Email us at ${SUPPORT_EMAIL}`, [
-        { text: "OK" },
+      Alert.alert(t("support.contact_title"), t("support.email_us", { email: SUPPORT_EMAIL }), [
+        { text: t("common.continue") },
       ]),
     );
-  }, [history]);
+  }, [history, t]);
+
+  const quickReplies = [
+    t("support.quick_track"),
+    t("support.quick_refund"),
+    t("support.quick_wrong"),
+    t("support.quick_human"),
+  ];
 
   if (!visible) return null;
 
@@ -214,7 +221,7 @@ export const AIAssistantBottomSheet = ({
           <View className="px-5 py-3 border-b border-gray-100 flex-row items-center">
             <View className="flex-1" />
             <Text className="text-[#111] font-black text-[18px] flex-1 text-center">
-              Support
+              {t("support.title")}
             </Text>
             <View className="flex-1 items-end">
               <TouchableOpacity
@@ -232,14 +239,14 @@ export const AIAssistantBottomSheet = ({
               <Feather name="cpu" size={24} color="#FF7F50" />
             </View>
             <Text className="text-[#111] font-black text-[15px] mb-0.5">
-              Mismish AI Support
+              {t("support.assistant")}
             </Text>
             <View className="flex-row items-center">
               <View className="w-2 h-2 rounded-full bg-green-400 mr-1.5" />
               <Text className="text-gray-500 text-[12px] font-medium">
                 {isLoadingOrders
-                  ? "Loading your orders…"
-                  : "Online · Instant replies"}
+                  ? t("support.loading_orders")
+                  : t("support.online")}
               </Text>
             </View>
           </View>
@@ -259,7 +266,7 @@ export const AIAssistantBottomSheet = ({
             {/* Quick replies — show before user sends first message */}
             {messages.filter((m) => m.role === "user").length === 0 && (
               <View className="flex-row flex-wrap gap-x-2 gap-y-2 mt-3 mb-2">
-                {QUICK_REPLIES.map((reply) => (
+                {quickReplies.map((reply) => (
                   <TouchableOpacity
                     key={reply}
                     onPress={() => sendMessage(reply)}
@@ -277,18 +284,17 @@ export const AIAssistantBottomSheet = ({
             {isEscalated && (
               <View className="mt-2 mb-4 p-4 rounded-2xl bg-gray-50 border border-gray-200">
                 <Text className="text-[#111] font-black text-[14px] mb-1">
-                  Talk to a human agent 🤝
+                  {t("support.human_title")}
                 </Text>
                 <Text className="text-gray-500 text-[13px] mb-3 leading-5">
-                  I'll send your full chat history to our support team. They'll
-                  reply within a few hours.
+                  {t("support.human_description")}
                 </Text>
                 <TouchableOpacity
                   onPress={handleEscalate}
                   className="h-11 bg-[#FF7F50] rounded-xl items-center justify-center"
                 >
                   <Text className="text-white font-black text-[14px]">
-                    Email Support Team
+                    {t("support.email_team")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -300,7 +306,7 @@ export const AIAssistantBottomSheet = ({
             <TextInput
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Ask me anything…"
+              placeholder={t("support.input_placeholder")}
               placeholderTextColor="#999"
               className="flex-1 min-h-[44px] bg-gray-50 rounded-2xl px-4 text-[#111] font-medium mr-3"
               multiline

@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useCart } from "../../../context/CartContext";
 import { DEFAULT_LISTING_IMAGE } from "../../../constants/images";
+import { useTranslation } from "react-i18next";
 
 export const CheckoutOrderItems = () => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const { cartItems, incrementItem, decrementItem } = useCart();
 
@@ -18,11 +20,11 @@ export const CheckoutOrderItems = () => {
         className="flex-row items-center justify-between mb-1.5"
       >
         <Text className="text-[#111] font-black text-[15px]">
-          Order Details
+          {t("checkout.order_items")}
         </Text>
         <View className="flex-row items-center">
           <Text className="text-gray-500 font-medium text-[13px] mr-1">
-            {totalCount} item{totalCount !== 1 ? "s" : ""}
+            {totalCount} {t("checkout.item")}
           </Text>
           <Feather
             name={expanded ? "chevron-up" : "chevron-down"}
@@ -52,7 +54,7 @@ export const CheckoutOrderItems = () => {
                   {item.title}
                 </Text>
                 <Text className="text-gray-500 font-medium text-[13px] mt-0.5">
-                  SAR {item.price.toFixed(2)} each
+                  {t("common.currency")} {item.price.toFixed(2)} {t("checkout.each")}
                 </Text>
               </View>
 
