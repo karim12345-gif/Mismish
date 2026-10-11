@@ -7,6 +7,7 @@ import {
 import { notificationService } from "../../../shared/lib/notificationService";
 import { emitOrderEvent } from "../../../shared/lib/orderStream";
 import prisma from "../../../shared/lib/prisma";
+import { VENDOR_PRIVATE_FIELDS_OMIT } from "../../vendors/services/vendor-private-fields";
 import { awardOrderPoints } from "../../rewards/rewards.service";
 import type { CreateOrderBody } from "../orders.types";
 import { orderReceivedCopy } from "../../../shared/notifications/notification-copy";
@@ -60,7 +61,9 @@ export const createOrder = async (userId: number, data: CreateOrderBody) => {
           pickupOffset,
           pickupWindowEnd: effectiveEnd,
         },
-        include: { surpriseBox: { include: { vendor: true } } },
+        include: {
+          surpriseBox: { include: { vendor: { omit: VENDOR_PRIVATE_FIELDS_OMIT } } },
+        },
       });
     },
   );

@@ -2,6 +2,7 @@ import { OrderStatus } from "@prisma/client";
 import { cancelPickupReminders } from "../../../shared/lib/notificationScheduler";
 import { notificationService } from "../../../shared/lib/notificationService";
 import prisma from "../../../shared/lib/prisma";
+import { VENDOR_PRIVATE_FIELDS_OMIT } from "../../vendors/services/vendor-private-fields";
 import { awardOrderPoints } from "../../rewards/rewards.service";
 
 export const devSetOrderStatus = async (
@@ -14,7 +15,9 @@ export const devSetOrderStatus = async (
       status,
       ...(status === "COMPLETED" ? { pickupStatus: "COLLECTED" } : {}),
     },
-    include: { surpriseBox: { include: { vendor: true } } },
+    include: {
+      surpriseBox: { include: { vendor: { omit: VENDOR_PRIVATE_FIELDS_OMIT } } },
+    },
   });
 
   if (["COMPLETED", "CANCELLED", "DELIVERED"].includes(status)) {

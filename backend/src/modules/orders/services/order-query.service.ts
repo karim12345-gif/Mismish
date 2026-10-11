@@ -1,5 +1,6 @@
 import { AppError } from "../../../shared/lib/AppError";
 import prisma from "../../../shared/lib/prisma";
+import { VENDOR_PRIVATE_FIELDS_OMIT } from "../../vendors/services/vendor-private-fields";
 import type { ImpactStats } from "../orders.types";
 
 export const getMyOrders = async (userId: number) =>
@@ -30,7 +31,9 @@ export const getOrderById = async (userId: number, orderId: number) => {
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { surpriseBox: { include: { vendor: true } } },
+    include: {
+      surpriseBox: { include: { vendor: { omit: VENDOR_PRIVATE_FIELDS_OMIT } } },
+    },
   });
 
   if (!order) throw new AppError(404, "Order not found");

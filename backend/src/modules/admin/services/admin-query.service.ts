@@ -1,6 +1,7 @@
 import { OrderStatus, Prisma, VendorStatus } from "@prisma/client";
 import prisma from "../../../shared/lib/prisma";
 import { limitFrom } from "../admin.utils";
+import { VENDOR_PRIVATE_FIELDS_OMIT } from "../../vendors/services/vendor-private-fields";
 
 const ACTIVE_ORDER_STATUSES: OrderStatus[] = [
   "PENDING",
@@ -113,6 +114,7 @@ export const getVendors = async (query: {
     where,
     take: limitFrom(query.limit),
     orderBy: { createdAt: "desc" },
+    omit: VENDOR_PRIVATE_FIELDS_OMIT,
     include: {
       _count: { select: { listings: true, reviews: true, favorites: true } },
     },
